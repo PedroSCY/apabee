@@ -1,0 +1,547 @@
+@startuml
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam shadowing false
+skinparam packageBackgroundColor #F5F5F5
+skinparam packageBorderColor #90A4AE
+skinparam noteBackgroundColor #FFFDE7
+skinparam noteBorderColor #F9A825
+
+' ============================================================
+' ENUMS
+' ============================================================
+
+enum RoleUsuario {
+  ADMIN
+  ASSOCIADO
+}
+
+enum StatusAtribuicao {
+  ATIVO
+  DEVOLVIDO
+}
+
+enum CategoriaInsumo {
+  FERRAMENTA
+  INSUMO
+}
+
+enum UnidadeMedida {
+  KG
+  LITRO
+  UNIDADE
+  GRAMA
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+enum TipoLote {
+  PRODUCAO
+  AQUISICAO
+}
+
+enum TipoVenda {
+  COLETIVA
+  INDIVIDUAL
+}
+
+enum TipoMovimentoFinanceiro {
+  ANTECIPACAO
+  RATEIO_FINAL
+}
+
+enum StatusPedido {
+  PENDENTE
+  CONFIRMADO
+  ENVIADO
+  CANCELADO
+}
+
+enum CategoriaDocumento {
+  ATA
+  FINANCEIRO
+  PRESTACAO_CONTAS
+  RELATORIO
+  OUTRO
+}
+
+' ============================================================
+' IDENTIDADE
+' ============================================================
+
+package "Identidade" {
+
+  class Usuario {
+    - id: UUID
+    - nome: String
+    - email: String
+    - role: RoleUsuario
+    - ativo: Boolean
+    - criadoEm: DateTime
+    ..
+    + isAdmin(): Boolean
+    + isAssociado(): Boolean
+    + ativar(): void
+    + desativar(): void
+    + alterarRole(role: RoleUsuario): void
+  }
+
+  class Associado {
+    - id: UUID
+    - usuarioId: UUID
+    - dataIngresso: Date
+    - observacoes: String
+    ..
+    + registrarColheita(c: Colheita): void
+    + atribuirEquipamento(e: Equipamento): AtribuicaoEquipamento
+    + atribuirInsumo(i: Insumo): AtribuicaoInsumo
+    + totalProduzido(inicio: Date, fim: Date): Number
+    + listarEquipamentosEmUso(): List
+    + listarInsumosEmUso(): List
+  }
+
+  Associado "1" *-- "1" Usuario : possui
+}
+
+' ============================================================
+' PATRIMONIO
+' ============================================================
+
+package "Patrimonio" {
+
+  class Equipamento {
+    - id: UUID
+    - nome: String
+    - numeroSerie: String
+    - descricao: String
+    - emUso: Boolean
+    - criadoEm: DateTime
+    ..
+    + atribuir(a: Associado): AtribuicaoEquipamento
+    + devolver(): void
+    + estaDisponivel(): Boolean
+  }
+
+  class AtribuicaoEquipamento {
+    - id: UUID
+    - equipamentoId: UUID
+    - associadoId: UUID
+    - dataInicio: Date
+    - dataFim: Date
+    - status: StatusAtribuicao
+    - observacao: String
+    ..
+    + devolver(): void
+    + estaAtiva(): Boolean
+    + duracaoEmDias(): Integer
+  }
+
+  class Insumo {
+    - id: UUID
+    - nome: String
+    - categoria: CategoriaInsumo
+    - descricao: String
+    - emUso: Boolean
+    - criadoEm: DateTime
+    ..
+    + atribuir(a: Associado): AtribuicaoInsumo
+    + devolver(): void
+    + estaDisponivel(): Boolean
+  }
+
+  class AtribuicaoInsumo {
+    - id: UUID
+    - insumoId: UUID
+    - associadoId: UUID
+    - dataInicio: Date
+    - dataFim: Date
+    - status: StatusAtribuicao
+    - observacao: String
+    ..
+    + devolver(): void
+    + estaAtiva(): Boolean
+    + duracaoEmDias(): Integer
+  }
+
+  note top of Equipamento
+    RN02: emUso = true indica atribuicao
+    ativa. Apenas UMA atribuicao ativa
+    por equipamento por vez.
+  end note
+
+  note right of Insumo
+    RN06: Insumo e patrimonio da
+    associacao. Atribuicao segue
+    mesmo padrao do Equipamento:
+    data_inicio, data_fim,
+    ATIVO | DEVOLVIDO.
+  end note
+
+  Equipamento "1" *-- "0..*" AtribuicaoEquipamento : gera
+  Insumo "1" *-- "0..*" AtribuicaoInsumo : gera
+}
+
+' ============================================================
+' PRODUCAO
+' ============================================================
+
+package "Producao" {
+
+  class TipoMateriaPrima {
+    - id: UUID
+    - nome: String
+    - unidade: UnidadeMedida
+    - descricao: String
+  }
+
+  note right of TipoMateriaPrima
+    Exemplos: Mel, Cera bruta,
+    Polen, Propolis, Geleia Real
+  end note
+
+  class LoteProducao {
+    - id: UUID
+    - tipo: TipoLote
+    - periodo: String
+    - dataInicio: Date
+    - dataFim: Date
+    - ativo: Boolean
+    - custoTotal: Decimal
+    ..
+    + estaAberto(): Boolean
+    + encerrar(): void
+    + totalProduzido(): Number
+  }
+
+  class ParticipacaoLote {
+    - id: UUID
+    - loteProducaoId: UUID
+    - associadoId: UUID
+    - percentual: Decimal
+    - volume: Number
+    - valorInvestido: Decimal
+    ..
+    + calcularDireito(faturamento: Decimal): Decimal
+  }
+
+  class Colheita {
+    - id: UUID
+    - associadoId: UUID
+    - tipoMateriaPrimaId: UUID
+    - equipamentoId: UUID
+    - loteProducaoId: UUID
+    - volume: Number
+    - unidade: UnidadeMedida
+    - dataColheita: Date
+    - observacao: String
+    ..
+    + validar(): Boolean
+    + adicionarAoEstoque(): MovimentacaoEstoque
+  }
+
+  class EstoqueMateriaPrima {
+    - id: UUID
+    - tipoMateriaPrimaId: UUID
+    - quantidadeDisponivel: Number
+    - unidade: UnidadeMedida
+    - atualizadoEm: DateTime
+    ..
+    + entrada(qtd: Number, c: Colheita): void
+    + saida(qtd: Number): void
+    + saldoAtual(): Number
+    + temSaldo(qtd: Number): Boolean
+  }
+
+  class MovimentacaoEstoque {
+    - id: UUID
+    - tipo: TipoMovimentacao
+    - quantidade: Number
+    - referenciaId: UUID
+    - criadoEm: DateTime
+    ..
+    + descrever(): String
+  }
+
+  note bottom of Colheita
+    RN03: Ao confirmar colheita,
+    volume e adicionado ao
+    EstoqueMateriaPrima via
+    MovimentacaoEstoque (ENTRADA).
+  end note
+
+  note bottom of LoteProducao
+    RN07: Lote pode ser PRODUCAO
+    (colheita) ou AQUISICAO
+    (compra coletiva p/ revenda).
+    RN08: Participacao definida por:
+    volume, valorInvestido ou percentual
+  end note
+
+  note bottom of ParticipacaoLote
+    RN09: percentual define o direito
+    financeiro do associado sobre o lote.
+  end note
+
+  TipoMateriaPrima "1" *-- "0..*" Colheita : classifica
+  TipoMateriaPrima "1" *-- "1" EstoqueMateriaPrima : controla
+  EstoqueMateriaPrima "1" *-- "0..*" MovimentacaoEstoque : registra
+  LoteProducao "1" *-- "0..*" ParticipacaoLote : define
+  LoteProducao "1" *-- "0..*" Colheita : agrupa
+}
+
+' ============================================================
+' CATALOGO
+' ============================================================
+
+package "Catalogo" {
+
+  class Produto {
+    - id: UUID
+    - nome: String
+    - slug: String
+    - descricao: String
+    - preco: Decimal
+    - imagemUrl: String
+    - ativo: Boolean
+    - loteOrigemId: UUID
+    - criadoEm: DateTime
+    ..
+    + publicar(): void
+    + despublicar(): void
+    + atualizarPreco(preco: Decimal): void
+    + estaDisponivel(): Boolean
+  }
+
+  class EstoqueProduto {
+    - id: UUID
+    - produtoId: UUID
+    - quantidadeDisponivel: Integer
+    - atualizadoEm: DateTime
+    ..
+    + entrada(qtd: Integer): void
+    + saida(qtd: Integer, pedidoId: UUID): void
+    + temSaldo(qtd: Integer): Boolean
+    + saldoAtual(): Integer
+  }
+
+  class ComposicaoProduto {
+    - id: UUID
+    - produtoId: UUID
+    - tipoMateriaPrimaId: UUID
+    - quantidadeNecessaria: Number
+    - unidade: UnidadeMedida
+    ..
+    + verificarDisponibilidade(): Boolean
+    + calcularCusto(): Decimal
+  }
+
+  note right of ComposicaoProduto
+    RN05: Gerar estoque de Produto
+    consome EstoqueMateriaPrima
+    conforme ComposicaoProduto.
+  end note
+
+  Produto "1" *-- "1" EstoqueProduto : controla
+  Produto "1" *-- "0..*" ComposicaoProduto : composta por
+}
+
+' ============================================================
+' COMERCIAL
+' ============================================================
+
+package "Comercial" {
+
+  class Venda {
+    - id: UUID
+    - loteProducaoId: UUID
+    - associadoId: UUID
+    - tipo: TipoVenda
+    - volume: Number
+    - valor: Decimal
+    - data: DateTime
+    ..
+    + isIndividual(): Boolean
+    + gerarAntecipacao(): MovimentoFinanceiro
+  }
+
+  class Pedido {
+    - id: UUID
+    - clienteNome: String
+    - clienteEmail: String
+    - clienteTelefone: String
+    - status: StatusPedido
+    - total: Decimal
+    - criadoEm: DateTime
+    ..
+    + adicionarItem(p: Produto, qtd: Integer): ItemPedido
+    + calcularTotal(): Decimal
+    + confirmar(): void
+    + cancelar(motivo: String): void
+    + marcarEnviado(): void
+    + podeSerCancelado(): Boolean
+  }
+
+  class ItemPedido {
+    - id: UUID
+    - pedidoId: UUID
+    - produtoId: UUID
+    - quantidade: Integer
+    - precoUnitario: Decimal
+    ..
+    + subtotal(): Decimal
+  }
+
+  note bottom of Pedido
+    RN04: Confirmar pedido baixa
+    EstoqueProduto automaticamente.
+    Status >= CONFIRMADO nao
+    permite cancelamento.
+  end note
+
+  note right of Venda
+    RN11: Venda INDIVIDUAL gera
+    MovimentoFinanceiro do tipo
+    ANTECIPACAO automaticamente.
+  end note
+
+  Pedido "1" *-- "1..*" ItemPedido : contem
+  LoteProducao "1" *-- "0..*" Venda : gera
+}
+
+' ============================================================
+' FINANCEIRO
+' ============================================================
+
+package "Financeiro" {
+
+  class MovimentoFinanceiro {
+    - id: UUID
+    - associadoId: UUID
+    - loteProducaoId: UUID
+    - valor: Decimal
+    - tipo: TipoMovimentoFinanceiro
+    - data: DateTime
+    ..
+    + isAntecipacao(): Boolean
+  }
+
+  class ApuracaoLote {
+    - id: UUID
+    - loteProducaoId: UUID
+    - faturamentoTotal: Decimal
+    - fechadoEm: DateTime
+    ..
+    + calcularValorFinal(percentual: Decimal, antecipacoes: List): Decimal
+    + gerarRateio(associado: Associado, participacao: ParticipacaoLote): MovimentoFinanceiro
+  }
+
+  note bottom of ApuracaoLote
+    RN10: valor_final =
+    (percentual * faturamentoTotal)
+    - antecipacoes
+    RN12: MVP = registro/auditoria.
+    Sem transacoes reais.
+  end note
+
+  LoteProducao "1" *-- "0..1" ApuracaoLote : fecha
+  ApuracaoLote "1" --> "0..*" MovimentoFinanceiro : gera
+}
+
+' ============================================================
+' GESTAO
+' ============================================================
+
+package "Gestao" {
+
+  class Ata {
+    - id: UUID
+    - titulo: String
+    - conteudo: String
+    - autorId: UUID
+    - dataReuniao: Date
+    - publicada: Boolean
+    - criadoEm: DateTime
+    ..
+    + publicar(): void
+    + adicionarParticipante(a: Associado): void
+    + gerarPDF(): Blob
+  }
+
+  class ParticipanteAta {
+    - id: UUID
+    - ata: Ata
+    - associadoId: UUID
+    ..
+    + confirmarPresenca(): void
+  }
+
+  class Documento {
+    - id: UUID
+    - titulo: String
+    - categoria: CategoriaDocumento
+    - arquivoUrl: String
+    - tamanhoBytes: Long
+    - publicado: Boolean
+    - autorId: UUID
+    - criadoEm: DateTime
+    ..
+    + publicar(): void
+    + despublicar(): void
+    + url(): String
+  }
+
+  class ConfiguracaoAssociacao {
+    - id: UUID
+    - nomeExibido: String
+    - cnpj: String
+    - email: String
+    - telefone: String
+    - endereco: String
+    - atualizadoEm: DateTime
+    ..
+    + atualizar(dados: Map): ConfiguracaoAssociacao
+  }
+
+  class RelatorioProducao {
+    - id: UUID
+    - dataInicio: Date
+    - dataFim: Date
+    - geradoEm: DateTime
+    ..
+    + totalPorAssociado(): Map
+    + totalPorTipo(): Map
+    + exportar(): Blob
+  }
+
+  Ata "1" *-- "0..*" ParticipanteAta : registra
+}
+
+' ============================================================
+' ASSOCIACOES CRUZADAS
+' ============================================================
+
+Associado "1" --o "0..*" AtribuicaoEquipamento : tem em uso
+Associado "1" --o "0..*" AtribuicaoInsumo : tem em uso
+Associado "1" --o "0..*" Colheita : produz
+Associado "1" --o "0..*" ParticipacaoLote : participa
+Associado "1" --o "0..*" ParticipanteAta : participa
+Associado "1" --o "0..*" MovimentoFinanceiro : recebe
+Associado "1" --o "0..*" Venda : realiza
+
+Colheita "0..*" --> "1" EstoqueMateriaPrima : alimenta
+ComposicaoProduto "0..*" --> "1" TipoMateriaPrima : usa
+EstoqueProduto ..> ComposicaoProduto : consome ao gerar
+ItemPedido "0..*" --> "1" Produto : referencia
+ItemPedido ..> EstoqueProduto : baixa ao confirmar
+Produto "0..*" --> "0..1" LoteProducao : origem
+Venda "0..*" --> "1" LoteProducao : referencia
+MovimentoFinanceiro "0..*" --> "1" LoteProducao : referencia
+Ata "0..*" --> "1" Usuario : redigida por
+Documento "0..*" --> "1" Usuario : publicado por
+RelatorioProducao ..> Colheita : agrega dados
+
+@enduml
