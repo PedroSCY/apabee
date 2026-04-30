@@ -1,6 +1,6 @@
-import { RoleUsuario } from "@repo/shared"
-import { Usuario } from "./Usuario"
-import { DomainError } from "../shared/DomainError"
+import { RoleUsuario } from '@apa/shared'
+import { Usuario } from './Usuario'
+import { DomainError } from '../shared/DomainError'
 
 const makeAdmin = (id?: string) =>
   Usuario.create({ nome: 'Admin APA', email: 'admin@apa.com.br', role: RoleUsuario.ADMIN }, id)

@@ -13,6 +13,11 @@ export enum CategoriaInsumo {
   INSUMO = 'INSUMO',
 }
 
+export enum TipoPatrimonio {
+  EQUIPAMENTO = 'EQUIPAMENTO',
+  INSUMO = 'INSUMO'
+}
+
 export enum UnidadeMedida {
   KG = 'KG',
   LITRO = 'LITRO',
@@ -49,7 +54,10 @@ export enum StatusPedido {
   CANCELADO = 'CANCELADO',
 }
 
-export enum Patrimonio {
-  EQUIPAMENTO = 'EQUIPAMENTO',
-  INSUMO = 'INSUMO'
+export enum CategoriaDocumento {
+  ATA = 'ATA',
+  FINANCEIRO = 'FINANCEIRO',
+  PRESTACAO_CONTAS = 'PRESTACAO_CONTAS',
+  RELATORIO = 'RELATORIO',
+  OUTRO = 'OUTRO',
 }

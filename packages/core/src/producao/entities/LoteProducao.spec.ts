@@ -1,5 +1,5 @@
-import { TipoLote } from "@repo/shared";
-import { LoteProducao } from "./LoteProducao";
+import { TipoLote } from '@apa/shared'
+import { LoteProducao } from './LoteProducao'
 
 const makeLote = (overrides = {}) =>
   new LoteProducao({
@@ -10,23 +10,22 @@ const makeLote = (overrides = {}) =>
     ativo: true,
     custoTotal: 0,
     ...overrides,
-  });
+  })
 
 describe('LoteProducao', () => {
   it('estaAberto deve retornar true quando ativo', () => {
-    expect(makeLote().estaAberto()).toBe(true);
-  });
+    expect(makeLote().estaAberto()).toBe(true)
+  })
 
   it('encerrar deve setar ativo=false e dataFim', () => {
-    const lote = makeLote();
-    const encerrado = lote.encerrar();
-    expect(encerrado.ativo).toBe(false);
-    expect(encerrado.dataFim).toBeDefined();
-  });
+    const lote = makeLote()
+    const encerrado = lote.encerrar()
+    expect(encerrado.ativo).toBe(false)
+    expect(encerrado.dataFim).toBeDefined()
+  })
 
   it('encerrar lote já encerrado deve lançar erro', () => {
-    const encerrado = makeLote({ ativo: false });
-    expect(() => encerrado.encerrar()).toThrow('Lote já está encerrado.');
-  });
-});
- 
+    const encerrado = makeLote({ ativo: false })
+    expect(() => encerrado.encerrar()).toThrow('Lote já está encerrado.')
+  })
+})

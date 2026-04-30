@@ -1,5 +1,5 @@
-import { RoleUsuario } from "@repo/shared"
-import { Associado, Usuario } from "../../entities"
+import { RoleUsuario } from '@apa/shared'
+import { Associado, Usuario } from '../../entities'
 
 // ---- Criar Usuário ----
 export interface CriarUsuarioInput {

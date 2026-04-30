@@ -1,21 +1,29 @@
-import { UnidadeMedida } from "@repo/shared";
+import { UnidadeMedida } from '@apa/shared'
 
 interface TipoMateriaPrimaProps {
-  id: string;
-  nome: string;
-  unidade: UnidadeMedida;
-  descricao?: string;
+  id: string
+  nome: string
+  unidade: UnidadeMedida
+  descricao?: string
 }
 
 export class TipoMateriaPrima {
-  private readonly props: TipoMateriaPrimaProps;
+  private readonly props: TipoMateriaPrimaProps
 
   constructor(props: TipoMateriaPrimaProps) {
-    this.props = props;
+    this.props = props
   }
 
-  get id(): string { return this.props.id; }
-  get nome(): string { return this.props.nome; }
-  get unidade(): UnidadeMedida { return this.props.unidade; }
-  get descricao(): string | undefined { return this.props.descricao; }
+  get id(): string {
+    return this.props.id
+  }
+  get nome(): string {
+    return this.props.nome
+  }
+  get unidade(): UnidadeMedida {
+    return this.props.unidade
+  }
+  get descricao(): string | undefined {
+    return this.props.descricao
+  }
 }

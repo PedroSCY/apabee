@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
-export const UUIDSchema = z.string().uuid()
+export const UUIDSchema = z.uuid()
 
-export const EmailSchema = z.string().email()
+export const EmailSchema = z.email()
 
 export const PercentualSchema = z
   .number()

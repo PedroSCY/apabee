@@ -1,43 +1,49 @@
-import { StatusAtribuicao } from "@repo/shared";
-import { Atribuicao } from "./Atribuicao";
+import { AtribuicaoPatrimonio } from './AtribuicaoPatrimonio';
+import { StatusAtribuicao, TipoPatrimonio } from '@apa/shared';
 
-const makeAtribuicao = (overrides = {}) =>
-  new Atribuicao({
-    id: 'uuid-1',
-    patrimonioId: 'equip-1',
-    associadoId: 'assoc-1',
+const make = (tipo = TipoPatrimonio.EQUIPAMENTO, overrides = {}) =>
+  new AtribuicaoPatrimonio({
+    id: 'uuid-1', patrimonioId: 'pat-1',
+    tipoPatrimonio: tipo, associadoId: 'assoc-1',
     dataInicio: new Date('2024-01-01'),
-    status: StatusAtribuicao.ATIVO,
-    ...overrides,
+    status: StatusAtribuicao.ATIVO, ...overrides,
   });
 
-describe('AtribuicaoEquipamento', () => {
-  it('estaAtiva deve retornar true quando status é ATIVO', () => {
-    expect(makeAtribuicao().estaAtiva()).toBe(true);
+describe('AtribuicaoPatrimonio', () => {
+  it('estaAtiva retorna true quando ATIVO', () => {
+    expect(make().estaAtiva()).toBe(true);
   });
 
-  it('devolver deve mudar status para DEVOLVIDO e setar dataFim', () => {
-    const atribuicao = makeAtribuicao();
-    const devolvida = atribuicao.devolver();
+  it('isEquipamento e isInsumo discriminam corretamente', () => {
+    expect(make(TipoPatrimonio.EQUIPAMENTO).isEquipamento()).toBe(true);
+    expect(make(TipoPatrimonio.EQUIPAMENTO).isInsumo()).toBe(false);
+    expect(make(TipoPatrimonio.INSUMO).isInsumo()).toBe(true);
+    expect(make(TipoPatrimonio.INSUMO).isEquipamento()).toBe(false);
+  });
+
+  it('devolver muda status para DEVOLVIDO e seta dataFim', () => {
+    const devolvida = make().devolver();
     expect(devolvida.status).toBe(StatusAtribuicao.DEVOLVIDO);
     expect(devolvida.dataFim).toBeDefined();
   });
 
-  it('devolver numa atribuição já devolvida deve lançar erro', () => {
-    const devolvida = makeAtribuicao({ status: StatusAtribuicao.DEVOLVIDO });
-    expect(() => devolvida.devolver()).toThrow('Atribuição já foi devolvida.');
+  it('devolver atribuição já devolvida lança erro', () => {
+    expect(() => make(TipoPatrimonio.EQUIPAMENTO, { status: StatusAtribuicao.DEVOLVIDO }).devolver())
+      .toThrow('Atribuição já foi devolvida.');
   });
 
-  it('deve preservar imutabilidade ao devolver', () => {
-    const original = makeAtribuicao();
+  it('preserva imutabilidade ao devolver', () => {
+    const original = make();
     original.devolver();
     expect(original.status).toBe(StatusAtribuicao.ATIVO);
   });
 
-  it('duracaoEmDias deve calcular corretamente', () => {
-    const inicio = new Date('2024-01-01');
-    const fim = new Date('2024-01-11');
-    const atribuicao = makeAtribuicao({ dataInicio: inicio, dataFim: fim, status: StatusAtribuicao.DEVOLVIDO });
-    expect(atribuicao.duracaoEmDias()).toBe(10);
+  it('duracaoEmDias calcula corretamente', () => {
+    const a = make(TipoPatrimonio.EQUIPAMENTO, {
+      dataInicio: new Date('2024-01-01'),
+      dataFim: new Date('2024-01-11'),
+      status: StatusAtribuicao.DEVOLVIDO,
+    });
+    expect(a.duracaoEmDias()).toBe(10);
   });
 });

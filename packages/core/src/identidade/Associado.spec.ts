@@ -1,7 +1,7 @@
-import { RoleUsuario } from "@repo/shared"
-import { Usuario } from "./Usuario"
-import { Associado } from "./Associado"
-import { DomainError } from "../shared/DomainError"
+import { RoleUsuario } from '@apa/shared'
+import { Usuario } from './Usuario'
+import { Associado } from './Associado'
+import { DomainError } from '../shared/DomainError'
 
 const makeUsuarioAssociado = () =>
   Usuario.create({ nome: 'João Silva', email: 'joao@apa.com.br', role: RoleUsuario.ASSOCIADO })
