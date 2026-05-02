@@ -9,6 +9,14 @@ import {
   Patch,
   Post,
 } from '@nestjs/common'
+import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 import { RoleUsuario } from '@apa/shared'
 import {
   Associado,
@@ -29,6 +37,8 @@ import {
   LISTAR_ASSOCIADOS_USE_CASE,
 } from '../../../identidade.tokens'
 
+@ApiTags('Identidade')
+@ApiBearerAuth('JWT')
 @Controller('identidade')
 @Roles(RoleUsuario.ADMIN)
 export class IdentidadeController {
@@ -45,6 +55,11 @@ export class IdentidadeController {
     private readonly desativarUsuario: IDesativarUsuarioUseCase,
   ) {}
 
+  @ApiOperation({ summary: 'Criar usuário', description: 'Cria o usuário no banco e a credencial no Supabase Auth.' })
+  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
+  @ApiResponse({ status: 409, description: 'E-mail já cadastrado.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão (requer ADMIN).' })
   @Post('usuarios')
   @HttpCode(HttpStatus.CREATED)
   async criarUsuarioHandler(@Body() dto: CriarUsuarioDto) {
@@ -52,6 +67,10 @@ export class IdentidadeController {
     return this.toUsuarioResponse(usuario)
   }
 
+  @ApiOperation({ summary: 'Vincular associado', description: 'Vincula um usuário existente como associado da APA.' })
+  @ApiResponse({ status: 201, description: 'Associado criado com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  @ApiResponse({ status: 409, description: 'Usuário já é associado.' })
   @Post('associados')
   @HttpCode(HttpStatus.CREATED)
   async criarAssociadoHandler(@Body() dto: CriarAssociadoDto) {
@@ -63,18 +82,28 @@ export class IdentidadeController {
     return this.toAssociadoResponse(associado)
   }
 
+  @ApiOperation({ summary: 'Listar associados', description: 'Retorna todos os associados com dados do usuário vinculado.' })
+  @ApiResponse({ status: 200, description: 'Lista de associados.' })
   @Get('associados')
   async listarAssociadosHandler() {
     const lista = await this.listarAssociados.execute()
     return lista.map((a) => this.toAssociadoResponse(a))
   }
 
+  @ApiOperation({ summary: 'Ativar usuário', description: 'Remove o ban no Supabase Auth e marca o usuário como ativo.' })
+  @ApiParam({ name: 'id', description: 'UUID do usuário' })
+  @ApiNoContentResponse({ description: 'Usuário ativado.' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
   @Patch('usuarios/:id/ativar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async ativarUsuarioHandler(@Param('id') id: string) {
     await this.ativarUsuario.execute({ usuarioId: id })
   }
 
+  @ApiOperation({ summary: 'Desativar usuário', description: 'Aplica ban permanente no Supabase Auth e marca o usuário como inativo.' })
+  @ApiParam({ name: 'id', description: 'UUID do usuário' })
+  @ApiNoContentResponse({ description: 'Usuário desativado.' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
   @Patch('usuarios/:id/desativar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async desativarUsuarioHandler(@Param('id') id: string) {

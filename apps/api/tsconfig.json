@@ -1,7 +1,6 @@
 {
   "extends": "@repo/typescript-config/nestjs",
   "compilerOptions": {
-    "outDir": "./dist",
     "rootDir": "../../",
     "noEmit": true,
     "sourceMap": true,

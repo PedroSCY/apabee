@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CriarCredencialInput, IProvedorAuth } from '@apa/core'
 
@@ -6,10 +7,10 @@ import { CriarCredencialInput, IProvedorAuth } from '@apa/core'
 export class SupabaseProvedorAuth implements IProvedorAuth {
   private readonly client: SupabaseClient
 
-  constructor() {
+  constructor(config: ConfigService) {
     this.client = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      config.get<string>('SUPABASE_PROJECT_URL')!,
+      config.get<string>('SUPABASE_SERVICE_KEY')!,
     )
   }
 

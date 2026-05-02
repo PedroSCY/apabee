@@ -1,2 +1,2 @@
-export * from './entities';
-export * from './ports/out';
+﻿export * from './entities/index';
+export * from './ports/out/index';

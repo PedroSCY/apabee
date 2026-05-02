@@ -3,8 +3,8 @@
   "ui": "tui",
   "globalEnv": [
     "DATABASE_URL",
-    "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_PROJECT_URL",
+    "SUPABASE_SERVICE_KEY",
     "JWT_SECRET",
     "PORT"
   ],
@@ -26,7 +26,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["^build"]
     }
   }
 }

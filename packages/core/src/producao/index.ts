@@ -1,3 +1,3 @@
-export * from './entities';
-export * from './ports/in';
-export * from './ports/out';
+﻿export * from './entities/index';
+export * from './ports/in/index';
+export * from './ports/out/index';
