@@ -1,0 +1,5 @@
+export { CriarUsuarioUseCase } from './CriarUsuarioUseCase'
+export { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
+export { ListarAssociadosUseCase } from './ListarAssociadosUseCase'
+export { AtivarUsuarioUseCase } from './AtivarUsuarioUseCase'
+export { DesativarUsuarioUseCase } from './DesativarUsuarioUseCase'

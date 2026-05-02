@@ -2,12 +2,17 @@
   "extends": "@repo/typescript-config/nestjs",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "../../",
+    "noEmit": true,
     "sourceMap": true,
-    "incremental": true,
-    "preserveSymlinks": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "paths": {
+      "@apa/core": ["../../packages/core/src"],
+      "@apa/core/*": ["../../packages/core/src/*"],
+      "@apa/shared": ["../../packages/shared/src"],
+      "@apa/shared/*": ["../../packages/shared/src/*"]
+    }
   },
-  "include": ["src", "test"],
+  "include": ["src", "test", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,4 +1,13 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "preserveSymlinks": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "paths": {}
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,0 +1,79 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common'
+import { RoleUsuario } from '@apa/shared'
+import { Associado, IAssociadoRepository, IUsuarioRepository, Usuario } from '@apa/core'
+import { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
+
+const makeUsuario = (role = RoleUsuario.ASSOCIADO): Usuario =>
+  new Usuario({
+    id: 'usr-1',
+    nome: 'João',
+    email: 'joao@email.com',
+    role,
+    ativo: true,
+    criadoEm: new Date(),
+  })
+
+const makeUsuarioRepo = (): jest.Mocked<IUsuarioRepository> => ({
+  findById: jest.fn(),
+  findByEmail: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+})
+
+const makeAssociadoRepo = (): jest.Mocked<IAssociadoRepository> => ({
+  findById: jest.fn(),
+  findAll: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+})
+
+describe('CriarAssociadoUseCase', () => {
+  let useCase: CriarAssociadoUseCase
+  let usuarioRepo: jest.Mocked<IUsuarioRepository>
+  let associadoRepo: jest.Mocked<IAssociadoRepository>
+
+  beforeEach(() => {
+    usuarioRepo = makeUsuarioRepo()
+    associadoRepo = makeAssociadoRepo()
+    useCase = new CriarAssociadoUseCase(usuarioRepo, associadoRepo)
+  })
+
+  it('cria associado para usuário com role ASSOCIADO', async () => {
+    const usuario = makeUsuario(RoleUsuario.ASSOCIADO)
+    usuarioRepo.findById.mockResolvedValue(usuario)
+    const saved = new Associado({ id: 'asc-1', usuario, dataIngresso: new Date() })
+    associadoRepo.save.mockResolvedValue(saved)
+
+    const result = await useCase.execute({ usuarioId: 'usr-1' })
+
+    expect(usuarioRepo.findById).toHaveBeenCalledWith('usr-1')
+    expect(associadoRepo.save).toHaveBeenCalled()
+    expect(result).toBe(saved)
+  })
+
+  it('usa dataIngresso fornecida quando presente', async () => {
+    const usuario = makeUsuario()
+    usuarioRepo.findById.mockResolvedValue(usuario)
+    associadoRepo.save.mockImplementation(async (a) => a)
+    const data = new Date('2024-01-15')
+
+    const result = await useCase.execute({ usuarioId: 'usr-1', dataIngresso: data })
+
+    expect(result.dataIngresso).toBe(data)
+  })
+
+  it('lança NotFoundException quando usuário não existe', async () => {
+    usuarioRepo.findById.mockResolvedValue(null)
+
+    await expect(useCase.execute({ usuarioId: 'nao-existe' })).rejects.toThrow(NotFoundException)
+    expect(associadoRepo.save).not.toHaveBeenCalled()
+  })
+
+  it('lança BadRequestException quando usuário tem role ADMIN', async () => {
+    usuarioRepo.findById.mockResolvedValue(makeUsuario(RoleUsuario.ADMIN))
+
+    await expect(useCase.execute({ usuarioId: 'usr-1' })).rejects.toThrow(BadRequestException)
+    expect(associadoRepo.save).not.toHaveBeenCalled()
+  })
+})
