@@ -61,3 +61,34 @@ export enum CategoriaDocumento {
   RELATORIO = 'RELATORIO',
   OUTRO = 'OUTRO',
 }
+
+export enum StatusAssociado {
+  ATIVO = 'ATIVO',
+  PENDENTE = 'PENDENTE',
+  SUSPENSO = 'SUSPENSO',
+  INATIVO = 'INATIVO',
+}
+
+export enum StatusPatrimonio {
+  DISPONIVEL = 'DISPONIVEL',
+  EM_USO = 'EM_USO',
+  MANUTENCAO = 'MANUTENCAO',
+}
+
+export enum StatusLote {
+  ABERTO = 'ABERTO',
+  FECHADO = 'FECHADO',
+}
+
+export enum StatusProduto {
+  RASCUNHO = 'RASCUNHO',
+  PUBLICADO = 'PUBLICADO',
+  ARQUIVADO = 'ARQUIVADO',
+}
+
+export enum StatusSolicitacao {
+  PENDENTE = 'PENDENTE',
+  APROVADO = 'APROVADO',
+  NA_FILA = 'NA_FILA',
+  REPROVADO = 'REPROVADO',
+}

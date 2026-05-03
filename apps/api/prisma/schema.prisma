@@ -70,6 +70,37 @@ enum CategoriaDocumento {
   OUTRO
 }
 
+enum StatusAssociado {
+  ATIVO
+  PENDENTE
+  SUSPENSO
+  INATIVO
+}
+
+enum StatusPatrimonio {
+  DISPONIVEL
+  EM_USO
+  MANUTENCAO
+}
+
+enum StatusLote {
+  ABERTO
+  FECHADO
+}
+
+enum StatusProduto {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+}
+
+enum StatusSolicitacao {
+  PENDENTE
+  APROVADO
+  NA_FILA
+  REPROVADO
+}
+
 model Usuario {
   id        String      @id @default(uuid())
   nome      String
@@ -86,10 +117,11 @@ model Usuario {
 }
 
 model Associado {
-  id           String   @id @default(uuid())
-  usuarioId    String   @unique @map("usuario_id")
-  dataIngresso DateTime @map("data_ingresso")
+  id           String          @id @default(uuid())
+  usuarioId    String          @unique @map("usuario_id")
+  dataIngresso DateTime        @map("data_ingresso")
   observacoes  String?
+  status       StatusAssociado @default(ATIVO)
 
   usuario               Usuario                @relation(fields: [usuarioId], references: [id])
   atribuicoesPatrimonio AtribuicaoPatrimonio[]
@@ -103,12 +135,12 @@ model Associado {
 }
 
 model Equipamento {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   nome        String
-  numeroSerie String?  @map("numero_serie")
+  numeroSerie String?         @map("numero_serie")
   descricao   String?
-  emUso       Boolean  @default(false) @map("em_uso")
-  criadoEm    DateTime @default(now()) @map("criado_em")
+  status      StatusPatrimonio @default(DISPONIVEL)
+  criadoEm    DateTime        @default(now()) @map("criado_em")
 
   atribuicoes AtribuicaoPatrimonio[]
   colheitas   Colheita[]
@@ -117,12 +149,12 @@ model Equipamento {
 }
 
 model Insumo {
-  id        String          @id @default(uuid())
+  id        String           @id @default(uuid())
   nome      String
   categoria CategoriaInsumo
   descricao String?
-  emUso     Boolean         @default(false) @map("em_uso")
-  criadoEm  DateTime        @default(now()) @map("criado_em")
+  status    StatusPatrimonio @default(DISPONIVEL)
+  criadoEm  DateTime         @default(now()) @map("criado_em")
 
   atribuicoes AtribuicaoPatrimonio[]
 
@@ -161,13 +193,13 @@ model TipoMateriaPrima {
 }
 
 model LoteProducao {
-  id         String    @id @default(uuid())
+  id         String     @id @default(uuid())
   tipo       TipoLote
   periodo    String
-  dataInicio DateTime  @map("data_inicio")
-  dataFim    DateTime? @map("data_fim")
-  ativo      Boolean   @default(true)
-  custoTotal Decimal   @default(0) @map("custo_total") @db.Decimal(10, 2)
+  dataInicio DateTime   @map("data_inicio")
+  dataFim    DateTime?  @map("data_fim")
+  status     StatusLote @default(ABERTO)
+  custoTotal Decimal    @default(0) @map("custo_total") @db.Decimal(10, 2)
 
   colheitas             Colheita[]
   participacoes         ParticipacaoLote[]
@@ -241,15 +273,15 @@ model MovimentacaoEstoque {
 }
 
 model Produto {
-  id           String   @id @default(uuid())
+  id           String        @id @default(uuid())
   nome         String
-  slug         String   @unique
+  slug         String        @unique
   descricao    String
-  preco        Decimal  @db.Decimal(10, 2)
-  imagemUrl    String?  @map("imagem_url")
-  ativo        Boolean  @default(true)
-  loteOrigemId String?  @map("lote_origem_id")
-  criadoEm     DateTime @default(now()) @map("criado_em")
+  preco        Decimal       @db.Decimal(10, 2)
+  imagemUrl    String?       @map("imagem_url")
+  status       StatusProduto @default(RASCUNHO)
+  loteOrigemId String?       @map("lote_origem_id")
+  criadoEm     DateTime      @default(now()) @map("criado_em")
 
   loteOrigem  LoteProducao?      @relation(fields: [loteOrigemId], references: [id])
   estoque     EstoqueProduto?

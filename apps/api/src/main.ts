@@ -3,13 +3,19 @@ import { ValidationPipe } from '@nestjs/common'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
+import helmet from '@fastify/helmet'
 import { AppModule } from './app.module'
+import { GlobalExceptionFilter } from './shared/filters/http-exception.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   )
+
+  await app.register(helmet, { contentSecurityPolicy: false })
+
+  app.useGlobalFilters(new GlobalExceptionFilter())
 
   const config = app.get(ConfigService)
 

@@ -1,5 +1,5 @@
 import { RoleUsuario } from '@apa/shared'
-import { Usuario } from './usuario'
+import { Usuario } from './Usuario'
 
 const makeUsuario = (overrides = {}) =>
   new Usuario({

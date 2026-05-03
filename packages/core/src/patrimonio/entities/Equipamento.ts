@@ -1,35 +1,41 @@
+import { StatusPatrimonio } from '@apa/shared'
+
 interface EquipamentoProps {
-  id: string;
-  nome: string;
-  numeroSerie?: string;
-  descricao?: string;
-  emUso: boolean;
-  criadoEm: Date;
+  id: string
+  nome: string
+  numeroSerie?: string
+  descricao?: string
+  status: StatusPatrimonio
+  criadoEm: Date
 }
 
 export class Equipamento {
-  private readonly props: EquipamentoProps;
+  private readonly props: EquipamentoProps
 
   constructor(props: EquipamentoProps) {
-    this.props = props;
+    this.props = props
   }
 
-  get id(): string { return this.props.id; }
-  get nome(): string { return this.props.nome; }
-  get numeroSerie(): string | undefined { return this.props.numeroSerie; }
-  get descricao(): string | undefined { return this.props.descricao; }
-  get emUso(): boolean { return this.props.emUso; }
-  get criadoEm(): Date { return this.props.criadoEm; }
+  get id(): string { return this.props.id }
+  get nome(): string { return this.props.nome }
+  get numeroSerie(): string | undefined { return this.props.numeroSerie }
+  get descricao(): string | undefined { return this.props.descricao }
+  get status(): StatusPatrimonio { return this.props.status }
+  get criadoEm(): Date { return this.props.criadoEm }
 
   estaDisponivel(): boolean {
-    return !this.props.emUso;
+    return this.props.status === StatusPatrimonio.DISPONIVEL
   }
 
   marcarEmUso(): Equipamento {
-    return new Equipamento({ ...this.props, emUso: true });
+    return new Equipamento({ ...this.props, status: StatusPatrimonio.EM_USO })
   }
 
   marcarDisponivel(): Equipamento {
-    return new Equipamento({ ...this.props, emUso: false });
+    return new Equipamento({ ...this.props, status: StatusPatrimonio.DISPONIVEL })
+  }
+
+  colocarEmManutencao(): Equipamento {
+    return new Equipamento({ ...this.props, status: StatusPatrimonio.MANUTENCAO })
   }
 }

@@ -1,4 +1,4 @@
-import { TipoLote } from '@apa/shared'
+import { TipoLote, StatusLote } from '@apa/shared'
 
 interface LoteProducaoProps {
   id: string
@@ -6,7 +6,7 @@ interface LoteProducaoProps {
   periodo: string
   dataInicio: Date
   dataFim?: Date
-  ativo: boolean
+  status: StatusLote
   custoTotal: number
 }
 
@@ -17,30 +17,16 @@ export class LoteProducao {
     this.props = props
   }
 
-  get id(): string {
-    return this.props.id
-  }
-  get tipo(): TipoLote {
-    return this.props.tipo
-  }
-  get periodo(): string {
-    return this.props.periodo
-  }
-  get dataInicio(): Date {
-    return this.props.dataInicio
-  }
-  get dataFim(): Date | undefined {
-    return this.props.dataFim
-  }
-  get ativo(): boolean {
-    return this.props.ativo
-  }
-  get custoTotal(): number {
-    return this.props.custoTotal
-  }
+  get id(): string { return this.props.id }
+  get tipo(): TipoLote { return this.props.tipo }
+  get periodo(): string { return this.props.periodo }
+  get dataInicio(): Date { return this.props.dataInicio }
+  get dataFim(): Date | undefined { return this.props.dataFim }
+  get status(): StatusLote { return this.props.status }
+  get custoTotal(): number { return this.props.custoTotal }
 
   estaAberto(): boolean {
-    return this.props.ativo
+    return this.props.status === StatusLote.ABERTO
   }
 
   encerrar(): LoteProducao {
@@ -49,7 +35,7 @@ export class LoteProducao {
     }
     return new LoteProducao({
       ...this.props,
-      ativo: false,
+      status: StatusLote.FECHADO,
       dataFim: new Date(),
     })
   }

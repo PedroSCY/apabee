@@ -8,16 +8,16 @@ class EnvVars {
   PORT: number = 3000
 
   @IsString()
-  DATABASE_URL: string
+  DATABASE_URL!: string
 
   @IsUrl({ require_tld: false })
-  SUPABASE_PROJECT_URL: string
+  SUPABASE_PROJECT_URL!: string
 
   @IsString()
-  SUPABASE_SERVICE_KEY: string
+  SUPABASE_SERVICE_KEY!: string
 
   @IsString()
-  JWT_SECRET: string
+  JWT_SECRET!: string
 }
 
 export function validateEnv(config: Record<string, unknown>) {

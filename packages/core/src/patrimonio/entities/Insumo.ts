@@ -1,11 +1,11 @@
-import { CategoriaInsumo } from '@apa/shared'
+import { CategoriaInsumo, StatusPatrimonio } from '@apa/shared'
 
 interface InsumoProps {
   id: string
   nome: string
   categoria: CategoriaInsumo
   descricao?: string
-  emUso: boolean
+  status: StatusPatrimonio
   criadoEm: Date
 }
 
@@ -16,34 +16,26 @@ export class Insumo {
     this.props = props
   }
 
-  get id(): string {
-    return this.props.id
-  }
-  get nome(): string {
-    return this.props.nome
-  }
-  get categoria(): CategoriaInsumo {
-    return this.props.categoria
-  }
-  get descricao(): string | undefined {
-    return this.props.descricao
-  }
-  get emUso(): boolean {
-    return this.props.emUso
-  }
-  get criadoEm(): Date {
-    return this.props.criadoEm
-  }
+  get id(): string { return this.props.id }
+  get nome(): string { return this.props.nome }
+  get categoria(): CategoriaInsumo { return this.props.categoria }
+  get descricao(): string | undefined { return this.props.descricao }
+  get status(): StatusPatrimonio { return this.props.status }
+  get criadoEm(): Date { return this.props.criadoEm }
 
   estaDisponivel(): boolean {
-    return !this.props.emUso
+    return this.props.status === StatusPatrimonio.DISPONIVEL
   }
 
   marcarEmUso(): Insumo {
-    return new Insumo({ ...this.props, emUso: true })
+    return new Insumo({ ...this.props, status: StatusPatrimonio.EM_USO })
   }
 
   marcarDisponivel(): Insumo {
-    return new Insumo({ ...this.props, emUso: false })
+    return new Insumo({ ...this.props, status: StatusPatrimonio.DISPONIVEL })
+  }
+
+  colocarEmManutencao(): Insumo {
+    return new Insumo({ ...this.props, status: StatusPatrimonio.MANUTENCAO })
   }
 }
