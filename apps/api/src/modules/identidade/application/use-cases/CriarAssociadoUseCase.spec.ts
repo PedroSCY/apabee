@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { RoleUsuario } from '@apa/shared'
+import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, IUsuarioRepository, Usuario } from '@apa/core'
 import { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
 
@@ -42,7 +42,7 @@ describe('CriarAssociadoUseCase', () => {
   it('cria associado para usuário com role ASSOCIADO', async () => {
     const usuario = makeUsuario(RoleUsuario.ASSOCIADO)
     usuarioRepo.findById.mockResolvedValue(usuario)
-    const saved = new Associado({ id: 'asc-1', usuario, dataIngresso: new Date() })
+    const saved = new Associado({ id: 'asc-1', usuario, dataIngresso: new Date(), status: StatusAssociado.ATIVO })
     associadoRepo.save.mockResolvedValue(saved)
 
     const result = await useCase.execute({ usuarioId: 'usr-1' })

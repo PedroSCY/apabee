@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { validateEnv } from './shared/config/env.validation'
 import { SharedModule } from './shared/shared.module'
 import { IdentidadeModule } from './modules/identidade/identidade.module'
+import { PatrimonioModule } from './modules/patrimonio/patrimonio.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -13,6 +14,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 30 }]),
     SharedModule,
     IdentidadeModule,
+    PatrimonioModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -38,4 +38,13 @@ export class Equipamento {
   colocarEmManutencao(): Equipamento {
     return new Equipamento({ ...this.props, status: StatusPatrimonio.MANUTENCAO })
   }
+
+  atualizarDados(input: { nome?: string; numeroSerie?: string; descricao?: string }): Equipamento {
+    return new Equipamento({
+      ...this.props,
+      nome: input.nome ?? this.props.nome,
+      numeroSerie: input.numeroSerie ?? this.props.numeroSerie,
+      descricao: input.descricao ?? this.props.descricao,
+    })
+  }
 }

@@ -1,4 +1,4 @@
-import { RoleUsuario } from '@apa/shared'
+import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, Usuario } from '@apa/core'
 import { ListarAssociadosUseCase } from './ListarAssociadosUseCase'
 
@@ -14,6 +14,7 @@ const makeAssociado = (id: string): Associado =>
       criadoEm: new Date(),
     }),
     dataIngresso: new Date(),
+    status: StatusAssociado.ATIVO,
   })
 
 const makeRepo = (): jest.Mocked<IAssociadoRepository> => ({
