@@ -54,4 +54,8 @@ export class Usuario {
   alterarRole(role: RoleUsuario): Usuario {
     return new Usuario({ ...this.props, role })
   }
+
+  toJSON(): UsuarioProps {
+    return { ...this.props }
+  }
 }

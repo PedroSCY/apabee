@@ -47,4 +47,8 @@ export class Equipamento {
       descricao: input.descricao ?? this.props.descricao,
     })
   }
+
+  toJSON(): EquipamentoProps {
+    return { ...this.props }
+  }
 }

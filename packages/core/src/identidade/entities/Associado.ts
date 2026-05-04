@@ -43,4 +43,8 @@ export class Associado {
   marcarPendente(): Associado {
     return new Associado({ ...this.props, status: StatusAssociado.PENDENTE })
   }
+
+  toJSON(): AssociadoProps {
+    return { ...this.props }
+  }
 }

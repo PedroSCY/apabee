@@ -46,4 +46,8 @@ export class Insumo {
       descricao: input.descricao ?? this.props.descricao,
     })
   }
+
+  toJSON(): InsumoProps {
+    return { ...this.props }
+  }
 }

@@ -68,4 +68,8 @@ export class AtribuicaoPatrimonio {
     const diff = fim.getTime() - this.props.dataInicio.getTime()
     return Math.floor(diff / 86_400_000)
   }
+
+  toJSON(): AtribuicaoPatrimonioProps {
+    return { ...this.props }
+  }
 }
