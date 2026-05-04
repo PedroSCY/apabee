@@ -38,4 +38,12 @@ export class Insumo {
   colocarEmManutencao(): Insumo {
     return new Insumo({ ...this.props, status: StatusPatrimonio.MANUTENCAO })
   }
+
+  atualizarDados(input: { nome?: string; descricao?: string }): Insumo {
+    return new Insumo({
+      ...this.props,
+      nome: input.nome ?? this.props.nome,
+      descricao: input.descricao ?? this.props.descricao,
+    })
+  }
 }

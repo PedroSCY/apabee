@@ -1,2 +1,5 @@
 export * from './CriarEquipamentoDto'
 export * from './AtualizarEquipamentoDto'
+export * from './CriarInsumoDto'
+export * from './AtualizarInsumoDto'
+export * from './AtribuirPatrimonioDto'
