@@ -26,12 +26,18 @@ export interface CriarAssociadoInput {
 export interface CriarUsuarioInput {
   nome: string
   email: string
-  senha: string
   role?: string
+  telefone?: string
 }
 
 export const identidadeApi = {
   listarAssociados: () => apiFetch<AssociadoResponse[]>('/identidade/associados'),
+
+  criarUsuario: (input: CriarUsuarioInput) =>
+    apiFetch<UsuarioResponse>('/identidade/usuarios', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   criarAssociado: (input: CriarAssociadoInput) =>
     apiFetch<AssociadoResponse>('/identidade/associados', {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { identidadeApi, type CriarAssociadoInput } from '@/lib/api/identidade'
+import { identidadeApi, type CriarAssociadoInput, type CriarUsuarioInput } from '@/lib/api/identidade'
 
 export const ASSOCIADOS_KEY = ['associados'] as const
 
@@ -9,6 +9,16 @@ export function useAssociados() {
   return useQuery({
     queryKey: ASSOCIADOS_KEY,
     queryFn: identidadeApi.listarAssociados,
+  })
+}
+
+export function useCriarUsuario() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CriarUsuarioInput) => identidadeApi.criarUsuario(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ASSOCIADOS_KEY })
+    },
   })
 }
 

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/shared/Sidebar'
+import { DashboardShell } from '@/components/shared/DashboardShell'
 import { ThemeBootstrap } from '@/components/theme/ThemeBootstrap'
 
 export default async function DashboardLayout({
@@ -16,12 +16,15 @@ export default async function DashboardLayout({
   if (!user) redirect('/login')
 
   const role = (user.app_metadata?.role as 'ADMIN' | 'ASSOCIADO') ?? 'ASSOCIADO'
+  const userName = (user.user_metadata?.nome as string | undefined) ?? ''
+  const userEmail = user.email ?? ''
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <>
       <ThemeBootstrap />
-      <Sidebar role={role} userEmail={user.email ?? ''} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
-    </div>
+      <DashboardShell role={role} userName={userName} userEmail={userEmail}>
+        {children}
+      </DashboardShell>
+    </>
   )
 }

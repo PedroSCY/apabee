@@ -4,10 +4,12 @@ import * as React from 'react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { UserPlus } from 'lucide-react'
 import { useAssociados, useAtivarUsuario, useDesativarUsuario } from '@/hooks/useAssociados'
-import { DataTable, StatusBadge, ConfirmDialog, EmptyState, type Column } from '@/components/shared'
+import { DataTable, StatusBadge, ConfirmDialog, type Column } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import type { AssociadoResponse } from '@/lib/api/identidade'
+import { CadastrarAssociadoDialog } from './CadastrarAssociadoDialog'
 
 type StatusFilter = 'TODOS' | 'ATIVO' | 'PENDENTE' | 'SUSPENSO' | 'INATIVO'
 
@@ -48,6 +50,7 @@ function toRow(a: AssociadoResponse): AssociadoRow {
 export function AssociadosClient() {
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('TODOS')
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
+  const [dialogOpen, setDialogOpen] = React.useState(false)
 
   const { data, isLoading } = useAssociados()
   const { mutateAsync: ativar, isPending: ativando } = useAtivarUsuario()
@@ -118,8 +121,9 @@ export function AssociadosClient() {
 
   return (
     <>
-      {/* Filtro de status */}
-      <div className="flex flex-wrap gap-2">
+      {/* Toolbar: filtros + ação */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -133,6 +137,12 @@ export function AssociadosClient() {
             {f.label}
           </button>
         ))}
+        </div>
+
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Novo Associado
+        </Button>
       </div>
 
       <DataTable
@@ -150,6 +160,8 @@ export function AssociadosClient() {
             : 'Cadastre o primeiro associado para começar.'
         }
       />
+
+      <CadastrarAssociadoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
       <ConfirmDialog
         open={confirmAction !== null}

@@ -1,4 +1,6 @@
 export { Sidebar } from './Sidebar'
+export { Header } from './Header'
+export { DashboardShell } from './DashboardShell'
 export { PageHeader } from './PageHeader'
 export { StatusBadge } from './StatusBadge'
 export { EmptyState } from './EmptyState'

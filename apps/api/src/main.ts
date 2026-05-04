@@ -4,6 +4,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
 import helmet from '@fastify/helmet'
+import cors from '@fastify/cors'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './shared/filters/http-exception.filter'
 
@@ -13,11 +14,30 @@ async function bootstrap() {
     new FastifyAdapter(),
   )
 
+  const config = app.get(ConfigService)
+
+  // CORS — lê origens permitidas do env para funcionar em dev e em prod
+  const allowedOrigins = (config.get<string>('ALLOWED_ORIGINS') ?? 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim())
+
+  await app.register(cors, {
+    origin: (origin: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
+      // Permite chamadas sem origin (ex: Swagger local, curl, Postman)
+      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
+        cb(null, true)
+      } else {
+        cb(new Error('CORS: origem não permitida'), false)
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+
   await app.register(helmet, { contentSecurityPolicy: false })
 
   app.useGlobalFilters(new GlobalExceptionFilter())
-
-  const config = app.get(ConfigService)
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -45,6 +65,7 @@ async function bootstrap() {
 
   console.log(`\nAPI rodando em: http://localhost:${port}`)
   console.log(`Swagger disponível em: http://localhost:${port}/api/docs\n`)
+  console.log(`CORS permitido para: ${allowedOrigins.join(', ')}\n`)
 }
 
 bootstrap()
