@@ -6,16 +6,16 @@ export class AtribuirPatrimonioDto {
   @ApiProperty({ example: 'uuid-do-equipamento-ou-insumo' })
   @IsString()
   @IsNotEmpty()
-  patrimonioId: string
+  patrimonioId!: string
 
   @ApiProperty({ enum: TipoPatrimonio, example: TipoPatrimonio.EQUIPAMENTO })
   @IsEnum(TipoPatrimonio)
-  tipoPatrimonio: TipoPatrimonio
+  tipoPatrimonio!: TipoPatrimonio
 
   @ApiProperty({ example: 'uuid-do-associado' })
   @IsString()
   @IsNotEmpty()
-  associadoId: string
+  associadoId!: string
 
   @ApiPropertyOptional({ example: 'Utilização no apiário da Fazenda Boa Vista' })
   @IsOptional()

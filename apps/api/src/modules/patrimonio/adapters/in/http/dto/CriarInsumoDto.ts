@@ -7,11 +7,11 @@ export class CriarInsumoDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
-  nome: string
+  nome!: string
 
   @ApiProperty({ enum: CategoriaInsumo, example: CategoriaInsumo.FERRAMENTA })
   @IsEnum(CategoriaInsumo)
-  categoria: CategoriaInsumo
+  categoria!: CategoriaInsumo
 
   @ApiPropertyOptional({ example: 'Fumigador metálico com fole de couro' })
   @IsOptional()

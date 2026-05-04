@@ -6,7 +6,7 @@ export class CriarEquipamentoDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
-  nome: string
+  nome!: string
 
   @ApiPropertyOptional({ example: 'SN-2024-001' })
   @IsOptional()

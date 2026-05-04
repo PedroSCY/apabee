@@ -38,4 +38,6 @@ export class Documento {
   tamanhoEmMB(): number {
     return Math.round((this.props.tamanhoBytes / 1_048_576) * 100) / 100;
   }
+
+  toJSON() { return { ...this.props } }
 }

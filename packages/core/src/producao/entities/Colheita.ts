@@ -47,6 +47,9 @@ export class Colheita {
   get observacao(): string | undefined {
     return this.props.observacao
   }
+  get criadoEm(): Date {
+    return this.props.criadoEm
+  }
 
   validar(): boolean {
     return this.props.volume > 0

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Associado as PrismaAssociado, Usuario as PrismaUsuario } from '@prisma/client'
 import { Associado, IAssociadoRepository, Usuario } from '@apa/core'
-import { RoleUsuario } from '@apa/shared'
+import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 type AssociadoWithUsuario = PrismaAssociado & { usuario: PrismaUsuario }
@@ -68,6 +68,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
       usuario,
       dataIngresso: record.dataIngresso,
       observacoes: record.observacoes ?? undefined,
+      status: record.status as StatusAssociado,
     })
   }
 }

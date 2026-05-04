@@ -14,4 +14,6 @@ export class ParticipanteAta {
   get id(): string { return this.props.id; }
   get ataId(): string { return this.props.ataId; }
   get associadoId(): string { return this.props.associadoId; }
+
+  toJSON() { return { ...this.props } }
 }
