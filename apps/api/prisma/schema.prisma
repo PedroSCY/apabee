@@ -427,13 +427,19 @@ model Documento {
 }
 
 model ConfiguracaoAssociacao {
-  id           String   @id @default(uuid())
-  nomeExibido  String   @map("nome_exibido")
-  cnpj         String?
-  email        String?
-  telefone     String?
-  endereco     String?
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  id                    String   @id @default(uuid())
+  nomeExibido           String   @map("nome_exibido")
+  cnpj                  String?
+  email                 String?
+  telefone              String?
+  endereco              String?
+  corFundo              String?  @map("cor_fundo")
+  corTexto              String?  @map("cor_texto")
+  corPrimaria           String?  @map("cor_primaria")
+  corPrimariaForeground String?  @map("cor_primaria_foreground")
+  corSidebar            String?  @map("cor_sidebar")
+  corAccent             String?  @map("cor_accent")
+  atualizadoEm          DateTime @updatedAt @map("atualizado_em")
 
   @@map("configuracao_associacao")
 }

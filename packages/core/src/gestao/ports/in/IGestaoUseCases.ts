@@ -1,6 +1,7 @@
 import type { Ata } from '../../entities/Ata'
 import type { Documento } from '../../entities/Documento'
 import type { ParticipanteAta } from '../../entities/ParticipanteAta'
+import type { ConfiguracaoAssociacao } from '../../entities/ConfiguracaoAssociacao'
 import type { CategoriaDocumento } from '@apa/shared'
 
 // ── Ata ──────────────────────────────────────────────────────────────────────
@@ -70,4 +71,28 @@ export interface IDespublicarDocumentoUseCase {
 
 export interface IExcluirDocumentoUseCase {
   execute(id: string): Promise<void>
+}
+
+// ── ConfiguracaoAssociacao ────────────────────────────────────────────────────
+
+export interface AtualizarConfiguracaoInput {
+  nomeExibido?: string
+  cnpj?: string
+  email?: string
+  telefone?: string
+  endereco?: string
+  corFundo?: string
+  corTexto?: string
+  corPrimaria?: string
+  corPrimariaForeground?: string
+  corSidebar?: string
+  corAccent?: string
+}
+
+export interface IObterConfiguracaoUseCase {
+  execute(): Promise<ConfiguracaoAssociacao>
+}
+
+export interface IAtualizarConfiguracaoUseCase {
+  execute(input: AtualizarConfiguracaoInput): Promise<ConfiguracaoAssociacao>
 }

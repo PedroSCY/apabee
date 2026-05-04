@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common'
 import { PrismaModule } from '../../shared/database/prisma.module'
 import { AtasController } from './adapters/in/http/AtasController'
 import { DocumentosController } from './adapters/in/http/DocumentosController'
+import { ConfiguracoesController } from './adapters/in/http/ConfiguracoesController'
 import { PrismaAtaRepository } from './adapters/out/persistence/PrismaAtaRepository'
 import { PrismaParticipanteAtaRepository } from './adapters/out/persistence/PrismaParticipanteAtaRepository'
 import { PrismaDocumentoRepository } from './adapters/out/persistence/PrismaDocumentoRepository'
+import { PrismaConfiguracaoAssociacaoRepository } from './adapters/out/persistence/PrismaConfiguracaoAssociacaoRepository'
 import { SupabaseStorageAdapter } from './adapters/out/external/SupabaseStorageAdapter'
 import { CriarAtaUseCase } from './application/use-cases/CriarAtaUseCase'
 import { ListarAtasUseCase } from './application/use-cases/ListarAtasUseCase'
@@ -18,11 +20,14 @@ import { ListarDocumentosUseCase } from './application/use-cases/ListarDocumento
 import { PublicarDocumentoUseCase } from './application/use-cases/PublicarDocumentoUseCase'
 import { DespublicarDocumentoUseCase } from './application/use-cases/DespublicarDocumentoUseCase'
 import { ExcluirDocumentoUseCase } from './application/use-cases/ExcluirDocumentoUseCase'
+import { ObterConfiguracaoUseCase } from './application/use-cases/ObterConfiguracaoUseCase'
+import { AtualizarConfiguracaoUseCase } from './application/use-cases/AtualizarConfiguracaoUseCase'
 import {
   ATA_REPOSITORY,
   PARTICIPANTE_ATA_REPOSITORY,
   DOCUMENTO_REPOSITORY,
   STORAGE_PORT,
+  CONFIGURACAO_REPOSITORY,
   CRIAR_ATA_USE_CASE,
   LISTAR_ATAS_USE_CASE,
   PUBLICAR_ATA_USE_CASE,
@@ -35,17 +40,20 @@ import {
   PUBLICAR_DOCUMENTO_USE_CASE,
   DESPUBLICAR_DOCUMENTO_USE_CASE,
   EXCLUIR_DOCUMENTO_USE_CASE,
+  OBTER_CONFIGURACAO_USE_CASE,
+  ATUALIZAR_CONFIGURACAO_USE_CASE,
 } from './gestao.tokens'
 
 @Module({
   imports: [PrismaModule],
-  controllers: [AtasController, DocumentosController],
+  controllers: [AtasController, DocumentosController, ConfiguracoesController],
   providers: [
     // Repositories
     { provide: ATA_REPOSITORY, useClass: PrismaAtaRepository },
     { provide: PARTICIPANTE_ATA_REPOSITORY, useClass: PrismaParticipanteAtaRepository },
     { provide: DOCUMENTO_REPOSITORY, useClass: PrismaDocumentoRepository },
     { provide: STORAGE_PORT, useClass: SupabaseStorageAdapter },
+    { provide: CONFIGURACAO_REPOSITORY, useClass: PrismaConfiguracaoAssociacaoRepository },
 
     // Ata use cases
     { provide: CRIAR_ATA_USE_CASE, useClass: CriarAtaUseCase },
@@ -62,6 +70,10 @@ import {
     { provide: PUBLICAR_DOCUMENTO_USE_CASE, useClass: PublicarDocumentoUseCase },
     { provide: DESPUBLICAR_DOCUMENTO_USE_CASE, useClass: DespublicarDocumentoUseCase },
     { provide: EXCLUIR_DOCUMENTO_USE_CASE, useClass: ExcluirDocumentoUseCase },
+
+    // Configuração use cases
+    { provide: OBTER_CONFIGURACAO_USE_CASE, useClass: ObterConfiguracaoUseCase },
+    { provide: ATUALIZAR_CONFIGURACAO_USE_CASE, useClass: AtualizarConfiguracaoUseCase },
   ],
 })
 export class GestaoModule {}
