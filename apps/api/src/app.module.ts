@@ -6,6 +6,7 @@ import { validateEnv } from './shared/config/env.validation'
 import { SharedModule } from './shared/shared.module'
 import { IdentidadeModule } from './modules/identidade/identidade.module'
 import { PatrimonioModule } from './modules/patrimonio/patrimonio.module'
+import { ProducaoModule } from './modules/producao/producao.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -15,6 +16,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     SharedModule,
     IdentidadeModule,
     PatrimonioModule,
+    ProducaoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

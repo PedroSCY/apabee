@@ -51,4 +51,6 @@ export class Colheita {
   validar(): boolean {
     return this.props.volume > 0
   }
+
+  toJSON() { return { ...this.props } }
 }

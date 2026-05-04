@@ -26,4 +26,6 @@ export class TipoMateriaPrima {
   get descricao(): string | undefined {
     return this.props.descricao
   }
+
+  toJSON() { return { ...this.props } }
 }

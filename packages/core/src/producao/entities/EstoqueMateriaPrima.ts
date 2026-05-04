@@ -50,4 +50,6 @@ export class EstoqueMateriaPrima {
       atualizadoEm: new Date(),
     })
   }
+
+  toJSON() { return { ...this.props } }
 }

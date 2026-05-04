@@ -24,4 +24,6 @@ export class ParticipacaoLote {
   calcularDireito(faturamentoTotal: number): number {
     return (this.props.percentual / 100) * faturamentoTotal;
   }
+
+  toJSON() { return { ...this.props } }
 }

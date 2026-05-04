@@ -2,6 +2,7 @@ import { TipoMovimentacao } from '@apa/shared';
 
 interface MovimentacaoEstoqueProps {
   id: string;
+  estoqueId: string;
   tipo: TipoMovimentacao;
   quantidade: number;
   referenciaId: string;
@@ -16,6 +17,7 @@ export class MovimentacaoEstoque {
   }
 
   get id(): string { return this.props.id; }
+  get estoqueId(): string { return this.props.estoqueId; }
   get tipo(): TipoMovimentacao { return this.props.tipo; }
   get quantidade(): number { return this.props.quantidade; }
   get referenciaId(): string { return this.props.referenciaId; }
@@ -29,4 +31,6 @@ export class MovimentacaoEstoque {
     const acao = this.isEntrada() ? 'Entrada' : 'Saída';
     return `${acao} de ${this.props.quantidade} unidades — ref: ${this.props.referenciaId}`;
   }
+
+  toJSON() { return { ...this.props } }
 }

@@ -39,4 +39,6 @@ export class LoteProducao {
       dataFim: new Date(),
     })
   }
+
+  toJSON() { return { ...this.props } }
 }

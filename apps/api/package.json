@@ -18,7 +18,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "db:seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "dependencies": {
     "@apa/core": "*",
@@ -65,7 +66,11 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.0",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
+  },
+  "prisma": {
+    "seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -7,6 +7,9 @@
     "SUPABASE_SERVICE_KEY",
     "JWT_SECRET",
     "PORT",
+    "SEED_ADMIN_EMAIL",
+    "SEED_ADMIN_PASSWORD",
+    "SEED_ADMIN_NOME",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "NEXT_PUBLIC_API_URL"
@@ -15,7 +18,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**",".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -23,7 +26,7 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
-    "test":{
+    "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },
