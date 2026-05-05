@@ -101,6 +101,13 @@ enum StatusSolicitacao {
   REPROVADO
 }
 
+enum CategoriaAviso {
+  GERAL
+  URGENTE
+  REUNIAO
+  FINANCEIRO
+}
+
 model Usuario {
   id        String      @id @default(uuid())
   nome      String
@@ -451,4 +458,16 @@ model RelatorioProducao {
   geradoEm   DateTime @default(now()) @map("gerado_em")
 
   @@map("relatorios_producao")
+}
+
+model Aviso {
+  id        String         @id @default(uuid())
+  titulo    String
+  conteudo  String
+  categoria CategoriaAviso @default(GERAL)
+  publicado Boolean        @default(false)
+  fixado    Boolean        @default(false)
+  criadoEm DateTime       @default(now()) @map("criado_em")
+
+  @@map("avisos")
 }

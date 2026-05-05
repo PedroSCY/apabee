@@ -27,6 +27,7 @@ import {
   IAtualizarProdutoUseCase,
   IBuscarProdutoUseCase,
   ICriarProdutoUseCase,
+  IEstoqueProdutoRepository,
   IGerarEstoqueProdutoUseCase,
   IListarProdutosUseCase,
   IPublicarProdutoUseCase,
@@ -39,6 +40,7 @@ import {
   ATUALIZAR_PRODUTO_USE_CASE,
   BUSCAR_PRODUTO_USE_CASE,
   CRIAR_PRODUTO_USE_CASE,
+  ESTOQUE_PRODUTO_REPOSITORY,
   GERAR_ESTOQUE_PRODUTO_USE_CASE,
   LISTAR_PRODUTOS_USE_CASE,
   PUBLICAR_PRODUTO_USE_CASE,
@@ -56,6 +58,7 @@ export class ProdutosController {
     @Inject(PUBLICAR_PRODUTO_USE_CASE) private readonly publicar: IPublicarProdutoUseCase,
     @Inject(ARQUIVAR_PRODUTO_USE_CASE) private readonly arquivar: IArquivarProdutoUseCase,
     @Inject(GERAR_ESTOQUE_PRODUTO_USE_CASE) private readonly gerarEstoque: IGerarEstoqueProdutoUseCase,
+    @Inject(ESTOQUE_PRODUTO_REPOSITORY) private readonly estoqueRepo: IEstoqueProdutoRepository,
   ) {}
 
   @ApiOperation({ summary: 'Criar produto (ADMIN)' })
@@ -74,7 +77,11 @@ export class ProdutosController {
   async listarHandler(@Query('publicos') publicos?: string) {
     const apenasPublicados = publicos === 'true'
     const lista = await this.listar.execute({ apenasPublicados })
-    return lista.map((p) => this.toProdutoResponse(p))
+    const estoques = await Promise.all(lista.map((p) => this.estoqueRepo.findByProduto(p.id)))
+    return lista.map((p, i) => ({
+      ...this.toProdutoResponse(p),
+      quantidadeEstoque: estoques[i]?.quantidadeDisponivel ?? 0,
+    }))
   }
 
   @ApiOperation({ summary: 'Buscar produto por ID' })

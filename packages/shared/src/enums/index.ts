@@ -92,3 +92,10 @@ export enum StatusSolicitacao {
   NA_FILA = 'NA_FILA',
   REPROVADO = 'REPROVADO',
 }
+
+export enum CategoriaAviso {
+  GERAL = 'GERAL',
+  URGENTE = 'URGENTE',
+  REUNIAO = 'REUNIAO',
+  FINANCEIRO = 'FINANCEIRO',
+}
