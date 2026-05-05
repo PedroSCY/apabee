@@ -21,8 +21,14 @@ export class AtribuicaoPatrimonio {
   get id(): string {
     return this.props.id
   }
+  get patrimonioId(): string {
+    return this.props.patrimonioId
+  }
   get insumoId(): string {
     return this.props.patrimonioId
+  }
+  get tipoPatrimonio(): string {
+    return this.props.tipoPatrimonio
   }
   get associadoId(): string {
     return this.props.associadoId

@@ -57,15 +57,16 @@ export class InsumosController {
   @ApiOperation({ summary: 'Criar insumo' })
   @ApiResponse({ status: 201, description: 'Insumo criado.' })
   @Post()
-  async criar(@Body() dto: CriarInsumoDto): Promise<Insumo> {
-    return this.criarInsumo.execute(dto)
+  async criar(@Body() dto: CriarInsumoDto) {
+    return this.toResponse(await this.criarInsumo.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar insumos' })
   @ApiResponse({ status: 200, description: 'Lista de insumos.' })
   @Get()
-  async listar(): Promise<Insumo[]> {
-    return this.listarInsumos.execute()
+  async listar() {
+    const lista = await this.listarInsumos.execute()
+    return lista.map((i) => this.toResponse(i))
   }
 
   @ApiOperation({ summary: 'Buscar insumo por ID' })
@@ -73,19 +74,16 @@ export class InsumosController {
   @ApiResponse({ status: 200, description: 'Insumo encontrado.' })
   @ApiResponse({ status: 404, description: 'Insumo não encontrado.' })
   @Get(':id')
-  async buscar(@Param('id') id: string): Promise<Insumo> {
-    return this.buscarInsumo.execute(id)
+  async buscar(@Param('id') id: string) {
+    return this.toResponse(await this.buscarInsumo.execute(id))
   }
 
   @ApiOperation({ summary: 'Atualizar dados do insumo' })
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Insumo atualizado.' })
   @Patch(':id')
-  async atualizar(
-    @Param('id') id: string,
-    @Body() dto: AtualizarInsumoDto,
-  ): Promise<Insumo> {
-    return this.atualizarInsumo.execute(id, dto)
+  async atualizar(@Param('id') id: string, @Body() dto: AtualizarInsumoDto) {
+    return this.toResponse(await this.atualizarInsumo.execute(id, dto))
   }
 
   @ApiOperation({ summary: 'Colocar insumo em manutenção' })
@@ -95,5 +93,16 @@ export class InsumosController {
   @Patch(':id/manutencao')
   async colocarManutencao(@Param('id') id: string): Promise<void> {
     await this.colocarEmManutencao.execute(id)
+  }
+
+  private toResponse(i: Insumo) {
+    return {
+      id: i.id,
+      nome: i.nome,
+      categoria: i.categoria,
+      descricao: i.descricao,
+      status: i.status,
+      criadoEm: i.criadoEm,
+    }
   }
 }

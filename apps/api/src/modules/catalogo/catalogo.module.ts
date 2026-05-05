@@ -44,5 +44,6 @@ import {
     { provide: ARQUIVAR_PRODUTO_USE_CASE, useClass: ArquivarProdutoUseCase },
     { provide: GERAR_ESTOQUE_PRODUTO_USE_CASE, useClass: GerarEstoqueProdutoUseCase },
   ],
+  exports: [PRODUTO_REPOSITORY, ESTOQUE_PRODUTO_REPOSITORY],
 })
 export class CatalogoModule {}

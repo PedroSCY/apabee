@@ -29,26 +29,42 @@ export class ColheitasController {
   @ApiOperation({ summary: 'Registrar colheita' })
   @ApiResponse({ status: 201, description: 'Colheita registrada.' })
   @Post()
-  async criar(@Body() dto: CriarColheitaDto): Promise<Colheita> {
-    return this.criarColheita.execute({
-      ...dto,
-      dataColheita: new Date(dto.dataColheita),
-    })
+  async criar(@Body() dto: CriarColheitaDto) {
+    return this.toResponse(
+      await this.criarColheita.execute({ ...dto, dataColheita: new Date(dto.dataColheita) }),
+    )
   }
 
   @ApiOperation({ summary: 'Listar colheitas por associado' })
   @ApiParam({ name: 'associadoId', type: String })
   @ApiResponse({ status: 200 })
   @Get('associado/:associadoId')
-  async listarAssociado(@Param('associadoId') associadoId: string): Promise<Colheita[]> {
-    return this.listarPorAssociado.execute(associadoId)
+  async listarAssociado(@Param('associadoId') associadoId: string) {
+    const lista = await this.listarPorAssociado.execute(associadoId)
+    return lista.map((c) => this.toResponse(c))
   }
 
   @ApiOperation({ summary: 'Listar colheitas por lote' })
   @ApiParam({ name: 'loteId', type: String })
   @ApiResponse({ status: 200 })
   @Get('lote/:loteId')
-  async listarLote(@Param('loteId') loteId: string): Promise<Colheita[]> {
-    return this.listarPorLote.execute(loteId)
+  async listarLote(@Param('loteId') loteId: string) {
+    const lista = await this.listarPorLote.execute(loteId)
+    return lista.map((c) => this.toResponse(c))
+  }
+
+  private toResponse(c: Colheita) {
+    return {
+      id: c.id,
+      associadoId: c.associadoId,
+      tipoMateriaPrimaId: c.tipoMateriaPrimaId,
+      equipamentoId: c.equipamentoId,
+      loteProducaoId: c.loteProducaoId,
+      volume: c.volume,
+      unidade: c.unidade,
+      dataColheita: c.dataColheita,
+      observacao: c.observacao,
+      criadoEm: c.criadoEm,
+    }
   }
 }

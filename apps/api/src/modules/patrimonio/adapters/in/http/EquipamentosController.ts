@@ -57,15 +57,16 @@ export class EquipamentosController {
   @ApiOperation({ summary: 'Criar equipamento' })
   @ApiResponse({ status: 201, description: 'Equipamento criado.' })
   @Post()
-  async criar(@Body() dto: CriarEquipamentoDto): Promise<Equipamento> {
-    return this.criarEquipamento.execute(dto)
+  async criar(@Body() dto: CriarEquipamentoDto) {
+    return this.toResponse(await this.criarEquipamento.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar equipamentos' })
   @ApiResponse({ status: 200, description: 'Lista de equipamentos.' })
   @Get()
-  async listar(): Promise<Equipamento[]> {
-    return this.listarEquipamentos.execute()
+  async listar() {
+    const lista = await this.listarEquipamentos.execute()
+    return lista.map((e) => this.toResponse(e))
   }
 
   @ApiOperation({ summary: 'Buscar equipamento por ID' })
@@ -73,19 +74,16 @@ export class EquipamentosController {
   @ApiResponse({ status: 200, description: 'Equipamento encontrado.' })
   @ApiResponse({ status: 404, description: 'Equipamento não encontrado.' })
   @Get(':id')
-  async buscar(@Param('id') id: string): Promise<Equipamento> {
-    return this.buscarEquipamento.execute(id)
+  async buscar(@Param('id') id: string) {
+    return this.toResponse(await this.buscarEquipamento.execute(id))
   }
 
   @ApiOperation({ summary: 'Atualizar dados do equipamento' })
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Equipamento atualizado.' })
   @Patch(':id')
-  async atualizar(
-    @Param('id') id: string,
-    @Body() dto: AtualizarEquipamentoDto,
-  ): Promise<Equipamento> {
-    return this.atualizarEquipamento.execute(id, dto)
+  async atualizar(@Param('id') id: string, @Body() dto: AtualizarEquipamentoDto) {
+    return this.toResponse(await this.atualizarEquipamento.execute(id, dto))
   }
 
   @ApiOperation({ summary: 'Colocar equipamento em manutenção' })
@@ -95,5 +93,16 @@ export class EquipamentosController {
   @Patch(':id/manutencao')
   async colocarManutencao(@Param('id') id: string): Promise<void> {
     await this.colocarEmManutencao.execute(id)
+  }
+
+  private toResponse(e: Equipamento) {
+    return {
+      id: e.id,
+      nome: e.nome,
+      numeroSerie: e.numeroSerie,
+      descricao: e.descricao,
+      status: e.status,
+      criadoEm: e.criadoEm,
+    }
   }
 }

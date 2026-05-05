@@ -45,21 +45,22 @@ export class LotesController {
   @ApiResponse({ status: 201 })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  criarLote(@Body() dto: CriarLoteDto): Promise<LoteProducao> {
-    return this.criar.execute({ ...dto, dataInicio: new Date(dto.dataInicio) })
+  async criarLote(@Body() dto: CriarLoteDto) {
+    return this.toLoteResponse(await this.criar.execute({ ...dto, dataInicio: new Date(dto.dataInicio) }))
   }
 
   @ApiOperation({ summary: 'Listar lotes' })
   @Get()
-  listarLotes(): Promise<LoteProducao[]> {
-    return this.listar.execute()
+  async listarLotes() {
+    const lista = await this.listar.execute()
+    return lista.map((l) => this.toLoteResponse(l))
   }
 
   @ApiOperation({ summary: 'Buscar lote por ID' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id')
-  buscarLote(@Param('id') id: string): Promise<LoteProducao> {
-    return this.buscar.execute(id)
+  async buscarLote(@Param('id') id: string) {
+    return this.toLoteResponse(await this.buscar.execute(id))
   }
 
   @ApiOperation({ summary: 'Encerrar lote' })
@@ -68,23 +69,26 @@ export class LotesController {
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
   @Patch(':id/encerrar')
-  encerrarLote(@Param('id') id: string): Promise<LoteProducao> {
-    return this.encerrar.execute(id)
+  async encerrarLote(@Param('id') id: string) {
+    return this.toLoteResponse(await this.encerrar.execute(id))
   }
 
   @ApiOperation({ summary: 'Listar participações do lote' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id/participacoes')
-  listarParticipacoesDo(@Param('id') id: string): Promise<ParticipacaoLote[]> {
-    return this.listarParticipacoes.execute(id)
+  async listarParticipacoesDo(@Param('id') id: string) {
+    const lista = await this.listarParticipacoes.execute(id)
+    return lista.map((p) => this.toParticipacaoResponse(p))
   }
 
   @ApiOperation({ summary: 'Registrar participação de associado no lote' })
   @ApiParam({ name: 'id', type: String })
   @Roles(RoleUsuario.ADMIN)
   @Post(':id/participacoes')
-  registrar(@Param('id') loteId: string, @Body() dto: RegistrarParticipacaoDto): Promise<ParticipacaoLote> {
-    return this.registrarParticipacao.execute({ ...dto, loteProducaoId: loteId })
+  async registrar(@Param('id') loteId: string, @Body() dto: RegistrarParticipacaoDto) {
+    return this.toParticipacaoResponse(
+      await this.registrarParticipacao.execute({ ...dto, loteProducaoId: loteId }),
+    )
   }
 
   @ApiOperation({ summary: 'Atualizar participação de associado no lote' })
@@ -92,11 +96,36 @@ export class LotesController {
   @ApiParam({ name: 'associadoId', type: String })
   @Roles(RoleUsuario.ADMIN)
   @Patch(':id/participacoes/:associadoId')
-  atualizar(
+  async atualizar(
     @Param('id') loteId: string,
     @Param('associadoId') associadoId: string,
     @Body() dto: RegistrarParticipacaoDto,
-  ): Promise<ParticipacaoLote> {
-    return this.atualizarParticipacao.execute(loteId, associadoId, dto)
+  ) {
+    return this.toParticipacaoResponse(
+      await this.atualizarParticipacao.execute(loteId, associadoId, dto),
+    )
+  }
+
+  private toLoteResponse(l: LoteProducao) {
+    return {
+      id: l.id,
+      tipo: l.tipo,
+      periodo: l.periodo,
+      dataInicio: l.dataInicio,
+      dataFim: l.dataFim,
+      status: l.status,
+      custoTotal: l.custoTotal,
+    }
+  }
+
+  private toParticipacaoResponse(p: ParticipacaoLote) {
+    return {
+      id: p.id,
+      loteProducaoId: p.loteProducaoId,
+      associadoId: p.associadoId,
+      percentual: p.percentual,
+      volume: p.volume,
+      valorInvestido: p.valorInvestido,
+    }
   }
 }

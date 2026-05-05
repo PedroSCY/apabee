@@ -49,11 +49,12 @@ export class AtribuicoesController {
   @ApiResponse({ status: 201, description: 'Atribuição criada.' })
   @ApiResponse({ status: 400, description: 'Patrimônio indisponível ou já atribuído (RN02).' })
   @Post()
-  async atribuir(@Body() dto: AtribuirPatrimonioDto): Promise<AtribuicaoPatrimonio> {
-    return this.atribuirPatrimonio.execute({
+  async atribuir(@Body() dto: AtribuirPatrimonioDto) {
+    const atribuicao = await this.atribuirPatrimonio.execute({
       ...dto,
       dataInicio: dto.dataInicio ? new Date(dto.dataInicio) : undefined,
     })
+    return this.toResponse(atribuicao)
   }
 
   @ApiOperation({ summary: 'Devolver patrimônio (encerrar atribuição)' })
@@ -69,9 +70,21 @@ export class AtribuicoesController {
   @ApiParam({ name: 'associadoId', type: String })
   @ApiResponse({ status: 200, description: 'Lista de atribuições.' })
   @Get('associado/:associadoId')
-  async listarPorAssociado(
-    @Param('associadoId') associadoId: string,
-  ): Promise<AtribuicaoPatrimonio[]> {
-    return this.listarAtribuicoes.execute(associadoId)
+  async listarPorAssociado(@Param('associadoId') associadoId: string) {
+    const lista = await this.listarAtribuicoes.execute(associadoId)
+    return lista.map((a) => this.toResponse(a))
+  }
+
+  private toResponse(a: AtribuicaoPatrimonio) {
+    return {
+      id: a.id,
+      patrimonioId: a.patrimonioId,
+      tipoPatrimonio: a.tipoPatrimonio,
+      associadoId: a.associadoId,
+      dataInicio: a.dataInicio,
+      dataFim: a.dataFim,
+      status: a.status,
+      observacao: a.observacao,
+    }
   }
 }

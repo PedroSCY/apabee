@@ -124,10 +124,17 @@ export class IdentidadeController {
   private toAssociadoResponse(a: Associado) {
     return {
       id: a.id,
-      nome: a.nome,
-      email: a.email,
+      usuario: {
+        id: a.usuario.id,
+        nome: a.usuario.nome,
+        email: a.usuario.email,
+        role: a.usuario.role,
+        ativo: a.usuario.ativo,
+        criadoEm: a.usuario.criadoEm,
+      },
       dataIngresso: a.dataIngresso,
       observacoes: a.observacoes,
+      status: a.status,
     }
   }
 }

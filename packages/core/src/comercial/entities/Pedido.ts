@@ -27,6 +27,12 @@ export class Pedido {
   get clienteEmail(): string {
     return this.props.clienteEmail
   }
+  get clienteTelefone(): string | undefined {
+    return this.props.clienteTelefone
+  }
+  get criadoEm(): Date {
+    return this.props.criadoEm
+  }
   get status(): StatusPedido {
     return this.props.status
   }

@@ -32,15 +32,16 @@ export class TiposMateriaPrimaController {
   @ApiResponse({ status: 201, description: 'Tipo criado.' })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criarTipo(@Body() dto: CriarTipoMateriaPrimaDto): Promise<TipoMateriaPrima> {
-    return this.criar.execute(dto)
+  async criarTipo(@Body() dto: CriarTipoMateriaPrimaDto) {
+    return this.toResponse(await this.criar.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar tipos de matéria-prima' })
   @ApiResponse({ status: 200, description: 'Lista de tipos.' })
   @Get()
-  async listarTipos(): Promise<TipoMateriaPrima[]> {
-    return this.listar.execute()
+  async listarTipos() {
+    const lista = await this.listar.execute()
+    return lista.map((t) => this.toResponse(t))
   }
 
   @ApiOperation({ summary: 'Buscar tipo de matéria-prima por ID' })
@@ -48,7 +49,16 @@ export class TiposMateriaPrimaController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 404, description: 'Não encontrado.' })
   @Get(':id')
-  async buscarTipo(@Param('id') id: string): Promise<TipoMateriaPrima> {
-    return this.buscar.execute(id)
+  async buscarTipo(@Param('id') id: string) {
+    return this.toResponse(await this.buscar.execute(id))
+  }
+
+  private toResponse(t: TipoMateriaPrima) {
+    return {
+      id: t.id,
+      nome: t.nome,
+      unidade: t.unidade,
+      descricao: t.descricao,
+    }
   }
 }
