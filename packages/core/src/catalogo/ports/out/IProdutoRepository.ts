@@ -13,6 +13,7 @@ export interface IProdutoRepository {
 
 export interface IEstoqueProdutoRepository {
   findByProduto(produtoId: string): Promise<EstoqueProduto | null>;
+  save(estoque: EstoqueProduto): Promise<EstoqueProduto>;
   update(estoque: EstoqueProduto): Promise<EstoqueProduto>;
 }
 

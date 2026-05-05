@@ -8,6 +8,7 @@ import { IdentidadeModule } from './modules/identidade/identidade.module'
 import { PatrimonioModule } from './modules/patrimonio/patrimonio.module'
 import { ProducaoModule } from './modules/producao/producao.module'
 import { GestaoModule } from './modules/gestao/gestao.module'
+import { CatalogoModule } from './modules/catalogo/catalogo.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -19,6 +20,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     PatrimonioModule,
     ProducaoModule,
     GestaoModule,
+    CatalogoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

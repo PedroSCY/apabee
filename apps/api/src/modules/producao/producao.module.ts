@@ -72,6 +72,6 @@ import {
     { provide: ATUALIZAR_PARTICIPACAO_USE_CASE, useClass: AtualizarParticipacaoUseCase },
     { provide: CONSULTAR_ESTOQUE_USE_CASE, useClass: ConsultarEstoqueUseCase },
   ],
-  exports: [LOTE_PRODUCAO_REPOSITORY],
+  exports: [LOTE_PRODUCAO_REPOSITORY, ESTOQUE_MATERIA_PRIMA_REPOSITORY],
 })
 export class ProducaoModule {}
