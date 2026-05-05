@@ -19,6 +19,7 @@ const ROUTE_LABELS: Record<string, string> = {
   producao: 'Produção',
   financeiro: 'Financeiro',
   documentos: 'Documentos',
+  comunicacao: 'Comunicação',
   configuracoes: 'Configurações',
 }
 
@@ -114,7 +115,7 @@ export function Header({ role, userName, userEmail }: HeaderProps) {
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
               <User className="h-4 w-4" />
             </div>
-            <span className="hidden sm:block font-medium max-w-[120px] truncate">
+            <span className="hidden sm:block font-medium max-w-30 truncate">
               {userName || userEmail}
             </span>
             <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', menuOpen && 'rotate-180')} />

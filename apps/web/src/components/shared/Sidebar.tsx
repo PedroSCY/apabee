@@ -14,6 +14,7 @@ import {
   Hexagon,
   ChevronLeft,
   ChevronRight,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebarStore } from '@/store/sidebar.store'
@@ -44,7 +45,10 @@ const ADMIN_NAV: NavGroup[] = [
   },
   {
     group: 'Sistema',
-    items: [{ label: 'Configurações', href: '/configuracoes', icon: Settings }],
+    items: [
+      { label: 'Comunicação', href: '/comunicacao', icon: Megaphone },
+      { label: 'Configurações', href: '/configuracoes', icon: Settings },
+    ],
   },
 ]
 

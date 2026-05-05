@@ -25,17 +25,26 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuth = request.nextUrl.pathname.startsWith('/login')
-  const isDashboard = request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.match(/^\/(associados|insumos|producao|lotes|produtos|financeiro|documentos|configuracoes)/)
+  const { pathname } = request.nextUrl
 
-  if (isDashboard && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  const PROTECTED = [
+    '/dashboard',
+    '/associados',
+    '/insumos',
+    '/producao',
+    '/lotes',
+    '/produtos',
+    '/financeiro',
+    '/documentos',
+    '/configuracoes',
+    '/comunicacao',
+  ]
 
-  if (isAuth && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  const isAuth = pathname.startsWith('/login')
+  const isDashboard = PROTECTED.some((r) => pathname === r || pathname.startsWith(r + '/'))
+
+  if (isDashboard && !user) return NextResponse.redirect(new URL('/login', request.url))
+  if (isAuth && user) return NextResponse.redirect(new URL('/dashboard', request.url))
 
   return response
 }

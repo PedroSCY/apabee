@@ -31,8 +31,11 @@ const STATUS_VARIANT: Record<string, BadgeVariant> = {
   MANUTENCAO: 'warning',
   DEVOLVIDO: 'muted',
   INATIVO: 'muted',
+  RASCUNHO: 'muted',
+  ESGOTADO: 'muted',
   SUSPENSO: 'error',
   CANCELADO: 'error',
+  PUBLICADO: 'success',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -50,6 +53,9 @@ const STATUS_LABEL: Record<string, string> = {
   CONCLUIDO: 'Concluído',
   CANCELADO: 'Cancelado',
   ANTECIPACAO: 'Antecipação',
+  PUBLICADO: 'Publicado',
+  RASCUNHO: 'Rascunho',
+  ESGOTADO: 'Esgotado',
 }
 
 interface StatusBadgeProps {
