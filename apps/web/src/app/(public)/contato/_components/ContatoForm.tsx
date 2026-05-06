@@ -32,7 +32,7 @@ export function ContatoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="rounded-2xl border border-border/60 bg-card p-8 shadow-card space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="c-nome">Nome *</Label>
@@ -84,7 +84,7 @@ export function ContatoForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full" variant='hero' disabled={isSubmitting}>
         {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
       </Button>
     </form>

@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { Users, Leaf, Award, MapPin } from 'lucide-react'
+import { Users, Leaf, Award, MapPin, Hexagon } from 'lucide-react'
 import type { Metadata } from 'next'
+import ConteudoPublico from '@/components/public/ConteudoPublico'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Sobre — Apabee | APA',
@@ -27,83 +29,130 @@ const VALORES = [
 
 export default function SobrePage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12 space-y-16">
+    <>
       {/* Header */}
-      <div className="text-center space-y-4">
-        <span className="text-5xl block">🐝</span>
-        <h1 className="text-3xl sm:text-4xl font-bold">Sobre a APA</h1>
-        <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          A Associação Pratense de Apicultura reúne os apicultores de Prata e região para
-          fortalecer a produção de mel e derivados com qualidade, transparência e cuidado.
-        </p>
-      </div>
+      <section className="bg-warm-gradient py-20">
+        <ConteudoPublico className="max-w-6xl">
+          <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-primary">
+            <Hexagon className="h-4 w-4" /> Quem somos
+          </span>
+          <h1 className="mt-3 font-serif text-5xl font-semibold text-accent md:text-6xl">
+            A voz dos apicultores de Prata.
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground">
+            A Associação Pratense de Apicultura — APA — nasceu da união de apicultores que acreditam
+            no poder das abelhas para transformar comunidades, preservar o meio ambiente e gerar
+            renda com produtos puros e de origem certificada.
+          </p>
+        </ConteudoPublico>
+      </section>
+
+      <section className="py-20">
+        <ConteudoPublico className="grid max-w-7xl gap-10 md:grid-cols-2">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 shadow-card">
+            <h2 className="font-serif text-3xl font-semibold text-accent">Missão</h2>
+            <p className="mt-3 text-muted-foreground">
+              Promover a apicultura sustentável em Prata e região, capacitando associados e
+              oferecendo produtos da colmeia da mais alta qualidade.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/60 bg-card p-8 shadow-card">
+            <h2 className="font-serif text-3xl font-semibold text-accent">Visão</h2>
+            <p className="mt-3 text-muted-foreground">
+              Ser referência em apicultura no Cariri Paraibano, reconhecida pela qualidade dos
+              produtos e pelo cuidado com as abelhas.
+            </p>
+          </div>
+        </ConteudoPublico>
+      </section>
 
       {/* História */}
-      <section className="grid gap-8 sm:grid-cols-2 items-center">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Nossa História</h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Fundada por apicultores locais com o objetivo de organizar coletivamente a
-            produção e comercialização de produtos apícolas, a APA nasceu da necessidade de
-            unir forças em uma região com grande potencial para a apicultura.
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            Com o sistema Apabee, a associação digitaliza sua gestão — rastreando colheitas,
-            lotes, estoque e distribuição de resultados de forma transparente para todos
-            os associados.
-          </p>
-        </div>
-        <div className="flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 p-12">
-          <span className="text-8xl">🍯</span>
-        </div>
+      <section>
+        <ConteudoPublico className="max-w-6xl">
+          <div className="grid md:grid-cols-2">
+            <div>
+              <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-primary">
+                <Hexagon className="h-4 w-4" /> Nossa História
+              </span>
+              <p className="text-muted-foreground leading-relaxed text-justify">
+                Fundada por apicultores locais com o objetivo de organizar coletivamente a produção
+                e comercialização de produtos apícolas, a APA nasceu da necessidade de unir forças
+                em uma região com grande potencial para a apicultura.
+              </p>
+              <p className="text-muted-foreground leading-relaxed text-justify">
+                Com o sistema Apabee, a associação digitaliza sua gestão — rastreando colheitas,
+                lotes, estoque e distribuição de resultados de forma transparente para todos os
+                associados.
+              </p>
+            </div>
+            <div className="hidden md:inline-flex items-center justify-center rounded-2xl bg-honey-600 mx-20 gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-honey-gradient shadow-soft">
+                <Hexagon className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+              </div>
+              <div className="leading-tight">
+                <p className="font-serif text-3xl font-semibold text-white">Apabee</p>
+              </div>
+            </div>
+          </div>
+        </ConteudoPublico>
       </section>
 
       {/* Valores */}
-      <section className="space-y-8">
-        <h2 className="text-2xl font-bold text-center">Nossos Valores</h2>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {VALORES.map(({ icon: Icon, titulo, texto }) => (
-            <div
-              key={titulo}
-              className="rounded-2xl border border-border bg-card p-6 space-y-3"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                <Icon className="h-5 w-5 text-primary" />
+      <section className="py-20 bg-warm-gradient">
+        <ConteudoPublico className="max-w-7xl">
+          <h2 className="text-4xl font-serif font-bold text-center text-accent">Nossos Valores</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-10">
+            {VALORES.map(({ icon: Icon, titulo, texto }) => (
+              <div
+                key={titulo}
+                className="rounded-2xl border border-border/60 bg-card p-7 shadow-card transition-smooth hover:-translate-y-1 hover:shadow-soft flex flex-col"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-honey-gradient shadow-soft">
+                  <Icon className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h3 className="mt-5 text-2xl font-serif font-semibold text-accent">{titulo}</h3>
+                <p className="mt-2 text-muted-foreground">{texto}</p>
               </div>
-              <h3 className="font-semibold">{titulo}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{texto}</p>
+            ))}
+          </div>
+        </ConteudoPublico>
+      </section>
+
+      <section className="bg-warm-200 pb-15">
+        <ConteudoPublico className="max-w-6xl">
+          <div className="flex flex-col items-center gap-6">
+            <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-primary">
+              <Hexagon className="h-4 w-4" /> Quer fazer parte?
+            </span>
+            <div className="flex w-fit items-center overflow-hidden rounded-3xl bg-honey-gradient shadow-glow p-4 gap-2">
+              <p className="text-primary-foreground ">
+                Entre em contato e saiba como se associar à APA.
+              </p>
+              <Button variant="secondary" size="lg" >
+                <Link href="/contato">Entre em Contato</Link>
+              </Button>
             </div>
-          ))}
-        </div>
+          </div>
+        </ConteudoPublico>
       </section>
 
       {/* Localização */}
-      <section className="rounded-2xl bg-secondary p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-          <MapPin className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg mb-1">Onde estamos</h3>
-          <p className="text-muted-foreground">
-            Prata — Paraíba, Brasil. A APA atua na região do Cariri paraibano, área com
-            florada rica e clima favorável à apicultura sustentável.
-          </p>
-        </div>
+      <section className="bg-secondary p-8">
+        <ConteudoPublico className="max-w-7xl">
+          <div className=" flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+              <MapPin className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-serif font-semibold text-lg text-accent mb-1">Onde estamos</h3>
+              <p className="text-muted-foreground">
+                Prata — Paraíba, Brasil. A APA atua na região do Cariri paraibano, área com florada
+                rica e clima favorável à apicultura sustentável.
+              </p>
+            </div>
+          </div>
+        </ConteudoPublico>
       </section>
-
-      {/* CTA */}
-      <div className="text-center space-y-4">
-        <h2 className="text-xl font-semibold">Quer fazer parte?</h2>
-        <p className="text-muted-foreground">
-          Entre em contato e saiba como se associar à APA.
-        </p>
-        <Link
-          href="/contato"
-          className="inline-flex items-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          Entre em Contato
-        </Link>
-      </div>
-    </div>
+    </>
   )
 }

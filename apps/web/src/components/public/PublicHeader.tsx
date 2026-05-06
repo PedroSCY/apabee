@@ -3,9 +3,10 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart, Menu, X } from 'lucide-react'
+import { ShoppingCart, Menu, X, Hexagon, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCartStore } from '@/store/cart.store'
+import { Button } from '../ui/button'
 
 const NAV_LINKS = [
   { href: '/', label: 'Início' },
@@ -19,18 +20,20 @@ function CartIcon() {
   const setOpen = useCartStore((s) => s.setDrawerOpen)
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={() => setOpen(true)}
       aria-label="Carrinho de compras"
-      className="relative p-2 rounded-lg hover:bg-primary/10 transition-colors"
+      className="relative "
     >
-      <ShoppingCart className="h-5 w-5 text-foreground" />
+      <ShoppingCart />
       {count > 0 && (
         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
           {count > 9 ? '9+' : count}
         </span>
       )}
-    </button>
+    </Button>
   )
 }
 
@@ -38,15 +41,24 @@ export function PublicHeader() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
-  React.useEffect(() => { setMobileOpen(false) }, [pathname])
+  React.useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80">
+      <div className="mx-auto flex h-16 container items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg text-foreground hover:text-primary transition-colors">
-          <span className="text-2xl leading-none">🐝</span>
-          <span>Apabee</span>
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-honey-gradient shadow-soft">
+            <Hexagon className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+          </div>
+          <div className="leading-tight">
+            <p className="font-serif text-xl font-semibold text-accent">Apabee</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Apicultura Pratense
+            </p>
+          </div>
         </Link>
 
         {/* Desktop nav */}
@@ -56,10 +68,10 @@ export function PublicHeader() {
               key={href}
               href={href}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                'px-3 py-2 rounded-md text-sm font-medium transition-smooth',
                 pathname === href || (href !== '/' && pathname?.startsWith(href))
                   ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                  : 'text-muted-foreground hover:text-accent hover:bg-secondary',
               )}
             >
               {label}
@@ -70,15 +82,14 @@ export function PublicHeader() {
         {/* Actions */}
         <div className="flex items-center gap-2">
           <CartIcon />
-          <Link
-            href="/login"
-            className="hidden sm:inline-flex items-center rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Entrar
-          </Link>
+          <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
+            <Link href="/login">
+              <LogIn /> Entrar
+            </Link>
+          </Button>
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
             aria-label="Menu"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -97,15 +108,16 @@ export function PublicHeader() {
                 'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 pathname === href || (href !== '/' && pathname?.startsWith(href))
                   ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                  : 'text-muted-foreground hover:text-accent hover:bg-secondary',
               )}
             >
               {label}
             </Link>
           ))}
+          <div className="w-full border-b-2 border-accent-light/60 "></div>
           <Link
             href="/login"
-            className="block rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
+            className="block  px-3 py-2 text-sm font-semibold text-accent hover:bg-primary/10 transition-colors"
           >
             Entrar
           </Link>

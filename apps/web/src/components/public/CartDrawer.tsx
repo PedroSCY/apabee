@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { X, Trash2, ShoppingCart, Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCartStore } from '@/store/cart.store'
+import Image from 'next/image'
+import { Button } from '../ui/button'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -52,12 +54,12 @@ export function CartDrawer() {
               </span>
             )}
           </div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setOpen(false)}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent transition-colors"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Items */}
@@ -84,7 +86,7 @@ export function CartDrawer() {
                 {/* Thumbnail */}
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/20 overflow-hidden">
                   {item.imagemUrl ? (
-                    <img
+                    <Image
                       src={item.imagemUrl}
                       alt={item.nome}
                       className="h-full w-full object-cover"
