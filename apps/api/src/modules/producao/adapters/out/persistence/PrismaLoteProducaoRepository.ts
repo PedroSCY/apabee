@@ -26,6 +26,13 @@ export class PrismaLoteProducaoRepository implements ILoteProducaoRepository {
     return records.map(this.toDomain)
   }
 
+  async findAbertosVencidos(): Promise<LoteProducao[]> {
+    const records = await this.prisma.loteProducao.findMany({
+      where: { status: StatusLote.ABERTO, dataFim: { lte: new Date() } },
+    })
+    return records.map(this.toDomain)
+  }
+
   async save(lote: LoteProducao): Promise<LoteProducao> {
     const record = await this.prisma.loteProducao.create({
       data: {

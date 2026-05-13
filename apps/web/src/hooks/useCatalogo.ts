@@ -1,7 +1,12 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { catalogoApi, type AtualizarProdutoInput, type CriarProdutoInput } from '@/lib/api/catalogo'
+import {
+  catalogoApi,
+  type AdicionarComposicaoInput,
+  type AtualizarProdutoInput,
+  type CriarProdutoInput,
+} from '@/lib/api/catalogo'
 
 export const PRODUTOS_KEY = ['produtos'] as const
 
@@ -48,8 +53,50 @@ export function useArquivarProduto() {
 export function useGerarEstoque() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, quantidade }: { id: string; quantidade: number }) =>
-      catalogoApi.gerarEstoque(id, quantidade),
+    mutationFn: ({ id, quantidade, loteOrigemId }: { id: string; quantidade: number; loteOrigemId?: string }) =>
+      catalogoApi.gerarEstoque(id, quantidade, loteOrigemId),
     onSuccess: () => void qc.invalidateQueries({ queryKey: PRODUTOS_KEY }),
+  })
+}
+
+export function useCapacidadeLote(produtoId: string, loteId: string | null) {
+  return useQuery({
+    queryKey: ['capacidade-lote', produtoId, loteId],
+    queryFn: () => catalogoApi.consultarCapacidade(produtoId, loteId!),
+    enabled: !!loteId,
+  })
+}
+
+export function useComposicoes(produtoId: string) {
+  return useQuery({
+    queryKey: ['composicoes', produtoId],
+    queryFn: () => catalogoApi.buscarComposicoes(produtoId),
+    enabled: !!produtoId,
+  })
+}
+
+export function useAdicionarComposicao(produtoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: AdicionarComposicaoInput) =>
+      catalogoApi.adicionarComposicao(produtoId, input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['composicoes', produtoId] }),
+  })
+}
+
+export function useRemoverComposicao(produtoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (composicaoId: string) =>
+      catalogoApi.removerComposicao(produtoId, composicaoId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['composicoes', produtoId] }),
+  })
+}
+
+export function useTiposMateriaPrima() {
+  return useQuery({
+    queryKey: ['tipos-materia-prima'],
+    queryFn: catalogoApi.listarTiposMateriaPrima,
+    staleTime: 5 * 60 * 1000,
   })
 }

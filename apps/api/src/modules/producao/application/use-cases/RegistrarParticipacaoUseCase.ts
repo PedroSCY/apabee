@@ -1,5 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { TipoLote } from '@apa/shared'
 import {
+  ICalcularRateioUseCase,
   ILoteProducaoRepository,
   IParticipacaoLoteRepository,
   IRegistrarParticipacaoUseCase,
@@ -7,7 +9,11 @@ import {
   RegistrarParticipacaoInput,
 } from '@apa/core'
 import { randomUUID } from 'crypto'
-import { LOTE_PRODUCAO_REPOSITORY, PARTICIPACAO_LOTE_REPOSITORY } from '../../producao.tokens'
+import {
+  CALCULAR_RATEIO_USE_CASE,
+  LOTE_PRODUCAO_REPOSITORY,
+  PARTICIPACAO_LOTE_REPOSITORY,
+} from '../../producao.tokens'
 
 @Injectable()
 export class RegistrarParticipacaoUseCase implements IRegistrarParticipacaoUseCase {
@@ -16,12 +22,21 @@ export class RegistrarParticipacaoUseCase implements IRegistrarParticipacaoUseCa
     private readonly loteRepository: ILoteProducaoRepository,
     @Inject(PARTICIPACAO_LOTE_REPOSITORY)
     private readonly participacaoRepository: IParticipacaoLoteRepository,
+    @Inject(CALCULAR_RATEIO_USE_CASE)
+    private readonly calcularRateio: ICalcularRateioUseCase,
   ) {}
 
   async execute(input: RegistrarParticipacaoInput): Promise<ParticipacaoLote> {
     const lote = await this.loteRepository.findById(input.loteProducaoId)
     if (!lote) throw new NotFoundException('Lote não encontrado')
     if (!lote.estaAberto()) throw new BadRequestException('Lote está encerrado')
+
+    if (lote.tipo === TipoLote.PRODUCAO && !input.volume) {
+      throw new BadRequestException('Lotes de produção requerem o campo volume')
+    }
+    if (lote.tipo === TipoLote.AQUISICAO && !input.valorInvestido) {
+      throw new BadRequestException('Lotes de aquisição requerem o campo valorInvestido')
+    }
 
     const existente = await this.participacaoRepository.findByAssociadoELote(
       input.associadoId,
@@ -33,11 +48,14 @@ export class RegistrarParticipacaoUseCase implements IRegistrarParticipacaoUseCa
       id: randomUUID(),
       loteProducaoId: input.loteProducaoId,
       associadoId: input.associadoId,
-      percentual: input.percentual,
+      percentual: 0,
+      percentualManual: false,
       volume: input.volume,
       valorInvestido: input.valorInvestido,
     })
 
-    return this.participacaoRepository.save(participacao)
+    await this.participacaoRepository.save(participacao)
+    const recalculadas = await this.calcularRateio.execute(input.loteProducaoId)
+    return recalculadas.find((p) => p.associadoId === input.associadoId) ?? participacao
   }
 }

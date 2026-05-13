@@ -7,20 +7,21 @@ export interface CriarLoteInput {
   tipo: TipoLote
   periodo: string
   dataInicio: Date
+  dataFim?: Date
 }
 
 export interface RegistrarParticipacaoInput {
   loteProducaoId: string
   associadoId: string
-  percentual: number
   volume?: number
   valorInvestido?: number
 }
 
 export interface AtualizarParticipacaoInput {
-  percentual?: number
   volume?: number
   valorInvestido?: number
+  percentual?: number
+  percentualManual?: boolean
 }
 
 export interface ICriarLoteUseCase {
@@ -49,6 +50,10 @@ export interface IListarParticipacoesPorLoteUseCase {
 
 export interface IAtualizarParticipacaoUseCase {
   execute(loteId: string, associadoId: string, input: AtualizarParticipacaoInput): Promise<ParticipacaoLote>
+}
+
+export interface ICalcularRateioUseCase {
+  execute(loteId: string): Promise<ParticipacaoLote[]>
 }
 
 export interface IConsultarEstoqueUseCase {

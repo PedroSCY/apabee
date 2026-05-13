@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common'
 import { PrismaModule } from '../../shared/database/prisma.module'
+import { IdentidadeModule } from '../identidade/identidade.module'
 import { EquipamentosController } from './adapters/in/http/EquipamentosController'
 import { InsumosController } from './adapters/in/http/InsumosController'
 import { AtribuicoesController } from './adapters/in/http/AtribuicoesController'
+import { SolicitacoesController } from './adapters/in/http/SolicitacoesController'
 import {
   PrismaAtribuicaoPatrimonioRepository,
   PrismaEquipamentoRepository,
   PrismaInsumoRepository,
+  PrismaSolicitacaoPatrimonioRepository,
 } from './adapters/out/persistence'
 import {
+  AprovarSolicitacaoUseCase,
   AtribuirPatrimonioUseCase,
   AtualizarEquipamentoUseCase,
   AtualizarInsumoUseCase,
@@ -18,12 +22,21 @@ import {
   ColocarInsumoEmManutencaoUseCase,
   CriarEquipamentoUseCase,
   CriarInsumoUseCase,
+  CriarSolicitacaoUseCase,
   DevolverPatrimonioUseCase,
+  ExcluirEquipamentoUseCase,
+  ExcluirInsumoUseCase,
+  LiberarEquipamentoManutencaoUseCase,
+  LiberarInsumoManutencaoUseCase,
   ListarAtribuicoesPorAssociadoUseCase,
   ListarEquipamentosUseCase,
   ListarInsumosUseCase,
+  ListarSolicitacoesUseCase,
+  ListarTodasAtribuicoesUseCase,
+  RejeitarSolicitacaoUseCase,
 } from './application/use-cases'
 import {
+  APROVAR_SOLICITACAO_USE_CASE,
   ATRIBUICAO_PATRIMONIO_REPOSITORY,
   ATRIBUIR_PATRIMONIO_USE_CASE,
   ATUALIZAR_EQUIPAMENTO_USE_CASE,
@@ -34,34 +47,53 @@ import {
   COLOCAR_INSUMO_MANUTENCAO_USE_CASE,
   CRIAR_EQUIPAMENTO_USE_CASE,
   CRIAR_INSUMO_USE_CASE,
+  CRIAR_SOLICITACAO_USE_CASE,
   DEVOLVER_PATRIMONIO_USE_CASE,
   EQUIPAMENTO_REPOSITORY,
+  EXCLUIR_EQUIPAMENTO_USE_CASE,
+  EXCLUIR_INSUMO_USE_CASE,
+  LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE,
+  LIBERAR_INSUMO_MANUTENCAO_USE_CASE,
   INSUMO_REPOSITORY,
   LISTAR_ATRIBUICOES_ASSOCIADO_USE_CASE,
   LISTAR_EQUIPAMENTOS_USE_CASE,
   LISTAR_INSUMOS_USE_CASE,
+  LISTAR_SOLICITACOES_USE_CASE,
+  LISTAR_TODAS_ATRIBUICOES_USE_CASE,
+  REJEITAR_SOLICITACAO_USE_CASE,
+  SOLICITACAO_PATRIMONIO_REPOSITORY,
 } from './patrimonio.tokens'
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [EquipamentosController, InsumosController, AtribuicoesController],
+  imports: [PrismaModule, IdentidadeModule],
+  controllers: [EquipamentosController, InsumosController, AtribuicoesController, SolicitacoesController],
   providers: [
     { provide: EQUIPAMENTO_REPOSITORY, useClass: PrismaEquipamentoRepository },
     { provide: INSUMO_REPOSITORY, useClass: PrismaInsumoRepository },
     { provide: ATRIBUICAO_PATRIMONIO_REPOSITORY, useClass: PrismaAtribuicaoPatrimonioRepository },
+    { provide: SOLICITACAO_PATRIMONIO_REPOSITORY, useClass: PrismaSolicitacaoPatrimonioRepository },
     { provide: CRIAR_EQUIPAMENTO_USE_CASE, useClass: CriarEquipamentoUseCase },
     { provide: LISTAR_EQUIPAMENTOS_USE_CASE, useClass: ListarEquipamentosUseCase },
     { provide: BUSCAR_EQUIPAMENTO_USE_CASE, useClass: BuscarEquipamentoUseCase },
     { provide: ATUALIZAR_EQUIPAMENTO_USE_CASE, useClass: AtualizarEquipamentoUseCase },
     { provide: COLOCAR_EQUIPAMENTO_MANUTENCAO_USE_CASE, useClass: ColocarEquipamentoEmManutencaoUseCase },
+    { provide: EXCLUIR_EQUIPAMENTO_USE_CASE, useClass: ExcluirEquipamentoUseCase },
+    { provide: LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE, useClass: LiberarEquipamentoManutencaoUseCase },
     { provide: CRIAR_INSUMO_USE_CASE, useClass: CriarInsumoUseCase },
     { provide: LISTAR_INSUMOS_USE_CASE, useClass: ListarInsumosUseCase },
     { provide: BUSCAR_INSUMO_USE_CASE, useClass: BuscarInsumoUseCase },
     { provide: ATUALIZAR_INSUMO_USE_CASE, useClass: AtualizarInsumoUseCase },
     { provide: COLOCAR_INSUMO_MANUTENCAO_USE_CASE, useClass: ColocarInsumoEmManutencaoUseCase },
+    { provide: EXCLUIR_INSUMO_USE_CASE, useClass: ExcluirInsumoUseCase },
+    { provide: LIBERAR_INSUMO_MANUTENCAO_USE_CASE, useClass: LiberarInsumoManutencaoUseCase },
     { provide: ATRIBUIR_PATRIMONIO_USE_CASE, useClass: AtribuirPatrimonioUseCase },
     { provide: DEVOLVER_PATRIMONIO_USE_CASE, useClass: DevolverPatrimonioUseCase },
     { provide: LISTAR_ATRIBUICOES_ASSOCIADO_USE_CASE, useClass: ListarAtribuicoesPorAssociadoUseCase },
+    { provide: LISTAR_TODAS_ATRIBUICOES_USE_CASE, useClass: ListarTodasAtribuicoesUseCase },
+    { provide: CRIAR_SOLICITACAO_USE_CASE, useClass: CriarSolicitacaoUseCase },
+    { provide: APROVAR_SOLICITACAO_USE_CASE, useClass: AprovarSolicitacaoUseCase },
+    { provide: REJEITAR_SOLICITACAO_USE_CASE, useClass: RejeitarSolicitacaoUseCase },
+    { provide: LISTAR_SOLICITACOES_USE_CASE, useClass: ListarSolicitacoesUseCase },
   ],
 })
 export class PatrimonioModule {}

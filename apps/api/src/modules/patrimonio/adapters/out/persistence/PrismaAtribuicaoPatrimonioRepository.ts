@@ -13,6 +13,13 @@ export class PrismaAtribuicaoPatrimonioRepository implements IAtribuicaoPatrimon
     return record ? this.toDomain(record) : null
   }
 
+  async findAll(): Promise<AtribuicaoPatrimonio[]> {
+    const records = await this.prisma.atribuicaoPatrimonio.findMany({
+      orderBy: { dataInicio: 'desc' },
+    })
+    return records.map(this.toDomain)
+  }
+
   async findByAssociado(associadoId: string): Promise<AtribuicaoPatrimonio[]> {
     const records = await this.prisma.atribuicaoPatrimonio.findMany({
       where: { associadoId },

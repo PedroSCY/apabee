@@ -6,10 +6,10 @@ import { useTemaStore, type ConfiguracaoTema } from '@/store/tema.store'
 const CSS_VAR_MAP: Record<keyof ConfiguracaoTema, string> = {
   corFundo: '--background',
   corTexto: '--foreground',
-  corPrimaria: '--primary',
+  corPrimaria: '--primary-base',
   corPrimariaForeground: '--primary-foreground',
   corSidebar: '--sidebar',
-  corAccent: '--accent',
+  corAccent: '--accent-base',
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

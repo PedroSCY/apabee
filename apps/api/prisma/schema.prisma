@@ -108,6 +108,24 @@ enum CategoriaAviso {
   FINANCEIRO
 }
 
+enum StatusSolicitacaoPatrimonio {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+enum TipoSolicitacaoContato {
+  CONTATO
+  COLETA
+  INTEGRACAO
+}
+
+enum StatusSolicitacaoContato {
+  PENDENTE
+  VISUALIZADA
+  RESOLVIDA
+}
+
 model Usuario {
   id        String      @id @default(uuid())
   nome      String
@@ -130,13 +148,14 @@ model Associado {
   observacoes  String?
   status       StatusAssociado @default(ATIVO)
 
-  usuario               Usuario                @relation(fields: [usuarioId], references: [id])
-  atribuicoesPatrimonio AtribuicaoPatrimonio[]
-  colheitas             Colheita[]
-  participacoesLote     ParticipacaoLote[]
-  participantesAta      ParticipanteAta[]
-  movimentosFinanceiros MovimentoFinanceiro[]
-  vendas                Venda[]
+  usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  atribuicoesPatrimonio    AtribuicaoPatrimonio[]
+  solicitacoesPatrimonio   SolicitacaoPatrimonio[]
+  colheitas                Colheita[]
+  participacoesLote        ParticipacaoLote[]
+  participantesAta         ParticipanteAta[]
+  movimentosFinanceiros    MovimentoFinanceiro[]
+  vendas                   Venda[]
 
   @@map("associados")
 }
@@ -149,8 +168,9 @@ model Equipamento {
   status      StatusPatrimonio @default(DISPONIVEL)
   criadoEm    DateTime        @default(now()) @map("criado_em")
 
-  atribuicoes AtribuicaoPatrimonio[]
-  colheitas   Colheita[]
+  atribuicoes  AtribuicaoPatrimonio[]
+  colheitas    Colheita[]
+  solicitacoes SolicitacaoPatrimonio[]
 
   @@map("equipamentos")
 }
@@ -163,7 +183,8 @@ model Insumo {
   status    StatusPatrimonio @default(DISPONIVEL)
   criadoEm  DateTime         @default(now()) @map("criado_em")
 
-  atribuicoes AtribuicaoPatrimonio[]
+  atribuicoes  AtribuicaoPatrimonio[]
+  solicitacoes SolicitacaoPatrimonio[]
 
   @@map("insumos")
 }
@@ -179,11 +200,29 @@ model AtribuicaoPatrimonio {
   status         StatusAtribuicao @default(ATIVO)
   observacao     String?
 
-  associado   Associado    @relation(fields: [associadoId], references: [id])
+  associado   Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
   equipamento Equipamento? @relation(fields: [equipamentoId], references: [id])
   insumo      Insumo?      @relation(fields: [insumoId], references: [id])
 
   @@map("atribuicoes_patrimonio")
+}
+
+model SolicitacaoPatrimonio {
+  id             String                      @id @default(uuid())
+  tipoPatrimonio TipoPatrimonio              @map("tipo_patrimonio")
+  equipamentoId  String?                     @map("equipamento_id")
+  insumoId       String?                     @map("insumo_id")
+  associadoId    String                      @map("associado_id")
+  justificativa  String?
+  status         StatusSolicitacaoPatrimonio @default(PENDENTE)
+  criadoEm       DateTime                    @default(now()) @map("criado_em")
+  resolvidoEm    DateTime?                   @map("resolvido_em")
+
+  associado   Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+  equipamento Equipamento? @relation(fields: [equipamentoId], references: [id])
+  insumo      Insumo?      @relation(fields: [insumoId], references: [id])
+
+  @@map("solicitacoes_patrimonio")
 }
 
 model TipoMateriaPrima {
@@ -219,15 +258,16 @@ model LoteProducao {
 }
 
 model ParticipacaoLote {
-  id             String   @id @default(uuid())
-  loteProducaoId String   @map("lote_producao_id")
-  associadoId    String   @map("associado_id")
-  percentual     Decimal  @db.Decimal(5, 2)
-  volume         Decimal? @db.Decimal(10, 3)
-  valorInvestido Decimal? @map("valor_investido") @db.Decimal(10, 2)
+  id               String   @id @default(uuid())
+  loteProducaoId   String   @map("lote_producao_id")
+  associadoId      String   @map("associado_id")
+  percentual       Decimal  @db.Decimal(5, 2)
+  percentualManual Boolean  @default(false) @map("percentual_manual")
+  volume           Decimal? @db.Decimal(10, 3)
+  valorInvestido   Decimal? @map("valor_investido") @db.Decimal(10, 2)
 
   lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
-  associado Associado    @relation(fields: [associadoId], references: [id])
+  associado Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
 
   @@unique([loteProducaoId, associadoId])
   @@map("participacoes_lote")
@@ -245,7 +285,7 @@ model Colheita {
   observacao         String?
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
-  associado        Associado        @relation(fields: [associadoId], references: [id])
+  associado        Associado        @relation(fields: [associadoId], references: [id], onDelete: Cascade)
   tipoMateriaPrima TipoMateriaPrima @relation(fields: [tipoMateriaPrimaId], references: [id])
   equipamento      Equipamento?     @relation(fields: [equipamentoId], references: [id])
   lote             LoteProducao     @relation(fields: [loteProducaoId], references: [id])
@@ -361,7 +401,7 @@ model Venda {
   data           DateTime  @default(now())
 
   lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
-  associado Associado?   @relation(fields: [associadoId], references: [id])
+  associado Associado?   @relation(fields: [associadoId], references: [id], onDelete: SetNull)
 
   @@map("vendas")
 }
@@ -374,7 +414,7 @@ model MovimentoFinanceiro {
   tipo           TipoMovimentoFinanceiro
   data           DateTime                @default(now())
 
-  associado Associado    @relation(fields: [associadoId], references: [id])
+  associado Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
   lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
 
   @@map("movimentos_financeiros")
@@ -412,7 +452,7 @@ model ParticipanteAta {
   associadoId String @map("associado_id")
 
   ata       Ata       @relation(fields: [ataId], references: [id])
-  associado Associado @relation(fields: [associadoId], references: [id])
+  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
 
   @@unique([ataId, associadoId])
   @@map("participantes_ata")
@@ -470,4 +510,19 @@ model Aviso {
   criadoEm DateTime       @default(now()) @map("criado_em")
 
   @@map("avisos")
+}
+
+model SolicitacaoContato {
+  id          String                   @id @default(uuid())
+  tipo        TipoSolicitacaoContato
+  status      StatusSolicitacaoContato @default(PENDENTE)
+  nome        String
+  email       String
+  telefone    String?
+  mensagem    String
+  localizacao String?
+  municipio   String?
+  criadoEm   DateTime                 @default(now()) @map("criado_em")
+
+  @@map("solicitacoes_contato")
 }

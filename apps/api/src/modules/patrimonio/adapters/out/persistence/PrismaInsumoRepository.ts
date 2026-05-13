@@ -44,6 +44,10 @@ export class PrismaInsumoRepository implements IInsumoRepository {
     return this.toDomain(record)
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.insumo.delete({ where: { id } })
+  }
+
   private toDomain(record: PrismaInsumo): Insumo {
     return new Insumo({
       id: record.id,

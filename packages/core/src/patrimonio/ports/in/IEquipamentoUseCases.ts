@@ -31,3 +31,11 @@ export interface IAtualizarEquipamentoUseCase {
 export interface IColocarEquipamentoEmManutencaoUseCase {
   execute(id: string): Promise<Equipamento>
 }
+
+export interface IExcluirEquipamentoUseCase {
+  execute(id: string): Promise<void>
+}
+
+export interface ILiberarEquipamentoManutencaoUseCase {
+  execute(id: string): Promise<Equipamento>
+}

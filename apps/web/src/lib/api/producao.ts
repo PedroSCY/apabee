@@ -29,6 +29,7 @@ export interface CriarLoteInput {
   tipo: string
   periodo: string
   dataInicio: string
+  dataFim?: string
 }
 
 // --- Participações ---
@@ -37,21 +38,22 @@ export interface ParticipacaoLoteResponse {
   loteProducaoId: string
   associadoId: string
   percentual: number
+  percentualManual: boolean
   volume?: number
   valorInvestido?: number
 }
 
 export interface RegistrarParticipacaoInput {
   associadoId: string
-  percentual: number
   volume?: number
   valorInvestido?: number
 }
 
 export interface AtualizarParticipacaoInput {
-  percentual?: number
   volume?: number
   valorInvestido?: number
+  percentual?: number
+  percentualManual?: boolean
 }
 
 // --- Colheitas ---
@@ -121,6 +123,13 @@ export const producaoApi = {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
+
+  calcularRateio: (loteId: string) =>
+    apiFetch<ParticipacaoLoteResponse[]>(`/producao/lotes/${loteId}/rateio`, { method: 'POST' }),
+
+  // Participações por associado
+  listarParticipacoesPorAssociado: (associadoId: string) =>
+    apiFetch<ParticipacaoLoteResponse[]>(`/producao/participacoes/associado/${associadoId}`),
 
   // Colheitas
   listarColheitasPorAssociado: (associadoId: string) =>

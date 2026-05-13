@@ -28,6 +28,7 @@ export class PrismaParticipacaoLoteRepository implements IParticipacaoLoteReposi
         loteProducaoId: participacao.loteProducaoId,
         associadoId: participacao.associadoId,
         percentual: participacao.percentual,
+        percentualManual: participacao.percentualManual,
         volume: participacao.volume ?? null,
         valorInvestido: participacao.valorInvestido ?? null,
       },
@@ -40,11 +41,23 @@ export class PrismaParticipacaoLoteRepository implements IParticipacaoLoteReposi
       where: { loteProducaoId_associadoId: { loteProducaoId: participacao.loteProducaoId, associadoId: participacao.associadoId } },
       data: {
         percentual: participacao.percentual,
+        percentualManual: participacao.percentualManual,
         volume: participacao.volume ?? null,
         valorInvestido: participacao.valorInvestido ?? null,
       },
     })
     return this.toDomain(record)
+  }
+
+  async updateMany(participacoes: ParticipacaoLote[]): Promise<void> {
+    await this.prisma.$transaction(
+      participacoes.map((p) =>
+        this.prisma.participacaoLote.update({
+          where: { loteProducaoId_associadoId: { loteProducaoId: p.loteProducaoId, associadoId: p.associadoId } },
+          data: { percentual: p.percentual, percentualManual: p.percentualManual },
+        }),
+      ),
+    )
   }
 
   private toDomain(record: PrismaParticipacao): ParticipacaoLote {
@@ -53,6 +66,7 @@ export class PrismaParticipacaoLoteRepository implements IParticipacaoLoteReposi
       loteProducaoId: record.loteProducaoId,
       associadoId: record.associadoId,
       percentual: Number(record.percentual),
+      percentualManual: record.percentualManual,
       volume: record.volume != null ? Number(record.volume) : undefined,
       valorInvestido: record.valorInvestido != null ? Number(record.valorInvestido) : undefined,
     })

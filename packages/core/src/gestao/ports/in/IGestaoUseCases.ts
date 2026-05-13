@@ -12,6 +12,7 @@ export interface CriarAtaInput {
   autorId: string
   dataReuniao: Date
   publicada?: boolean
+  participantesIds?: string[]
 }
 
 export interface ICriarAtaUseCase {

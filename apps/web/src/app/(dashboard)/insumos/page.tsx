@@ -25,7 +25,7 @@ export default async function InsumosPage() {
             : 'Consulte e solicite uso de equipamentos e insumos'
         }
       />
-      {isAdmin ? <AdminInsumos /> : <AssociadoInsumos userId={user.id} />}
+      {isAdmin ? <AdminInsumos /> : <AssociadoInsumos />}
     </div>
   )
 }

@@ -55,6 +55,7 @@ export interface CriarAtaInput {
   conteudo: string
   dataReuniao: string
   publicada?: boolean
+  participantesIds?: string[]
 }
 
 // ── Documento ────────────────────────────────────────────────────────────────

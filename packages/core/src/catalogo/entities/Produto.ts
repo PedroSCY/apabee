@@ -49,4 +49,8 @@ export class Produto {
     if (preco <= 0) throw new Error('Preço deve ser positivo.')
     return new Produto({ ...this.props, preco })
   }
+
+  comLoteOrigem(loteOrigemId: string): Produto {
+    return new Produto({ ...this.props, loteOrigemId })
+  }
 }

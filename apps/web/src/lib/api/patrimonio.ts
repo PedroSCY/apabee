@@ -60,6 +60,23 @@ export interface AtribuirPatrimonioInput {
   dataInicio?: string
 }
 
+export interface SolicitacaoPatrimonioResponse {
+  id: string
+  patrimonioId: string
+  tipoPatrimonio: string
+  associadoId: string
+  justificativa?: string
+  status: 'PENDENTE' | 'APROVADA' | 'REJEITADA'
+  criadoEm: string
+  resolvidoEm?: string
+}
+
+export interface CriarSolicitacaoInput {
+  patrimonioId: string
+  tipoPatrimonio: string
+  justificativa?: string
+}
+
 export const patrimonioApi = {
   // Equipamentos
   listarEquipamentos: () =>
@@ -83,6 +100,12 @@ export const patrimonioApi = {
   colocarEquipamentoEmManutencao: (id: string) =>
     apiFetch<void>(`/patrimonio/equipamentos/${id}/manutencao`, { method: 'PATCH' }),
 
+  liberarEquipamentoManutencao: (id: string) =>
+    apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}/liberar-manutencao`, { method: 'PATCH' }),
+
+  excluirEquipamento: (id: string) =>
+    apiFetch<void>(`/patrimonio/equipamentos/${id}`, { method: 'DELETE' }),
+
   // Insumos
   listarInsumos: () =>
     apiFetch<InsumoResponse[]>('/patrimonio/insumos'),
@@ -105,7 +128,16 @@ export const patrimonioApi = {
   colocarInsumoEmManutencao: (id: string) =>
     apiFetch<void>(`/patrimonio/insumos/${id}/manutencao`, { method: 'PATCH' }),
 
+  liberarInsumoManutencao: (id: string) =>
+    apiFetch<InsumoResponse>(`/patrimonio/insumos/${id}/liberar-manutencao`, { method: 'PATCH' }),
+
+  excluirInsumo: (id: string) =>
+    apiFetch<void>(`/patrimonio/insumos/${id}`, { method: 'DELETE' }),
+
   // Atribuições
+  listarTodasAtribuicoes: () =>
+    apiFetch<AtribuicaoPatrimonioResponse[]>('/patrimonio/atribuicoes'),
+
   atribuirPatrimonio: (input: AtribuirPatrimonioInput) =>
     apiFetch<AtribuicaoPatrimonioResponse>('/patrimonio/atribuicoes', {
       method: 'POST',
@@ -119,4 +151,26 @@ export const patrimonioApi = {
     apiFetch<AtribuicaoPatrimonioResponse[]>(
       `/patrimonio/atribuicoes/associado/${associadoId}`,
     ),
+
+  // Solicitações
+  criarSolicitacao: (input: CriarSolicitacaoInput) =>
+    apiFetch<SolicitacaoPatrimonioResponse>('/patrimonio/solicitacoes', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  listarSolicitacoes: (status?: string) =>
+    apiFetch<SolicitacaoPatrimonioResponse[]>(
+      `/patrimonio/solicitacoes${status ? `?status=${status}` : ''}`,
+    ),
+
+  aprovarSolicitacao: (id: string) =>
+    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/aprovar`, {
+      method: 'PATCH',
+    }),
+
+  rejeitarSolicitacao: (id: string) =>
+    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/rejeitar`, {
+      method: 'PATCH',
+    }),
 }

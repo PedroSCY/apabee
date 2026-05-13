@@ -86,6 +86,14 @@ export function useParticipacoesPorLote(loteId: string) {
   })
 }
 
+export function useParticipacoesPorAssociado(associadoId: string) {
+  return useQuery({
+    queryKey: [...PARTICIPACOES_KEY, 'associado', associadoId],
+    queryFn: () => producaoApi.listarParticipacoesPorAssociado(associadoId),
+    enabled: Boolean(associadoId),
+  })
+}
+
 export function useRegistrarParticipacao() {
   const qc = useQueryClient()
   return useMutation({
@@ -107,6 +115,14 @@ export function useAtualizarParticipacao() {
       associadoId: string
       input: AtualizarParticipacaoInput
     }) => producaoApi.atualizarParticipacao(loteId, associadoId, input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: PARTICIPACOES_KEY }),
+  })
+}
+
+export function useCalcularRateio() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (loteId: string) => producaoApi.calcularRateio(loteId),
     onSuccess: () => void qc.invalidateQueries({ queryKey: PARTICIPACOES_KEY }),
   })
 }

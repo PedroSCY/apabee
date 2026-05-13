@@ -45,6 +45,18 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
     return this.toDomain(record)
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.usuario.delete({ where: { id } })
+  }
+
+  async contemRegistrosDeAutoria(id: string): Promise<boolean> {
+    const [atas, docs] = await Promise.all([
+      this.prisma.ata.count({ where: { autorId: id } }),
+      this.prisma.documento.count({ where: { autorId: id } }),
+    ])
+    return atas > 0 || docs > 0
+  }
+
   private toDomain(record: PrismaUsuario): Usuario {
     return new Usuario({
       id: record.id,

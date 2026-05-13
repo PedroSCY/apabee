@@ -55,6 +55,10 @@ export class PrismaEquipamentoRepository implements IEquipamentoRepository {
     return this.toDomain(record)
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.equipamento.delete({ where: { id } })
+  }
+
   private toDomain(record: PrismaEquipamento): Equipamento {
     return new Equipamento({
       id: record.id,

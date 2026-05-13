@@ -19,6 +19,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR
 
+    if (!(exception instanceof HttpException)) {
+      console.error('[GlobalExceptionFilter] Erro não tratado:', exception)
+    }
+
     const message =
       exception instanceof HttpException
         ? exception.getResponse()

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -24,6 +25,8 @@ import {
   IBuscarEquipamentoUseCase,
   IColocarEquipamentoEmManutencaoUseCase,
   ICriarEquipamentoUseCase,
+  IExcluirEquipamentoUseCase,
+  ILiberarEquipamentoManutencaoUseCase,
   IListarEquipamentosUseCase,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
@@ -33,6 +36,8 @@ import {
   BUSCAR_EQUIPAMENTO_USE_CASE,
   COLOCAR_EQUIPAMENTO_MANUTENCAO_USE_CASE,
   CRIAR_EQUIPAMENTO_USE_CASE,
+  EXCLUIR_EQUIPAMENTO_USE_CASE,
+  LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE,
   LISTAR_EQUIPAMENTOS_USE_CASE,
 } from '../../../patrimonio.tokens'
 
@@ -52,6 +57,10 @@ export class EquipamentosController {
     private readonly atualizarEquipamento: IAtualizarEquipamentoUseCase,
     @Inject(COLOCAR_EQUIPAMENTO_MANUTENCAO_USE_CASE)
     private readonly colocarEmManutencao: IColocarEquipamentoEmManutencaoUseCase,
+    @Inject(EXCLUIR_EQUIPAMENTO_USE_CASE)
+    private readonly excluirEquipamento: IExcluirEquipamentoUseCase,
+    @Inject(LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE)
+    private readonly liberarManutencao: ILiberarEquipamentoManutencaoUseCase,
   ) {}
 
   @ApiOperation({ summary: 'Criar equipamento' })
@@ -63,6 +72,7 @@ export class EquipamentosController {
 
   @ApiOperation({ summary: 'Listar equipamentos' })
   @ApiResponse({ status: 200, description: 'Lista de equipamentos.' })
+  @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get()
   async listar() {
     const lista = await this.listarEquipamentos.execute()
@@ -93,6 +103,24 @@ export class EquipamentosController {
   @Patch(':id/manutencao')
   async colocarManutencao(@Param('id') id: string): Promise<void> {
     await this.colocarEmManutencao.execute(id)
+  }
+
+  @ApiOperation({ summary: 'Liberar equipamento da manutenção' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 200, description: 'Equipamento liberado para DISPONIVEL.' })
+  @Patch(':id/liberar-manutencao')
+  async liberarManutencaoHandler(@Param('id') id: string) {
+    return this.toResponse(await this.liberarManutencao.execute(id))
+  }
+
+  @ApiOperation({ summary: 'Excluir equipamento' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiNoContentResponse({ description: 'Equipamento excluído.' })
+  @ApiResponse({ status: 400, description: 'Equipamento em uso — devolva antes de excluir.' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id')
+  async excluir(@Param('id') id: string): Promise<void> {
+    await this.excluirEquipamento.execute(id)
   }
 
   private toResponse(e: Equipamento) {

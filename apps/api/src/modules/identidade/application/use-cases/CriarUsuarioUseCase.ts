@@ -28,6 +28,7 @@ export class CriarUsuarioUseCase implements ICriarUsuarioUseCase {
       role: input.role,
       nome: input.nome,
       telefone: input.telefone,
+      senha: input.senha,
     })
 
     const usuario = new Usuario({

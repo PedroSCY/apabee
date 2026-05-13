@@ -11,6 +11,7 @@ interface SupabaseJwtPayload {
   role: string
   app_metadata?: {
     role?: RoleUsuario
+    associadoId?: string
   }
 }
 
@@ -18,6 +19,7 @@ export interface JwtPayload {
   sub: string
   email: string
   role: RoleUsuario
+  associadoId?: string
 }
 
 @Injectable()
@@ -41,6 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       sub: payload.sub,
       email: payload.email,
       role: payload.app_metadata?.role ?? RoleUsuario.ASSOCIADO,
+      associadoId: payload.app_metadata?.associadoId,
     }
   }
 }

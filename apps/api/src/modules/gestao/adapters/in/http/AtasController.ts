@@ -52,6 +52,7 @@ export class AtasController {
       autorId: req.user.sub,
       dataReuniao: new Date(dto.dataReuniao),
       publicada: dto.publicada,
+      participantesIds: dto.participantesIds,
     })
   }
 

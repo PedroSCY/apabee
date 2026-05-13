@@ -1,9 +1,25 @@
 'use client'
 
 import * as React from 'react'
-import { Dialog } from 'radix-ui'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarDocumento } from '@/hooks/useGestao'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
@@ -40,7 +56,7 @@ export function UploadDocumentoDialog({ open, onOpenChange }: Props) {
     }
   }, [open])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!arquivo) { toast.error('Selecione um arquivo.'); return }
     if (!titulo.trim()) { toast.error('Informe o título.'); return }
@@ -78,66 +94,69 @@ export function UploadDocumentoDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-          <Dialog.Title className="text-lg font-semibold">Novo Documento</Dialog.Title>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Título</label>
-              <input
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ex: Ata Reunião Mai/26"
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Categoria</label>
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Novo Documento</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="titulo">Título</Label>
+            <Input
+              id="titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ex: Ata Reunião Mai/26"
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="categoria">Categoria</Label>
+            <Select value={categoria} onValueChange={setCategoria} disabled={isPending}>
+              <SelectTrigger id="categoria">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 {CATEGORIAS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                 ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Arquivo</label>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
-                onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
-                className="w-full text-sm"
-              />
-              {arquivo && (
-                <p className="text-xs text-muted-foreground">
-                  {arquivo.name} — {(arquivo.size / 1024).toFixed(0)} KB
-                </p>
-              )}
-            </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={publicado}
-                onChange={(e) => setPublicado(e.target.checked)}
-              />
-              Publicar imediatamente
-            </label>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? 'Enviando…' : 'Enviar'}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Arquivo</Label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
+              onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+              disabled={isPending}
+              className="w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground cursor-pointer"
+            />
+            {arquivo && (
+              <p className="text-xs text-muted-foreground">
+                {arquivo.name} — {(arquivo.size / 1024).toFixed(0)} KB
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="publicado"
+              checked={publicado}
+              onCheckedChange={setPublicado}
+              disabled={isPending}
+            />
+            <Label htmlFor="publicado" className="cursor-pointer">Publicar imediatamente</Label>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Enviando…' : 'Enviar'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

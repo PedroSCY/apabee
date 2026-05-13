@@ -2,24 +2,26 @@ import {
   Body, Controller, Get, HttpCode, HttpStatus,
   Inject, Param, Patch, Post,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiNoContentResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { RoleUsuario } from '@apa/shared'
 import {
+  IAtualizarParticipacaoUseCase,
   IBuscarLoteUseCase,
+  ICalcularRateioUseCase,
   ICriarLoteUseCase,
   IEncerrarLoteUseCase,
   IListarLotesUseCase,
   IListarParticipacoesPorLoteUseCase,
   IRegistrarParticipacaoUseCase,
-  IAtualizarParticipacaoUseCase,
   LoteProducao,
   ParticipacaoLote,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
-import { CriarLoteDto, RegistrarParticipacaoDto } from './dto'
+import { AtualizarParticipacaoDto, CriarLoteDto, RegistrarParticipacaoDto } from './dto'
 import {
   ATUALIZAR_PARTICIPACAO_USE_CASE,
   BUSCAR_LOTE_USE_CASE,
+  CALCULAR_RATEIO_USE_CASE,
   CRIAR_LOTE_USE_CASE,
   ENCERRAR_LOTE_USE_CASE,
   LISTAR_LOTES_USE_CASE,
@@ -39,6 +41,7 @@ export class LotesController {
     @Inject(REGISTRAR_PARTICIPACAO_USE_CASE) private readonly registrarParticipacao: IRegistrarParticipacaoUseCase,
     @Inject(LISTAR_PARTICIPACOES_LOTE_USE_CASE) private readonly listarParticipacoes: IListarParticipacoesPorLoteUseCase,
     @Inject(ATUALIZAR_PARTICIPACAO_USE_CASE) private readonly atualizarParticipacao: IAtualizarParticipacaoUseCase,
+    @Inject(CALCULAR_RATEIO_USE_CASE) private readonly calcularRateio: ICalcularRateioUseCase,
   ) {}
 
   @ApiOperation({ summary: 'Criar lote de produção' })
@@ -46,7 +49,13 @@ export class LotesController {
   @Roles(RoleUsuario.ADMIN)
   @Post()
   async criarLote(@Body() dto: CriarLoteDto) {
-    return this.toLoteResponse(await this.criar.execute({ ...dto, dataInicio: new Date(dto.dataInicio) }))
+    return this.toLoteResponse(
+      await this.criar.execute({
+        ...dto,
+        dataInicio: new Date(dto.dataInicio),
+        dataFim: dto.dataFim ? new Date(dto.dataFim) : undefined,
+      }),
+    )
   }
 
   @ApiOperation({ summary: 'Listar lotes' })
@@ -65,7 +74,6 @@ export class LotesController {
 
   @ApiOperation({ summary: 'Encerrar lote' })
   @ApiParam({ name: 'id', type: String })
-  @ApiNoContentResponse({ description: 'Lote encerrado.' })
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
   @Patch(':id/encerrar')
@@ -91,7 +99,7 @@ export class LotesController {
     )
   }
 
-  @ApiOperation({ summary: 'Atualizar participação de associado no lote' })
+  @ApiOperation({ summary: 'Atualizar participação (volume/valorInvestido/percentual manual)' })
   @ApiParam({ name: 'id', type: String })
   @ApiParam({ name: 'associadoId', type: String })
   @Roles(RoleUsuario.ADMIN)
@@ -99,11 +107,20 @@ export class LotesController {
   async atualizar(
     @Param('id') loteId: string,
     @Param('associadoId') associadoId: string,
-    @Body() dto: RegistrarParticipacaoDto,
+    @Body() dto: AtualizarParticipacaoDto,
   ) {
     return this.toParticipacaoResponse(
       await this.atualizarParticipacao.execute(loteId, associadoId, dto),
     )
+  }
+
+  @ApiOperation({ summary: 'Recalcular rateio automático do lote (respeita percentuais manuais)' })
+  @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @Post(':id/rateio')
+  async recalcularRateio(@Param('id') loteId: string) {
+    const lista = await this.calcularRateio.execute(loteId)
+    return lista.map((p) => this.toParticipacaoResponse(p))
   }
 
   private toLoteResponse(l: LoteProducao) {
@@ -124,6 +141,7 @@ export class LotesController {
       loteProducaoId: p.loteProducaoId,
       associadoId: p.associadoId,
       percentual: p.percentual,
+      percentualManual: p.percentualManual,
       volume: p.volume,
       valorInvestido: p.valorInvestido,
     }

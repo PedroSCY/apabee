@@ -5,7 +5,14 @@ import { patrimonioApi, type AtribuirPatrimonioInput } from '@/lib/api/patrimoni
 import { EQUIPAMENTOS_KEY } from './useEquipamentos'
 import { INSUMOS_KEY } from './useInsumos'
 
-const ATRIBUICOES_KEY = ['atribuicoes'] as const
+export const ATRIBUICOES_KEY = ['atribuicoes'] as const
+
+export function useTodasAtribuicoes() {
+  return useQuery({
+    queryKey: ATRIBUICOES_KEY,
+    queryFn: patrimonioApi.listarTodasAtribuicoes,
+  })
+}
 
 export function useAtribuicoesPorAssociado(associadoId: string) {
   return useQuery({

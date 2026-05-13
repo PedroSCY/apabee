@@ -1,8 +1,15 @@
 'use client'
 
-import { Dialog } from 'radix-ui'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -28,41 +35,28 @@ export function ConfirmDialog({
   isPending = false,
 }: ConfirmDialogProps) {
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content
-          className={cn(
-            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-            'w-full max-w-md rounded-xl bg-card p-6 shadow-lg',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-          )}
-        >
-          <Dialog.Title className="text-base font-semibold">{title}</Dialog.Title>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && (
-            <Dialog.Description className="mt-2 text-sm text-muted-foreground">
-              {description}
-            </Dialog.Description>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
           )}
-          <div className="mt-6 flex justify-end gap-3">
-            <Dialog.Close asChild>
-              <Button variant="outline" size="sm" disabled={isPending}>
-                {cancelLabel}
-              </Button>
-            </Dialog.Close>
-            <Button
-              variant={variant === 'destructive' ? 'destructive' : 'default'}
-              size="sm"
-              onClick={() => void onConfirm()}
-              disabled={isPending}
-            >
-              {isPending ? 'Processando...' : confirmLabel}
-            </Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel size="sm" disabled={isPending}>
+            {cancelLabel}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            size="sm"
+            variant={variant === 'destructive' ? 'destructive' : 'default'}
+            onClick={() => void onConfirm()}
+            disabled={isPending}
+          >
+            {isPending ? 'Processando...' : confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

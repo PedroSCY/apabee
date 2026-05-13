@@ -31,3 +31,11 @@ export interface IAtualizarInsumoUseCase {
 export interface IColocarInsumoEmManutencaoUseCase {
   execute(id: string): Promise<Insumo>
 }
+
+export interface IExcluirInsumoUseCase {
+  execute(id: string): Promise<void>
+}
+
+export interface ILiberarInsumoManutencaoUseCase {
+  execute(id: string): Promise<Insumo>
+}

@@ -44,6 +44,10 @@ export class Associado {
     return new Associado({ ...this.props, status: StatusAssociado.PENDENTE })
   }
 
+  atualizarDados(dados: { status?: StatusAssociado; dataIngresso?: Date; observacoes?: string }): Associado {
+    return new Associado({ ...this.props, ...dados })
+  }
+
   toJSON(): AssociadoProps {
     return { ...this.props }
   }

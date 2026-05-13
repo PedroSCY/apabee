@@ -1,12 +1,28 @@
 'use client'
 
 import * as React from 'react'
-import { Dialog } from 'radix-ui'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarColheita, useLotes, useTiposMateriaPrima } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
 import type { ApiError } from '@/lib/api/client'
@@ -36,7 +52,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
 
   const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO')
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
   })
@@ -57,75 +73,117 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background rounded-xl shadow-xl p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
-          <Dialog.Title className="text-lg font-semibold">Registrar Colheita</Dialog.Title>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Associado</label>
-              <select {...register('associadoId')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background">
-                <option value="">Selecione…</option>
-                {associados.map((a) => (
-                  <option key={a.id} value={a.id}>{a.usuario.nome}</option>
-                ))}
-              </select>
-              {errors.associadoId && <p className="text-xs text-destructive">{errors.associadoId.message}</p>}
-            </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Registrar Colheita</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Associado</Label>
+            <Controller
+              control={control}
+              name="associadoId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {associados.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.associadoId && <p className="text-xs text-destructive">{errors.associadoId.message}</p>}
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Lote (aberto)</label>
-              <select {...register('loteProducaoId')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background">
-                <option value="">Selecione…</option>
-                {lotesAbertos.map((l) => (
-                  <option key={l.id} value={l.id}>{l.periodo} — {l.tipo}</option>
-                ))}
-              </select>
-              {errors.loteProducaoId && <p className="text-xs text-destructive">{errors.loteProducaoId.message}</p>}
-            </div>
+          <div className="space-y-1.5">
+            <Label>Lote (aberto)</Label>
+            <Controller
+              control={control}
+              name="loteProducaoId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lotesAbertos.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.periodo} — {l.tipo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.loteProducaoId && <p className="text-xs text-destructive">{errors.loteProducaoId.message}</p>}
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Tipo de Matéria-Prima</label>
-              <select {...register('tipoMateriaPrimaId')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background">
-                <option value="">Selecione…</option>
-                {tipos.map((t) => (
-                  <option key={t.id} value={t.id}>{t.nome} ({t.unidade})</option>
-                ))}
-              </select>
-              {errors.tipoMateriaPrimaId && <p className="text-xs text-destructive">{errors.tipoMateriaPrimaId.message}</p>}
-            </div>
+          <div className="space-y-1.5">
+            <Label>Tipo de Matéria-Prima</Label>
+            <Controller
+              control={control}
+              name="tipoMateriaPrimaId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tipos.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.nome} ({t.unidade})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.tipoMateriaPrimaId && <p className="text-xs text-destructive">{errors.tipoMateriaPrimaId.message}</p>}
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Volume</label>
-                <input type="number" step="0.001" {...register('volume', { valueAsNumber: true })} placeholder="0.000" className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background" />
-                {errors.volume && <p className="text-xs text-destructive">{errors.volume.message}</p>}
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Unidade</label>
-                <input readOnly value={tipoSelecionado?.unidade ?? '—'} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-muted text-muted-foreground" />
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="volume">Volume</Label>
+              <Input
+                id="volume"
+                type="number"
+                step="0.001"
+                {...register('volume', { valueAsNumber: true })}
+                placeholder="0.000"
+                disabled={isPending}
+              />
+              {errors.volume && <p className="text-xs text-destructive">{errors.volume.message}</p>}
             </div>
+            <div className="space-y-1.5">
+              <Label>Unidade</Label>
+              <Input readOnly value={tipoSelecionado?.unidade ?? '—'} className="bg-muted text-muted-foreground" />
+            </div>
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Data da Colheita</label>
-              <input type="date" {...register('dataColheita')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background" />
-              {errors.dataColheita && <p className="text-xs text-destructive">{errors.dataColheita.message}</p>}
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="dataColheita">Data da Colheita</Label>
+            <Input id="dataColheita" type="date" {...register('dataColheita')} disabled={isPending} />
+            {errors.dataColheita && <p className="text-xs text-destructive">{errors.dataColheita.message}</p>}
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Observação (opcional)</label>
-              <textarea rows={2} {...register('observacao')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background resize-none" />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="observacao">Observação (opcional)</Label>
+            <Textarea
+              id="observacao"
+              rows={2}
+              {...register('observacao')}
+              disabled={isPending}
+              className="resize-none"
+            />
+          </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? 'Registrando…' : 'Registrar'}</Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? 'Registrando…' : 'Registrar'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

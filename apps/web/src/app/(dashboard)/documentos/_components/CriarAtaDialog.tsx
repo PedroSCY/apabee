@@ -1,9 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import { Dialog } from 'radix-ui'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarAta } from '@/hooks/useGestao'
 
 interface Props {
@@ -23,7 +33,7 @@ export function CriarAtaDialog({ open, onOpenChange }: Props) {
     if (!open) { setTitulo(''); setConteudo(''); setDataReuniao(''); setPublicada(false) }
   }, [open])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!titulo.trim() || !dataReuniao) { toast.error('Preencha título e data.'); return }
     try {
@@ -36,55 +46,59 @@ export function CriarAtaDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background rounded-xl shadow-xl p-6 w-full max-w-lg space-y-4">
-          <Dialog.Title className="text-lg font-semibold">Nova Ata</Dialog.Title>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Título</label>
-              <input
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ex: Reunião Ordinária — Maio/2026"
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Data da Reunião</label>
-              <input
-                type="date"
-                value={dataReuniao}
-                onChange={(e) => setDataReuniao(e.target.value)}
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Conteúdo / Pauta</label>
-              <textarea
-                value={conteudo}
-                onChange={(e) => setConteudo(e.target.value)}
-                rows={5}
-                placeholder="Descreva os assuntos tratados, deliberações e encaminhamentos…"
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background resize-none"
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={publicada}
-                onChange={(e) => setPublicada(e.target.checked)}
-              />
-              Publicar imediatamente
-            </label>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? 'Salvando…' : 'Criar Ata'}</Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Nova Ata</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="titulo">Título</Label>
+            <Input
+              id="titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ex: Reunião Ordinária — Maio/2026"
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="dataReuniao">Data da Reunião</Label>
+            <Input
+              id="dataReuniao"
+              type="date"
+              value={dataReuniao}
+              onChange={(e) => setDataReuniao(e.target.value)}
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="conteudo">Conteúdo / Pauta</Label>
+            <Textarea
+              id="conteudo"
+              value={conteudo}
+              onChange={(e) => setConteudo(e.target.value)}
+              rows={5}
+              placeholder="Descreva os assuntos tratados, deliberações e encaminhamentos…"
+              disabled={isPending}
+              className="resize-none"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="publicada"
+              checked={publicada}
+              onCheckedChange={setPublicada}
+              disabled={isPending}
+            />
+            <Label htmlFor="publicada" className="cursor-pointer">Publicar imediatamente</Label>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? 'Salvando…' : 'Criar Ata'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

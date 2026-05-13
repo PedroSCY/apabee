@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { PrismaModule } from '../../shared/database/prisma.module'
+import { EncerrarLotesVencidosService } from './application/services/EncerrarLotesVencidosService'
 import { TiposMateriaPrimaController } from './adapters/in/http/TiposMateriaPrimaController'
 import { ColheitasController } from './adapters/in/http/ColheitasController'
 import { LotesController } from './adapters/in/http/LotesController'
@@ -12,6 +13,7 @@ import {
 } from './adapters/out/persistence'
 import {
   AtualizarParticipacaoUseCase,
+  CalcularRateioUseCase,
   BuscarLoteUseCase,
   BuscarTipoMateriaPrimaUseCase,
   ConsultarEstoqueUseCase,
@@ -28,6 +30,7 @@ import {
 } from './application/use-cases'
 import {
   ATUALIZAR_PARTICIPACAO_USE_CASE,
+  CALCULAR_RATEIO_USE_CASE,
   BUSCAR_LOTE_USE_CASE,
   BUSCAR_TIPO_MATERIA_PRIMA_USE_CASE,
   COLHEITA_REPOSITORY,
@@ -69,9 +72,11 @@ import {
     { provide: ENCERRAR_LOTE_USE_CASE, useClass: EncerrarLoteUseCase },
     { provide: REGISTRAR_PARTICIPACAO_USE_CASE, useClass: RegistrarParticipacaoUseCase },
     { provide: LISTAR_PARTICIPACOES_LOTE_USE_CASE, useClass: ListarParticipacoesPorLoteUseCase },
+    { provide: CALCULAR_RATEIO_USE_CASE, useClass: CalcularRateioUseCase },
     { provide: ATUALIZAR_PARTICIPACAO_USE_CASE, useClass: AtualizarParticipacaoUseCase },
     { provide: CONSULTAR_ESTOQUE_USE_CASE, useClass: ConsultarEstoqueUseCase },
+    EncerrarLotesVencidosService,
   ],
-  exports: [LOTE_PRODUCAO_REPOSITORY, ESTOQUE_MATERIA_PRIMA_REPOSITORY],
+  exports: [COLHEITA_REPOSITORY, LOTE_PRODUCAO_REPOSITORY, ESTOQUE_MATERIA_PRIMA_REPOSITORY],
 })
 export class ProducaoModule {}

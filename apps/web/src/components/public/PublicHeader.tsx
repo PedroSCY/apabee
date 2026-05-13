@@ -1,12 +1,17 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart, Menu, X, Hexagon, LogIn } from 'lucide-react'
+import { ShoppingCart, Menu, Hexagon, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCartStore } from '@/store/cart.store'
 import { Button } from '../ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetClose,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 const NAV_LINKS = [
   { href: '/', label: 'Início' },
@@ -25,7 +30,7 @@ function CartIcon() {
       size="icon"
       onClick={() => setOpen(true)}
       aria-label="Carrinho de compras"
-      className="relative "
+      className="relative"
     >
       <ShoppingCart />
       {count > 0 && (
@@ -39,11 +44,6 @@ function CartIcon() {
 
 export function PublicHeader() {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = React.useState(false)
-
-  React.useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-backdrop-filter:bg-background/80">
@@ -87,42 +87,43 @@ export function PublicHeader() {
               <LogIn /> Entrar
             </Link>
           </Button>
-          <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="Menu"
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <nav className="mt-8 flex flex-col gap-1">
+                {NAV_LINKS.map(({ href, label }) => (
+                  <SheetClose asChild key={href}>
+                    <Link
+                      href={href}
+                      className={cn(
+                        'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        pathname === href || (href !== '/' && pathname?.startsWith(href))
+                          ? 'text-primary bg-primary/10'
+                          : 'text-muted-foreground hover:text-accent hover:bg-secondary',
+                      )}
+                    >
+                      {label}
+                    </Link>
+                  </SheetClose>
+                ))}
+                <div className="my-2 border-t border-border" />
+                <SheetClose asChild>
+                  <Link
+                    href="/login"
+                    className="block px-3 py-2 text-sm font-semibold text-accent hover:bg-primary/10 transition-colors rounded-lg"
+                  >
+                    Entrar
+                  </Link>
+                </SheetClose>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border/60 bg-background px-4 py-3 space-y-1">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                pathname === href || (href !== '/' && pathname?.startsWith(href))
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-accent hover:bg-secondary',
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-          <div className="w-full border-b-2 border-accent-light/60 "></div>
-          <Link
-            href="/login"
-            className="block  px-3 py-2 text-sm font-semibold text-accent hover:bg-primary/10 transition-colors"
-          >
-            Entrar
-          </Link>
-        </div>
-      )}
     </header>
   )
 }

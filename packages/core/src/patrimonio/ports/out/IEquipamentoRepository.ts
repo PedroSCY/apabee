@@ -6,4 +6,5 @@ export interface IEquipamentoRepository {
   findDisponiveis(): Promise<Equipamento[]>;
   save(equipamento: Equipamento): Promise<Equipamento>;
   update(equipamento: Equipamento): Promise<Equipamento>;
+  delete(id: string): Promise<void>;
 }

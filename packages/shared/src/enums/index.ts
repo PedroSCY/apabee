@@ -99,3 +99,21 @@ export enum CategoriaAviso {
   REUNIAO = 'REUNIAO',
   FINANCEIRO = 'FINANCEIRO',
 }
+
+export enum StatusSolicitacaoPatrimonio {
+  PENDENTE = 'PENDENTE',
+  APROVADA = 'APROVADA',
+  REJEITADA = 'REJEITADA',
+}
+
+export enum TipoSolicitacaoContato {
+  CONTATO = 'CONTATO',
+  COLETA = 'COLETA',
+  INTEGRACAO = 'INTEGRACAO',
+}
+
+export enum StatusSolicitacaoContato {
+  PENDENTE = 'PENDENTE',
+  VISUALIZADA = 'VISUALIZADA',
+  RESOLVIDA = 'RESOLVIDA',
+}

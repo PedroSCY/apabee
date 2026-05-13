@@ -54,3 +54,23 @@ export function useColocarInsumoEmManutencao() {
     },
   })
 }
+
+export function useLiberarInsumoManutencao() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => patrimonioApi.liberarInsumoManutencao(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
+    },
+  })
+}
+
+export function useExcluirInsumo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => patrimonioApi.excluirInsumo(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
+    },
+  })
+}

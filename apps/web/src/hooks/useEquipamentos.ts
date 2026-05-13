@@ -54,3 +54,23 @@ export function useColocarEquipamentoEmManutencao() {
     },
   })
 }
+
+export function useLiberarEquipamentoManutencao() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => patrimonioApi.liberarEquipamentoManutencao(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: EQUIPAMENTOS_KEY })
+    },
+  })
+}
+
+export function useExcluirEquipamento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => patrimonioApi.excluirEquipamento(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: EQUIPAMENTOS_KEY })
+    },
+  })
+}

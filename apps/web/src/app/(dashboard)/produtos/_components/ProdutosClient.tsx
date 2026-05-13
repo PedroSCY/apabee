@@ -2,12 +2,19 @@
 
 import * as React from 'react'
 import { Plus, Search, Package } from 'lucide-react'
-import { Dialog } from 'radix-ui'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useProdutos, useCriarProduto } from '@/hooks/useCatalogo'
 import { ProdutoCard } from './ProdutoCard'
 
@@ -16,6 +23,11 @@ import { ProdutoCard } from './ProdutoCard'
 function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [form, setForm] = React.useState({ nome: '', descricao: '', preco: '', imagemUrl: '' })
   const { mutateAsync: criar, isPending } = useCriarProduto()
+
+  function handleOpenChange(v: boolean) {
+    if (isPending) return
+    onOpenChange(v)
+  }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -32,81 +44,78 @@ function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => { if (!isPending) onOpenChange(v) }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className={cn(
-          'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-          'w-full max-w-lg rounded-xl bg-card p-6 shadow-lg',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        )}>
-          <Dialog.Title className="text-base font-semibold mb-5">Novo Produto</Dialog.Title>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="p-nome">Nome *</Label>
-              <Input
-                id="p-nome"
-                value={form.nome}
-                onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
-                required
-                minLength={2}
-                placeholder="Ex: Mel Silvestre 500g"
-              />
-            </div>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Novo Produto</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="p-nome">Nome *</Label>
+            <Input
+              id="p-nome"
+              value={form.nome}
+              onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
+              required
+              minLength={2}
+              placeholder="Ex: Mel Silvestre 500g"
+              disabled={isPending}
+            />
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="p-desc">Descrição *</Label>
-              <textarea
-                id="p-desc"
-                rows={3}
-                value={form.descricao}
-                onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
-                required
-                minLength={10}
-                placeholder="Descreva o produto para os associados e clientes..."
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-desc">Descrição *</Label>
+            <Textarea
+              id="p-desc"
+              rows={3}
+              value={form.descricao}
+              onChange={(e) => setForm((p) => ({ ...p, descricao: e.target.value }))}
+              required
+              minLength={10}
+              placeholder="Descreva o produto para os associados e clientes..."
+              disabled={isPending}
+              className="resize-none"
+            />
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="p-preco">Preço (R$) *</Label>
-              <Input
-                id="p-preco"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={form.preco}
-                onChange={(e) => setForm((p) => ({ ...p, preco: e.target.value }))}
-                required
-                placeholder="0,00"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-preco">Preço (R$) *</Label>
+            <Input
+              id="p-preco"
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={form.preco}
+              onChange={(e) => setForm((p) => ({ ...p, preco: e.target.value }))}
+              required
+              placeholder="0,00"
+              disabled={isPending}
+            />
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="p-img">URL da Imagem</Label>
-              <Input
-                id="p-img"
-                type="url"
-                value={form.imagemUrl}
-                onChange={(e) => setForm((p) => ({ ...p, imagemUrl: e.target.value }))}
-                placeholder="https://..."
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-img">URL da Imagem</Label>
+            <Input
+              id="p-img"
+              type="url"
+              value={form.imagemUrl}
+              onChange={(e) => setForm((p) => ({ ...p, imagemUrl: e.target.value }))}
+              placeholder="https://..."
+              disabled={isPending}
+            />
+          </div>
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Dialog.Close asChild>
-                <Button type="button" variant="outline" size="sm" disabled={isPending}>Cancelar</Button>
-              </Dialog.Close>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? 'Criando...' : 'Criar Produto'}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => handleOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? 'Criando...' : 'Criar Produto'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -164,22 +173,13 @@ export function ProdutosClient({ isAdmin }: Props) {
 
       {/* Filtros de status (apenas admin vê todos) */}
       {isAdmin && (
-        <div className="flex flex-wrap gap-2">
-          {STATUS_FILTROS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setFiltro(value)}
-              className={cn(
-                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                filtro === value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/70',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs value={filtro} onValueChange={(v) => setFiltro(v as Filtro)}>
+          <TabsList>
+            {STATUS_FILTROS.map(({ value, label }) => (
+              <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       )}
 
       {/* Grid */}

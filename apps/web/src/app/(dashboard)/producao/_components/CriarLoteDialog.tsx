@@ -1,18 +1,34 @@
 'use client'
 
 import * as React from 'react'
-import { Dialog } from 'radix-ui'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarLote } from '@/hooks/useProducao'
 
 const schema = z.object({
   tipo: z.enum(['PRODUCAO', 'AQUISICAO']),
   periodo: z.string().min(4, 'Informe o período'),
   dataInicio: z.string().min(1, 'Informe a data de início'),
+  dataFim: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -24,52 +40,69 @@ interface Props {
 
 export function CriarLoteDialog({ open, onOpenChange }: Props) {
   const { mutateAsync, isPending } = useCriarLote()
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { tipo: 'PRODUCAO', periodo: '', dataInicio: '' },
+    defaultValues: { tipo: 'PRODUCAO', periodo: '', dataInicio: '', dataFim: '' },
   })
 
   React.useEffect(() => { if (!open) reset() }, [open, reset])
 
   async function onSubmit(data: FormData) {
     try {
-      await mutateAsync(data)
+      await mutateAsync({ ...data, dataFim: data.dataFim || undefined })
       toast.success('Lote criado com sucesso!')
       onOpenChange(false)
     } catch { toast.error('Erro ao criar lote.') }
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
-          <Dialog.Title className="text-lg font-semibold">Criar Lote de Produção</Dialog.Title>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Tipo</label>
-              <select {...register('tipo')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background">
-                <option value="PRODUCAO">Produção (colheita)</option>
-                <option value="AQUISICAO">Aquisição (compra coletiva)</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Período</label>
-              <input {...register('periodo')} placeholder="Ex: 2025-01" className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background" />
-              {errors.periodo && <p className="text-xs text-destructive">{errors.periodo.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Data de Início</label>
-              <input type="date" {...register('dataInicio')} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Criar Lote de Produção</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="tipo">Tipo</Label>
+            <Controller
+              control={control}
+              name="tipo"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                  <SelectTrigger id="tipo">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PRODUCAO">Produção (colheita)</SelectItem>
+                    <SelectItem value="AQUISICAO">Aquisição (compra coletiva)</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="periodo">Período</Label>
+            <Input id="periodo" {...register('periodo')} placeholder="Ex: 2025-01" disabled={isPending} />
+            {errors.periodo && <p className="text-xs text-destructive">{errors.periodo.message}</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="dataInicio">Data de Início</Label>
+              <Input id="dataInicio" type="date" {...register('dataInicio')} disabled={isPending} />
               {errors.dataInicio && <p className="text-xs text-destructive">{errors.dataInicio.message}</p>}
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? 'Criando…' : 'Criar Lote'}</Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="dataFim">Encerramento <span className="text-muted-foreground">(opcional)</span></Label>
+              <Input id="dataFim" type="date" {...register('dataFim')} disabled={isPending} />
+              <p className="text-[10px] text-muted-foreground">Deixe vazio para encerrar manualmente.</p>
             </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? 'Criando…' : 'Criar Lote'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

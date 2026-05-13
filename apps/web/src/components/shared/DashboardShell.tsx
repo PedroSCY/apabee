@@ -1,25 +1,33 @@
 'use client'
 
-import { Sidebar } from './Sidebar'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from './Sidebar'
 import { Header } from './Header'
 
 interface DashboardShellProps {
   role: 'ADMIN' | 'ASSOCIADO'
   userName: string
   userEmail: string
+  defaultOpen?: boolean
   children: React.ReactNode
 }
 
-export function DashboardShell({ role, userName, userEmail, children }: DashboardShellProps) {
+export function DashboardShell({
+  role,
+  userName,
+  userEmail,
+  defaultOpen = true,
+  children,
+}: DashboardShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar role={role} />
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppSidebar role={role} />
+      <SidebarInset>
         <Header role={role} userName={userName} userEmail={userEmail} />
-        <main className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {children}
-        </main>
-      </div>
-    </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsPositive, IsUUID, Max, Min } from 'class-validator'
+import { IsNumber, IsOptional, IsPositive, IsUUID } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class RegistrarParticipacaoDto {
@@ -6,19 +6,13 @@ export class RegistrarParticipacaoDto {
   @IsUUID()
   associadoId!: string
 
-  @ApiProperty({ example: 30.5, description: 'Percentual de 0 a 100' })
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  percentual!: number
-
-  @ApiPropertyOptional({ example: 12.5 })
+  @ApiPropertyOptional({ example: 10.5, description: 'Volume produzido — obrigatório para lotes PRODUCAO' })
   @IsOptional()
   @IsNumber()
   @IsPositive()
   volume?: number
 
-  @ApiPropertyOptional({ example: 500.0 })
+  @ApiPropertyOptional({ example: 1000.0, description: 'Valor investido — obrigatório para lotes AQUISICAO' })
   @IsOptional()
   @IsNumber()
   @IsPositive()

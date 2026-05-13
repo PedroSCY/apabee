@@ -55,6 +55,10 @@ export class Usuario {
     return new Usuario({ ...this.props, role })
   }
 
+  atualizarDados(dados: { nome?: string; email?: string; role?: RoleUsuario }): Usuario {
+    return new Usuario({ ...this.props, ...dados })
+  }
+
   toJSON(): UsuarioProps {
     return { ...this.props }
   }

@@ -67,16 +67,25 @@ export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
 
     // Atualiza ou cria estoque do produto final
     const estoqueAtual = await this.estoqueProdutoRepository.findByProduto(input.produtoId)
+    let estoque: EstoqueProduto
     if (estoqueAtual) {
-      return this.estoqueProdutoRepository.update(estoqueAtual.entrada(input.quantidade))
+      estoque = await this.estoqueProdutoRepository.update(estoqueAtual.entrada(input.quantidade))
+    } else {
+      estoque = await this.estoqueProdutoRepository.save(
+        new EstoqueProduto({
+          id: randomUUID(),
+          produtoId: input.produtoId,
+          quantidadeDisponivel: input.quantidade,
+          atualizadoEm: new Date(),
+        }),
+      )
     }
 
-    const novoEstoque = new EstoqueProduto({
-      id: randomUUID(),
-      produtoId: input.produtoId,
-      quantidadeDisponivel: input.quantidade,
-      atualizadoEm: new Date(),
-    })
-    return this.estoqueProdutoRepository.save(novoEstoque)
+    // Vincula o lote de origem ao produto quando informado
+    if (input.loteOrigemId) {
+      await this.produtoRepository.update(produto.comLoteOrigem(input.loteOrigemId))
+    }
+
+    return estoque
   }
 }

@@ -5,5 +5,6 @@ export interface IInsumoRepository {
   findAll(): Promise<Insumo[]>;
   save(insumo: Insumo): Promise<Insumo>;
   update(insumo: Insumo): Promise<Insumo>;
+  delete(id: string): Promise<void>;
 }
 

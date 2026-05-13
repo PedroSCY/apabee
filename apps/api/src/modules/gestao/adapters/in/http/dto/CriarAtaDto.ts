@@ -1,5 +1,4 @@
-import { IsString, IsNotEmpty, IsBoolean, IsOptional, IsDateString } from 'class-validator'
-import { Type } from 'class-transformer'
+import { IsString, IsNotEmpty, IsBoolean, IsOptional, IsDateString, IsArray, IsUUID } from 'class-validator'
 
 export class CriarAtaDto {
   @IsString() @IsNotEmpty()
@@ -13,6 +12,9 @@ export class CriarAtaDto {
 
   @IsBoolean() @IsOptional()
   publicada?: boolean
+
+  @IsOptional() @IsArray() @IsUUID('4', { each: true })
+  participantesIds?: string[]
 }
 
 export class AdicionarParticipanteDto {

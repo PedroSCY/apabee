@@ -1,17 +1,23 @@
-import { Package, Layers, TrendingUp, Coins } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ASSOCIADO_STATS } from '../_mock/dashboard.mock'
+'use client'
 
-const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+import * as React from 'react'
+import { Package, Layers, Droplets, Users } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useMeuPerfil } from '@/hooks/useAssociados'
+import { useAtribuicoesPorAssociado } from '@/hooks/useAtribuicoes'
+import { useLotes, useColheitasPorAssociado, useParticipacoesPorAssociado } from '@/hooks/useProducao'
 
 function StatCard({
   title,
   value,
   icon: Icon,
+  loading,
 }: {
   title: string
   value: string | number
   icon: React.ElementType
+  loading?: boolean
 }) {
   return (
     <Card>
@@ -22,35 +28,64 @@ function StatCard({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold">{value}</p>
+        {loading ? (
+          <Skeleton className="h-8 w-16" />
+        ) : (
+          <p className="text-2xl font-bold">{value}</p>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 export function AssociadoDashboard() {
+  const { data: meuPerfil, isLoading: loadingPerfil } = useMeuPerfil()
+  const meuId = meuPerfil?.id ?? ''
+
+  const { data: atribuicoes = [], isLoading: loadingAtrib } = useAtribuicoesPorAssociado(meuId)
+  const { data: lotes = [], isLoading: loadingLotes } = useLotes()
+  const { data: colheitas = [], isLoading: loadingColheitas } = useColheitasPorAssociado(meuId)
+  const { data: participacoes = [], isLoading: loadingPart } = useParticipacoesPorAssociado(meuId)
+
+  const emprestimosAtivos = atribuicoes.filter((a) => a.status === 'ATIVO').length
+  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO').length
+
+  const anoAtual = new Date().getFullYear()
+  const colheitasAno = colheitas.filter(
+    (c) => new Date(c.dataColheita).getFullYear() === anoAtual,
+  )
+  const volumeTotal = colheitasAno.reduce((sum, c) => sum + c.volume, 0)
+  const unidadePrincipal = colheitasAno[0]?.unidade ?? 'kg'
+  const volumeLabel = volumeTotal > 0 ? `${volumeTotal.toLocaleString('pt-BR')} ${unidadePrincipal}` : '0 kg'
+
+  const loading = loadingPerfil || loadingAtrib
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          title="Empréstimos ativos"
-          value={ASSOCIADO_STATS.emprestimosAtivos}
+          title="Itens emprestados"
+          value={emprestimosAtivos}
           icon={Package}
+          loading={loading}
         />
         <StatCard
-          title="Lotes abertos"
-          value={ASSOCIADO_STATS.lotesAbertos}
+          title="Lotes em aberto"
+          value={lotesAbertos}
           icon={Layers}
+          loading={loadingLotes}
         />
         <StatCard
-          title="Contribuição YTD"
-          value={`${ASSOCIADO_STATS.contribuicaoYTD} kg`}
-          icon={TrendingUp}
+          title="Volume colhido (ano)"
+          value={loadingColheitas ? '…' : volumeLabel}
+          icon={Droplets}
+          loading={loadingColheitas && !meuId}
         />
         <StatCard
-          title="Receita estimada"
-          value={fmt(ASSOCIADO_STATS.receitaEstimada)}
-          icon={Coins}
+          title="Participações em lotes"
+          value={participacoes.length}
+          icon={Users}
+          loading={loadingPart && !meuId}
         />
       </div>
 

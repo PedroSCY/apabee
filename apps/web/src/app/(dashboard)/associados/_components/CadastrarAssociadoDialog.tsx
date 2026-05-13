@@ -1,13 +1,18 @@
 'use client'
 
 import * as React from 'react'
-import { Dialog } from 'radix-ui'
-import { X } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarUsuario, useCriarAssociado } from '@/hooks/useAssociados'
 
 interface Props {
@@ -26,24 +31,44 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
     telefone: '',
     dataIngresso: '',
     observacoes: '',
+    senha: '',
+    confirmarSenha: '',
   })
+  const [senhaError, setSenhaError] = React.useState('')
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    if (e.target.name === 'senha' || e.target.name === 'confirmarSenha') setSenhaError('')
   }
 
   function resetForm() {
-    setForm({ nome: '', email: '', telefone: '', dataIngresso: '', observacoes: '' })
+    setForm({ nome: '', email: '', telefone: '', dataIngresso: '', observacoes: '', senha: '', confirmarSenha: '' })
+    setSenhaError('')
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleOpenChange(v: boolean) {
+    if (isPending) return
+    if (!v) resetForm()
+    onOpenChange(v)
+  }
+
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
+    if (form.senha && form.senha.length < 8) {
+      setSenhaError('A senha deve ter no mínimo 8 caracteres.')
+      return
+    }
+    if (form.senha !== form.confirmarSenha) {
+      setSenhaError('As senhas não coincidem.')
+      return
+    }
     try {
       const usuario = await criarUsuario({
         nome: form.nome.trim(),
         email: form.email.trim(),
         role: 'ASSOCIADO',
         telefone: form.telefone.trim() || undefined,
+        senha: form.senha || undefined,
       })
       await criarAssociado({
         usuarioId: usuario.id,
@@ -60,124 +85,137 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={(v) => {
-        if (!isPending) {
-          if (!v) resetForm()
-          onOpenChange(v)
-        }
-      }}
-    >
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content
-          className={cn(
-            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-            'w-full max-w-lg rounded-xl bg-card p-6 shadow-lg',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-          )}
-        >
-          <div className="flex items-center justify-between mb-5">
-            <Dialog.Title className="text-base font-semibold">Cadastrar Associado</Dialog.Title>
-            <Dialog.Close asChild>
-              <button
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Cadastrar Associado</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="nome">Nome completo *</Label>
+              <Input
+                id="nome"
+                name="nome"
+                placeholder="João da Silva"
+                value={form.nome}
+                onChange={handleChange}
+                required
+                minLength={2}
                 disabled={isPending}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:opacity-50"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </Dialog.Close>
+              />
+            </div>
+
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="email">E-mail *</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="joao@exemplo.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                name="telefone"
+                placeholder="(34) 99999-0000"
+                value={form.telefone}
+                onChange={handleChange}
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="dataIngresso">Data de ingresso</Label>
+              <Input
+                id="dataIngresso"
+                name="dataIngresso"
+                type="date"
+                value={form.dataIngresso}
+                onChange={handleChange}
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Textarea
+                id="observacoes"
+                name="observacoes"
+                rows={3}
+                placeholder="Informações adicionais sobre o associado..."
+                value={form.observacoes}
+                onChange={handleChange}
+                disabled={isPending}
+                className="resize-none"
+              />
+            </div>
           </div>
 
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-1.5">
-                <Label htmlFor="nome">Nome completo *</Label>
-                <Input
-                  id="nome"
-                  name="nome"
-                  placeholder="João da Silva"
-                  value={form.nome}
-                  onChange={handleChange}
-                  required
-                  minLength={2}
-                  disabled={isPending}
-                />
-              </div>
-
-              <div className="col-span-2 space-y-1.5">
-                <Label htmlFor="email">E-mail *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="joao@exemplo.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  disabled={isPending}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="telefone">Telefone</Label>
-                <Input
-                  id="telefone"
-                  name="telefone"
-                  placeholder="(34) 99999-0000"
-                  value={form.telefone}
-                  onChange={handleChange}
-                  disabled={isPending}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="dataIngresso">Data de ingresso</Label>
-                <Input
-                  id="dataIngresso"
-                  name="dataIngresso"
-                  type="date"
-                  value={form.dataIngresso}
-                  onChange={handleChange}
-                  disabled={isPending}
-                />
-              </div>
-
-              <div className="col-span-2 space-y-1.5">
-                <Label htmlFor="observacoes">Observações</Label>
-                <textarea
-                  id="observacoes"
-                  name="observacoes"
-                  rows={3}
-                  placeholder="Informações adicionais sobre o associado..."
-                  value={form.observacoes}
-                  onChange={handleChange}
-                  disabled={isPending}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 resize-none"
-                />
-              </div>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              O associado receberá um e-mail para definir sua senha de acesso.
+          <div className="col-span-2 space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Senha inicial (opcional)
             </p>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Dialog.Close asChild>
-                <Button type="button" variant="outline" size="sm" disabled={isPending}>
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? 'Cadastrando...' : 'Cadastrar'}
-              </Button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="senha">Senha</Label>
+                <Input
+                  id="senha"
+                  name="senha"
+                  type="password"
+                  placeholder="Mín. 8 caracteres"
+                  value={form.senha}
+                  onChange={handleChange}
+                  disabled={isPending}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmarSenha">Confirmar senha</Label>
+                <Input
+                  id="confirmarSenha"
+                  name="confirmarSenha"
+                  type="password"
+                  placeholder="Repita a senha"
+                  value={form.confirmarSenha}
+                  onChange={handleChange}
+                  disabled={isPending}
+                />
+              </div>
             </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+            {senhaError && (
+              <p className="text-xs text-destructive">{senhaError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {form.senha
+                ? 'O associado poderá alterar a senha após o primeiro acesso.'
+                : 'Se não informada, o associado receberá um e-mail para definir a própria senha.'}
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isPending}
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? 'Cadastrando...' : 'Cadastrar'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

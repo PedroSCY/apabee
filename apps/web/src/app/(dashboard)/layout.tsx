@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DashboardShell } from '@/components/shared/DashboardShell'
@@ -19,10 +20,18 @@ export default async function DashboardLayout({
   const userName = (user.user_metadata?.nome as string | undefined) ?? ''
   const userEmail = user.email ?? ''
 
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false'
+
   return (
     <>
       <ThemeBootstrap />
-      <DashboardShell role={role} userName={userName} userEmail={userEmail}>
+      <DashboardShell
+        role={role}
+        userName={userName}
+        userEmail={userEmail}
+        defaultOpen={defaultOpen}
+      >
         {children}
       </DashboardShell>
     </>

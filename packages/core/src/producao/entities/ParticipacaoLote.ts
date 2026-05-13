@@ -3,6 +3,7 @@ interface ParticipacaoLoteProps {
   loteProducaoId: string;
   associadoId: string;
   percentual: number;
+  percentualManual: boolean;
   volume?: number;
   valorInvestido?: number;
 }
@@ -18,6 +19,7 @@ export class ParticipacaoLote {
   get loteProducaoId(): string { return this.props.loteProducaoId; }
   get associadoId(): string { return this.props.associadoId; }
   get percentual(): number { return this.props.percentual; }
+  get percentualManual(): boolean { return this.props.percentualManual; }
   get volume(): number | undefined { return this.props.volume; }
   get valorInvestido(): number | undefined { return this.props.valorInvestido; }
 

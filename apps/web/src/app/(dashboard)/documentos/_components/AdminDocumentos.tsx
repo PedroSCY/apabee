@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -15,9 +16,9 @@ import {
 } from '@/hooks/useGestao'
 import { DataTable, EmptyState, StatusBadge, ConfirmDialog, type Column } from '@/components/shared'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { DocumentoResponse, AtaResponse } from '@/lib/api/gestao'
 import { UploadDocumentoDialog } from './UploadDocumentoDialog'
-import { CriarAtaDialog } from './CriarAtaDialog'
 
 const CATEGORIA_LABEL: Record<string, string> = {
   ATA: 'Ata',
@@ -26,8 +27,6 @@ const CATEGORIA_LABEL: Record<string, string> = {
   RELATORIO: 'Relatório',
   OUTRO: 'Outro',
 }
-
-type Tab = 'documentos' | 'atas'
 
 function DocumentosTab() {
   const { data: documentos = [] } = useDocumentos()
@@ -63,47 +62,19 @@ function DocumentosTab() {
   const cols: Column<DocumentoResponse>[] = [
     { key: 'titulo', label: 'Título' },
     { key: 'categoria', label: 'Categoria', render: (r) => CATEGORIA_LABEL[r.categoria] ?? r.categoria },
+    { key: 'tamanhoBytes', label: 'Tamanho', render: (r) => `${(r.tamanhoBytes / 1024).toFixed(0)} KB` },
+    { key: 'criadoEm', label: 'Data', render: (r) => format(new Date(r.criadoEm), 'dd/MM/yyyy', { locale: ptBR }) },
+    { key: 'publicado', label: 'Status', render: (r) => <StatusBadge status={r.publicado ? 'PUBLICADO' : 'RASCUNHO'} /> },
     {
-      key: 'tamanhoBytes',
-      label: 'Tamanho',
-      render: (r) => `${(r.tamanhoBytes / 1024).toFixed(0)} KB`,
-    },
-    {
-      key: 'criadoEm',
-      label: 'Data',
-      render: (r) => format(new Date(r.criadoEm), 'dd/MM/yyyy', { locale: ptBR }),
-    },
-    {
-      key: 'publicado',
-      label: 'Status',
-      render: (r) => <StatusBadge status={r.publicado ? 'PUBLICADO' : 'RASCUNHO'} />,
-    },
-    {
-      key: 'acoes',
-      label: '',
-      className: 'w-48 text-right',
+      key: 'acoes', label: '', className: 'w-48 text-right',
       render: (r) => (
         <div className="flex items-center gap-1 justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.open(r.arquivoUrl, '_blank')}
-          >
-            Ver
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleTogglePublicado(r)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => window.open(r.arquivoUrl, '_blank')}>Ver</Button>
+          <Button variant="ghost" size="sm" onClick={() => handleTogglePublicado(r)}>
             {r.publicado ? 'Ocultar' : 'Publicar'}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setExcluirConfirm({ id: r.id, titulo: r.titulo })}
-          >
+          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
+            onClick={() => setExcluirConfirm({ id: r.id, titulo: r.titulo })}>
             Excluir
           </Button>
         </div>
@@ -118,19 +89,10 @@ function DocumentosTab() {
       </div>
 
       {documentos.length === 0 ? (
-        <EmptyState
-          title="Nenhum documento"
-          description="Faça upload do primeiro documento para a associação."
-        />
+        <EmptyState title="Nenhum documento" description="Faça upload do primeiro documento para a associação." />
       ) : (
-        <DataTable
-          data={documentos}
-          columns={cols}
-          rowKey={(r) => r.id}
-          searchable
-          searchPlaceholder="Buscar por título…"
-          searchKeys={['titulo']}
-        />
+        <DataTable data={documentos} columns={cols} rowKey={(r) => r.id}
+          searchable searchPlaceholder="Buscar por título…" searchKeys={['titulo']} />
       )}
 
       <UploadDocumentoDialog open={uploadOpen} onOpenChange={setUploadOpen} />
@@ -140,19 +102,17 @@ function DocumentosTab() {
         onOpenChange={(o) => { if (!o) setExcluirConfirm(null) }}
         title="Excluir Documento"
         description={`Tem certeza que deseja excluir "${excluirConfirm?.titulo}"? O arquivo será removido do storage.`}
-        confirmLabel="Excluir"
-        variant="destructive"
-        onConfirm={handleExcluir}
-      />
+        confirmLabel="Excluir" variant="destructive"
+        onConfirm={handleExcluir} />
     </>
   )
 }
 
 function AtasTab() {
+  const router = useRouter()
   const { data: atas = [] } = useAtas()
   const { mutateAsync: publicar } = usePublicarAta()
   const { mutateAsync: despublicar } = useDespublicarAta()
-  const [criarOpen, setCriarOpen] = React.useState(false)
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
 
   async function handleTogglePublicada(ata: AtaResponse) {
@@ -167,27 +127,13 @@ function AtasTab() {
 
   const cols: Column<AtaResponse>[] = [
     { key: 'titulo', label: 'Título' },
+    { key: 'dataReuniao', label: 'Data da Reunião', render: (r) => format(new Date(r.dataReuniao), 'dd/MM/yyyy', { locale: ptBR }) },
+    { key: 'publicada', label: 'Status', render: (r) => <StatusBadge status={r.publicada ? 'PUBLICADO' : 'RASCUNHO'} /> },
     {
-      key: 'dataReuniao',
-      label: 'Data da Reunião',
-      render: (r) => format(new Date(r.dataReuniao), 'dd/MM/yyyy', { locale: ptBR }),
-    },
-    {
-      key: 'publicada',
-      label: 'Status',
-      render: (r) => <StatusBadge status={r.publicada ? 'PUBLICADO' : 'RASCUNHO'} />,
-    },
-    {
-      key: 'acoes',
-      label: '',
-      className: 'w-48 text-right',
+      key: 'acoes', label: '', className: 'w-48 text-right',
       render: (r) => (
         <div className="flex items-center gap-1 justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
             {expandedId === r.id ? 'Fechar' : 'Ver conteúdo'}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => handleTogglePublicada(r)}>
@@ -203,21 +149,15 @@ function AtasTab() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setCriarOpen(true)}>+ Nova Ata</Button>
+        <Button onClick={() => router.push('/documentos/atas/nova')}>+ Nova Ata</Button>
       </div>
 
       {atas.length === 0 ? (
         <EmptyState title="Nenhuma ata" description="Crie a primeira ata de reunião." />
       ) : (
         <div className="space-y-4">
-          <DataTable
-            data={atas}
-            columns={cols}
-            rowKey={(r) => r.id}
-            searchable
-            searchPlaceholder="Buscar por título…"
-            searchKeys={['titulo']}
-          />
+          <DataTable data={atas} columns={cols} rowKey={(r) => r.id}
+            searchable searchPlaceholder="Buscar por título…" searchKeys={['titulo']} />
           {ataExpandida && (
             <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-2">
               <p className="text-sm font-medium">{ataExpandida.titulo}</p>
@@ -226,34 +166,19 @@ function AtasTab() {
           )}
         </div>
       )}
-
-      <CriarAtaDialog open={criarOpen} onOpenChange={setCriarOpen} />
     </>
   )
 }
 
 export function AdminDocumentos() {
-  const [tab, setTab] = React.useState<Tab>('documentos')
-
   return (
-    <>
-      <div className="flex gap-1 border-b border-border mb-6">
-        {(['documentos', 'atas'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
-              tab === t
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t === 'documentos' ? 'Documentos' : 'Atas'}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'documentos' ? <DocumentosTab /> : <AtasTab />}
-    </>
+    <Tabs defaultValue="documentos">
+      <TabsList className="mb-6">
+        <TabsTrigger value="documentos">Documentos</TabsTrigger>
+        <TabsTrigger value="atas">Atas</TabsTrigger>
+      </TabsList>
+      <TabsContent value="documentos"><DocumentosTab /></TabsContent>
+      <TabsContent value="atas"><AtasTab /></TabsContent>
+    </Tabs>
   )
 }

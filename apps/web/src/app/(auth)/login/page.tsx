@@ -59,7 +59,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-3xl font-bold text-[#7C4A00]">Apabee</h1>
+          <h1 className="text-3xl font-bold text-primary-darker">Apabee</h1>
           <p className="text-sm text-muted-foreground">
             Associação Pratense de Apicultura
           </p>

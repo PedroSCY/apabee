@@ -11,13 +11,13 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
         outline:
-          "border border-input bg-background shadow-xs hover:border-accent hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border bg-background shadow-xs hover:bg-secondary hover:text-secondary-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
-          "hover:bg-accent/10 hover:text-accent dark:hover:bg-accent/50",
+          "hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/30",
         link: "text-primary underline-offset-4 hover:underline",
         hero: "bg-honey-gradient text-primary-foreground shadow-glow font-semibold transition-smooth hover:scale-[1.03] hover:shadow-glow",
         accent: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-soft",
@@ -27,7 +27,7 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-9 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
         lg: "h-12 rounded-md px-8 has-[>svg]:px-4",
-        xl: "h-14 rounded-lg px-10 thas-[>svg]:px-5",
+        xl: "h-14 rounded-lg px-10 has-[>svg]:px-5",
         icon: "size-10",
         "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",

@@ -5,6 +5,14 @@ import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { EmptyState } from './EmptyState'
 import { TableSkeleton } from './LoadingSkeleton'
 
@@ -87,49 +95,43 @@ export function DataTable<T>({
             <TableSkeleton rows={5} columns={columns.length} />
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-muted-foreground">
-              <tr>
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow className="hover:bg-transparent border-b-0">
                 {columns.map((col) => (
-                  <th
+                  <TableHead
                     key={col.key}
-                    className={cn(
-                      'px-4 py-3 text-left font-medium text-xs uppercase tracking-wide',
-                      col.className,
-                    )}
+                    className={cn('text-xs uppercase tracking-wide text-muted-foreground', col.className)}
                   >
                     {col.label}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length}>
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={columns.length} className="p-0">
                     <EmptyState
                       title={emptyTitle}
                       description={emptyDescription}
                       className="py-12"
                     />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 paginated.map((row) => (
-                  <tr
-                    key={rowKey(row)}
-                    className="border-t border-border hover:bg-muted/20 transition-colors"
-                  >
+                  <TableRow key={rowKey(row)}>
                     {columns.map((col) => (
-                      <td key={col.key} className={cn('px-4 py-3', col.className)}>
+                      <TableCell key={col.key} className={cn('px-4 py-3', col.className)}>
                         {getValue(row, col)}
-                      </td>
+                      </TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
 

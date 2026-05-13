@@ -1,13 +1,6 @@
-import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
-}
-
-export function Skeleton({ className, ...props }: SkeletonProps) {
-  return <div className={cn('animate-pulse rounded-md bg-muted', className)} {...props} />
-}
+export { Skeleton }
 
 interface TableSkeletonProps {
   rows?: number

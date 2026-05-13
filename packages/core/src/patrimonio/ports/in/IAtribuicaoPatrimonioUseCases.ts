@@ -20,3 +20,7 @@ export interface IDevolverPatrimonioUseCase {
 export interface IListarAtribuicoesPorAssociadoUseCase {
   execute(associadoId: string): Promise<AtribuicaoPatrimonio[]>
 }
+
+export interface IListarTodasAtribuicoesUseCase {
+  execute(): Promise<AtribuicaoPatrimonio[]>
+}

@@ -8,10 +8,12 @@ import {
   useEncerrarLote,
   useLotes,
   useParticipacoesPorLote,
-  useRegistrarParticipacao,
 } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
-import { ConfirmDialog, DataTable, EmptyState, StatusBadge, type Column } from '@/components/shared'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { ConfirmDialog, DataTable, EmptyState, ViewToggle, type Column } from '@/components/shared'
+import { useViewToggle } from '@/hooks/useViewToggle'
 import { Button } from '@/components/ui/button'
 import type { LoteProducaoResponse, ParticipacaoLoteResponse } from '@/lib/api/producao'
 import { CriarLoteDialog } from '../../producao/_components/CriarLoteDialog'
@@ -21,13 +23,13 @@ import { EditarParticipacaoDialog } from './EditarParticipacaoDialog'
 const TIPO_LABEL: Record<string, string> = { PRODUCAO: 'Produção', AQUISICAO: 'Aquisição' }
 
 function ParticipacoesList({
-  loteId,
+  lote,
   associados,
 }: {
-  loteId: string
+  lote: LoteProducaoResponse
   associados: { id: string; usuario: { nome: string } }[]
 }) {
-  const { data: participacoes = [] } = useParticipacoesPorLote(loteId)
+  const { data: participacoes = [] } = useParticipacoesPorLote(lote.id)
   const [editando, setEditando] = React.useState<ParticipacaoLoteResponse | null>(null)
 
   const cols: Column<ParticipacaoLoteResponse>[] = [
@@ -36,27 +38,40 @@ function ParticipacoesList({
       label: 'Associado',
       render: (r) => associados.find((a) => a.id === r.associadoId)?.usuario.nome ?? r.associadoId,
     },
-    { key: 'percentual', label: 'Percentual (%)', render: (r) => `${r.percentual}%` },
-    { key: 'volume', label: 'Volume', render: (r) => (r.volume != null ? `${r.volume}` : '—') },
     {
-      key: 'valorInvestido',
-      label: 'Valor Investido',
-      render: (r) => (r.valorInvestido != null ? `R$ ${r.valorInvestido.toFixed(2)}` : '—'),
+      key: 'percentual',
+      label: 'Percentual (%)',
+      render: (r) => (
+        <span className="flex items-center gap-1.5">
+          {r.percentual.toFixed(2)}%
+          {r.percentualManual && (
+            <Badge variant="outline" className="text-[10px] h-4 px-1 text-amber-600 border-amber-300">Manual</Badge>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'volume',
+      label: lote.tipo === 'PRODUCAO' ? 'Volume' : 'Valor Investido',
+      render: (r) =>
+        lote.tipo === 'PRODUCAO'
+          ? (r.volume != null ? `${r.volume} kg` : '—')
+          : (r.valorInvestido != null ? `R$ ${r.valorInvestido.toFixed(2)}` : '—'),
     },
     {
       key: 'acoes',
       label: '',
       className: 'w-24 text-right',
-      render: (r) => (
-        <Button variant="ghost" size="sm" onClick={() => setEditando(r)}>
-          Editar
-        </Button>
-      ),
+      render: (r) =>
+        lote.status === 'ABERTO' ? (
+          <Button variant="ghost" size="sm" onClick={() => setEditando(r)}>
+            Editar
+          </Button>
+        ) : null,
     },
   ]
 
-  const nomeAssociado =
-    associados.find((a) => a.id === editando?.associadoId)?.usuario.nome ?? ''
+  const nomeAssociado = associados.find((a) => a.id === editando?.associadoId)?.usuario.nome ?? ''
 
   return (
     <>
@@ -65,10 +80,10 @@ function ParticipacoesList({
       ) : (
         <DataTable data={participacoes} columns={cols} rowKey={(r) => r.id} />
       )}
-
       {editando && (
         <EditarParticipacaoDialog
-          loteId={loteId}
+          loteId={lote.id}
+          loteTipo={lote.tipo}
           participacao={editando}
           nomAssociado={nomeAssociado}
           open={true}
@@ -90,17 +105,44 @@ function TotalParticipacoes({ loteId }: { loteId: string }) {
   )
 }
 
-export function LotesAdmin() {
-  const { data: lotes = [] } = useLotes()
-  const { data: associados = [] } = useAssociados()
-  const { mutateAsync: encerrar } = useEncerrarLote()
+function ParticipacoesPanel({
+  expandedId,
+  loteExpandido,
+  associados,
+}: {
+  expandedId: string | null
+  loteExpandido: LoteProducaoResponse | null
+  associados: { id: string; usuario: { nome: string } }[]
+}) {
+  if (!expandedId || !loteExpandido) return null
+  return (
+    <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">
+          Participações — {loteExpandido.periodo} ({TIPO_LABEL[loteExpandido.tipo]})
+        </p>
+        <TotalParticipacoes loteId={expandedId} />
+      </div>
+      <ParticipacoesList lote={loteExpandido} associados={associados} />
+    </div>
+  )
+}
 
-  const [criarOpen, setCriarOpen] = React.useState(false)
-  const [encerrarConfirm, setEncerrarConfirm] = React.useState<{ id: string; periodo: string } | null>(null)
-  const [participacaoLoteId, setParticipacaoLoteId] = React.useState<string | null>(null)
+function LotesTable({
+  lotes,
+  associados,
+  onNovaParticipacao,
+  onEncerrar,
+}: {
+  lotes: LoteProducaoResponse[]
+  associados: { id: string; usuario: { nome: string } }[]
+  onNovaParticipacao: (lote: LoteProducaoResponse) => void
+  onEncerrar: (lote: LoteProducaoResponse) => void
+}) {
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
+  const loteExpandido = lotes.find((l) => l.id === expandedId) ?? null
 
-  const loteCols: Column<LoteProducaoResponse>[] = [
+  const cols: Column<LoteProducaoResponse>[] = [
     { key: 'periodo', label: 'Período' },
     { key: 'tipo', label: 'Tipo', render: (r) => TIPO_LABEL[r.tipo] ?? r.tipo },
     {
@@ -110,7 +152,7 @@ export function LotesAdmin() {
     },
     {
       key: 'dataFim',
-      label: 'Encerrado em',
+      label: 'Encerramento',
       render: (r) =>
         r.dataFim ? format(new Date(r.dataFim), 'dd/MM/yyyy', { locale: ptBR }) : '—',
     },
@@ -119,7 +161,6 @@ export function LotesAdmin() {
       label: 'Custo Total',
       render: (r) => `R$ ${Number(r.custoTotal).toFixed(2)}`,
     },
-    { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
       key: 'acoes',
       label: '',
@@ -135,14 +176,14 @@ export function LotesAdmin() {
           </Button>
           {r.status === 'ABERTO' && (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setParticipacaoLoteId(r.id)}>
+              <Button variant="ghost" size="sm" onClick={() => onNovaParticipacao(r)}>
                 + Participação
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive"
-                onClick={() => setEncerrarConfirm({ id: r.id, periodo: r.periodo })}
+                onClick={() => onEncerrar(r)}
               >
                 Encerrar
               </Button>
@@ -153,12 +194,124 @@ export function LotesAdmin() {
     },
   ]
 
+  return (
+    <div className="space-y-4">
+      <DataTable
+        data={lotes}
+        columns={cols}
+        rowKey={(r) => r.id}
+        searchable
+        searchPlaceholder="Buscar por período…"
+        searchKeys={['periodo']}
+      />
+      <ParticipacoesPanel
+        expandedId={expandedId}
+        loteExpandido={loteExpandido}
+        associados={associados}
+      />
+    </div>
+  )
+}
+
+function LotesGrid({
+  lotes,
+  associados,
+  onNovaParticipacao,
+  onEncerrar,
+}: {
+  lotes: LoteProducaoResponse[]
+  associados: { id: string; usuario: { nome: string } }[]
+  onNovaParticipacao: (lote: LoteProducaoResponse) => void
+  onEncerrar: (lote: LoteProducaoResponse) => void
+}) {
+  const [expandedId, setExpandedId] = React.useState<string | null>(null)
+  const loteExpandido = lotes.find((l) => l.id === expandedId) ?? null
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {lotes.map((l) => (
+          <div key={l.id} className="rounded-xl border bg-card p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                {TIPO_LABEL[l.tipo] ?? l.tipo}
+              </span>
+              <Badge variant={l.status === 'ABERTO' ? 'default' : 'secondary'} className="text-xs h-5">
+                {l.status}
+              </Badge>
+            </div>
+
+            <p className="text-lg font-bold leading-tight">{l.periodo}</p>
+
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+              <span>{format(new Date(l.dataInicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
+              {l.dataFim && (
+                <>
+                  <span>→</span>
+                  <span>{format(new Date(l.dataFim), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                </>
+              )}
+            </div>
+
+            <p className="text-sm">
+              Custo: <span className="font-semibold">R$ {Number(l.custoTotal).toFixed(2)}</span>
+            </p>
+
+            <div className="flex flex-wrap items-center gap-1 border-t pt-2.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedId(expandedId === l.id ? null : l.id)}
+              >
+                {expandedId === l.id ? 'Ocultar' : 'Participações'}
+              </Button>
+              {l.status === 'ABERTO' && (
+                <>
+                  <Button variant="ghost" size="sm" onClick={() => onNovaParticipacao(l)}>
+                    + Participação
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => onEncerrar(l)}
+                  >
+                    Encerrar
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <ParticipacoesPanel
+        expandedId={expandedId}
+        loteExpandido={loteExpandido}
+        associados={associados}
+      />
+    </div>
+  )
+}
+
+export function LotesAdmin() {
+  const { data: lotes = [] } = useLotes()
+  const { data: associados = [] } = useAssociados()
+  const { mutateAsync: encerrar } = useEncerrarLote()
+
+  const [criarOpen, setCriarOpen] = React.useState(false)
+  const [encerrarConfirm, setEncerrarConfirm] = React.useState<LoteProducaoResponse | null>(null)
+  const [participacaoLote, setParticipacaoLote] = React.useState<LoteProducaoResponse | null>(null)
+  const [view, setView] = useViewToggle('lotes')
+
+  const abertos = lotes.filter((l) => l.status === 'ABERTO')
+  const encerrados = lotes.filter((l) => l.status !== 'ABERTO')
+
   async function handleEncerrar() {
     if (!encerrarConfirm) return
     try {
       await encerrar(encerrarConfirm.id)
-      toast.success(`Lote "${encerrarConfirm.periodo}" encerrado. Rateio congelado.`)
-      setExpandedId(null)
+      toast.success(`Lote "${encerrarConfirm.periodo}" encerrado.`)
     } catch (e) {
       toast.error((e as Error).message ?? 'Erro ao encerrar lote.')
     } finally {
@@ -166,49 +319,72 @@ export function LotesAdmin() {
     }
   }
 
+  const LoteList = view === 'grid' ? LotesGrid : LotesTable
+
   return (
     <>
-      <div className="flex justify-end mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <ViewToggle view={view} onViewChange={setView} />
         <Button onClick={() => setCriarOpen(true)}>+ Novo Lote</Button>
       </div>
 
-      {lotes.length === 0 ? (
-        <EmptyState
-          title="Nenhum lote criado"
-          description="Crie o primeiro lote para registrar colheitas e participações."
-        />
-      ) : (
-        <div className="space-y-4">
-          <DataTable
-            data={lotes}
-            columns={loteCols}
-            rowKey={(r) => r.id}
-            searchable
-            searchPlaceholder="Buscar por período…"
-            searchKeys={['periodo']}
-          />
+      <Tabs defaultValue="abertos">
+        <TabsList className="mb-4">
+          <TabsTrigger value="abertos">
+            Abertos
+            {abertos.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">{abertos.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="encerrados">
+            Encerrados
+            {encerrados.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">{encerrados.length}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-          {expandedId && (
-            <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">
-                  Participações — {lotes.find((l) => l.id === expandedId)?.periodo}
-                </p>
-                <TotalParticipacoes loteId={expandedId} />
-              </div>
-              <ParticipacoesList loteId={expandedId} associados={associados} />
-            </div>
+        <TabsContent value="abertos">
+          {abertos.length === 0 ? (
+            <EmptyState
+              title="Nenhum lote aberto"
+              description="Crie um novo lote para registrar colheitas e participações."
+            />
+          ) : (
+            <LoteList
+              lotes={abertos}
+              associados={associados}
+              onNovaParticipacao={setParticipacaoLote}
+              onEncerrar={setEncerrarConfirm}
+            />
           )}
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="encerrados">
+          {encerrados.length === 0 ? (
+            <EmptyState
+              title="Nenhum lote encerrado"
+              description="Os lotes encerrados aparecerão aqui."
+            />
+          ) : (
+            <LoteList
+              lotes={encerrados}
+              associados={associados}
+              onNovaParticipacao={setParticipacaoLote}
+              onEncerrar={setEncerrarConfirm}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
 
       <CriarLoteDialog open={criarOpen} onOpenChange={setCriarOpen} />
 
-      {participacaoLoteId && (
+      {participacaoLote && (
         <RegistrarParticipacaoDialog
-          loteId={participacaoLoteId}
+          loteId={participacaoLote.id}
+          loteTipo={participacaoLote.tipo}
           open={true}
-          onOpenChange={(o) => { if (!o) setParticipacaoLoteId(null) }}
+          onOpenChange={(o) => { if (!o) setParticipacaoLote(null) }}
         />
       )}
 
@@ -216,7 +392,7 @@ export function LotesAdmin() {
         open={encerrarConfirm !== null}
         onOpenChange={(o) => { if (!o) setEncerrarConfirm(null) }}
         title="Encerrar Lote"
-        description={`Confirma o encerramento do lote "${encerrarConfirm?.periodo}"? O rateio será congelado e não poderá ser reaberto.`}
+        description={`Confirma o encerramento do lote "${encerrarConfirm?.periodo}"? O rateio será congelado.`}
         confirmLabel="Encerrar"
         variant="destructive"
         onConfirm={handleEncerrar}

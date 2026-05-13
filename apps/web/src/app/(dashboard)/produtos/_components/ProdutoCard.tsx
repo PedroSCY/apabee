@@ -1,19 +1,46 @@
 'use client'
 
 import * as React from 'react'
-import { Package, MoreVertical, Eye, Archive, Plus } from 'lucide-react'
+import { Package, MoreVertical, Eye, Archive, Plus, Trash2, FlaskConical } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { StatusBadge, ConfirmDialog } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog } from 'radix-ui'
-import { cn } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   usePublicarProduto,
   useArquivarProduto,
   useGerarEstoque,
+  useComposicoes,
+  useAdicionarComposicao,
+  useRemoverComposicao,
+  useTiposMateriaPrima,
+  useCapacidadeLote,
 } from '@/hooks/useCatalogo'
+import { useLotes } from '@/hooks/useProducao'
 import type { ProdutoResponse } from '@/lib/api/catalogo'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -24,19 +51,183 @@ function EstoqueLabel({ qtd }: { qtd: number }) {
   return <span className="text-xs font-medium text-emerald-600">{qtd} em estoque</span>
 }
 
+// ─── Dialog de composição (ingredientes) ─────────────────────────────────────
+
+const UNIDADES = ['KG', 'LITRO', 'GRAMA', 'UNIDADE'] as const
+
+function ComposicaoDialog({
+  produto,
+  open,
+  onOpenChange,
+}: {
+  produto: ProdutoResponse
+  open: boolean
+  onOpenChange: (v: boolean) => void
+}) {
+  const { data: composicoes = [], isLoading: carregando } = useComposicoes(produto.id)
+  const { data: tipos = [] } = useTiposMateriaPrima()
+  const { mutateAsync: adicionar, isPending: adicionando } = useAdicionarComposicao(produto.id)
+  const { mutateAsync: remover, isPending: removendo } = useRemoverComposicao(produto.id)
+
+  const [form, setForm] = React.useState({
+    tipoMateriaPrimaId: '',
+    quantidadeNecessaria: '',
+    unidade: 'KG',
+  })
+
+  async function handleAdicionar(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const qtd = Number(form.quantidadeNecessaria)
+    if (!form.tipoMateriaPrimaId || !qtd || qtd <= 0) return
+    try {
+      await adicionar({
+        tipoMateriaPrimaId: form.tipoMateriaPrimaId,
+        quantidadeNecessaria: qtd,
+        unidade: form.unidade,
+      })
+      toast.success('Ingrediente adicionado.')
+      setForm({ tipoMateriaPrimaId: '', quantidadeNecessaria: '', unidade: 'KG' })
+    } catch {
+      toast.error('Erro ao adicionar ingrediente.')
+    }
+  }
+
+  async function handleRemover(id: string) {
+    try {
+      await remover(id)
+      toast.success('Ingrediente removido.')
+    } catch {
+      toast.error('Erro ao remover ingrediente.')
+    }
+  }
+
+  const tipoNome = (id: string) => tipos.find((t) => t.id === id)?.nome ?? id
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Composição do Produto</DialogTitle>
+          <DialogDescription>
+            {produto.nome} — ingredientes de matéria-prima por unidade produzida
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Lista atual */}
+        <div className="space-y-2 min-h-12">
+          {carregando ? (
+            <p className="text-xs text-muted-foreground">Carregando...</p>
+          ) : composicoes.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">Nenhum ingrediente definido.</p>
+          ) : (
+            composicoes.map((c) => (
+              <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+                <span>
+                  <span className="font-medium">{tipoNome(c.tipoMateriaPrimaId)}</span>
+                  <span className="text-muted-foreground ml-2">— {c.quantidadeNecessaria} {c.unidade}</span>
+                </span>
+                <button
+                  onClick={() => void handleRemover(c.id)}
+                  disabled={removendo}
+                  className="ml-3 p-1 text-destructive hover:bg-destructive/10 rounded transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Formulário para adicionar */}
+        <form onSubmit={(e) => void handleAdicionar(e)} className="space-y-3 border-t border-border pt-4">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Adicionar ingrediente</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="tipo-mp">Tipo de matéria-prima *</Label>
+              <Select
+                value={form.tipoMateriaPrimaId}
+                onValueChange={(v) => setForm((p) => ({ ...p, tipoMateriaPrimaId: v }))}
+                disabled={adicionando}
+              >
+                <SelectTrigger id="tipo-mp">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {tipos.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.nome} ({t.unidade})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="qtd-mp">Quantidade *</Label>
+              <Input
+                id="qtd-mp"
+                type="number"
+                step="0.001"
+                min="0.001"
+                placeholder="Ex: 0.5"
+                value={form.quantidadeNecessaria}
+                onChange={(e) => setForm((p) => ({ ...p, quantidadeNecessaria: e.target.value }))}
+                required
+                disabled={adicionando}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="unid-mp">Unidade *</Label>
+              <Select
+                value={form.unidade}
+                onValueChange={(v) => setForm((p) => ({ ...p, unidade: v }))}
+                disabled={adicionando}
+              >
+                <SelectTrigger id="unid-mp">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button type="submit" size="sm" disabled={adicionando}>
+              <FlaskConical className="h-3.5 w-3.5" />
+              {adicionando ? 'Adicionando...' : 'Adicionar'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Admin dropdown menu ──────────────────────────────────────────────────────
 
 function AdminMenu({ produto }: { produto: ProdutoResponse }) {
-  const [open, setOpen] = React.useState(false)
   const [confirmArquivar, setConfirmArquivar] = React.useState(false)
   const [gerarOpen, setGerarOpen] = React.useState(false)
+  const [composicaoOpen, setComposicaoOpen] = React.useState(false)
   const [qtdGerar, setQtdGerar] = React.useState('')
+  const [loteId, setLoteId] = React.useState<string>('')
 
   const { mutateAsync: publicar, isPending: publicando } = usePublicarProduto()
   const { mutateAsync: arquivar, isPending: arquivando } = useArquivarProduto()
   const { mutateAsync: gerar, isPending: gerando } = useGerarEstoque()
+  const { data: lotes = [] } = useLotes()
+  const { data: capacidade } = useCapacidadeLote(produto.id, loteId || null)
+
+  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO')
+  const capacidadeMaxima = capacidade?.capacidadeMaxima ?? null
+  const qtdNum = Number(qtdGerar)
+  const acimaDaCapacidade = capacidadeMaxima !== null && qtdNum > capacidadeMaxima
 
   const isPending = publicando || arquivando || gerando
+
+  function resetGerar() {
+    setQtdGerar('')
+    setLoteId('')
+  }
 
   async function handlePublicar() {
     try {
@@ -45,7 +236,6 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
     } catch {
       toast.error('Erro ao publicar produto.')
     }
-    setOpen(false)
   }
 
   async function handleArquivar() {
@@ -58,13 +248,12 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
   }
 
   async function handleGerarEstoque() {
-    const qtd = Number(qtdGerar)
-    if (!qtd || qtd <= 0) return
+    if (!qtdNum || qtdNum <= 0 || acimaDaCapacidade) return
     try {
-      await gerar({ id: produto.id, quantidade: qtd })
-      toast.success(`${qtd} unidades adicionadas ao estoque.`)
+      await gerar({ id: produto.id, quantidade: qtdNum, loteOrigemId: loteId || undefined })
+      toast.success(`${qtdNum} unidades adicionadas ao estoque.`)
       setGerarOpen(false)
-      setQtdGerar('')
+      resetGerar()
     } catch {
       toast.error('Erro ao gerar estoque.')
     }
@@ -72,45 +261,37 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
 
   return (
     <>
-      <div className="relative">
-        <button
-          onClick={() => setOpen((v) => !v)}
-          disabled={isPending}
-          className="shrink-0 p-1 rounded-md text-muted-foreground hover:bg-accent transition-colors"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
-
-        {open && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-7 z-20 w-44 rounded-lg border bg-popover shadow-md py-1">
-              {produto.status === 'RASCUNHO' && (
-                <button
-                  onClick={handlePublicar}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-                >
-                  <Eye className="h-3.5 w-3.5" /> Publicar
-                </button>
-              )}
-              <button
-                onClick={() => { setGerarOpen(true); setOpen(false) }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-sm" disabled={isPending} className="shrink-0">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {produto.status === 'RASCUNHO' && (
+            <DropdownMenuItem onClick={handlePublicar}>
+              <Eye className="h-3.5 w-3.5" /> Publicar
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => setComposicaoOpen(true)}>
+            <FlaskConical className="h-3.5 w-3.5" /> Composição
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setGerarOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Gerar estoque
+          </DropdownMenuItem>
+          {produto.status !== 'ARQUIVADO' && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setConfirmArquivar(true)}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
               >
-                <Plus className="h-3.5 w-3.5" /> Gerar estoque
-              </button>
-              {produto.status !== 'ARQUIVADO' && (
-                <button
-                  onClick={() => { setConfirmArquivar(true); setOpen(false) }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-accent"
-                >
-                  <Archive className="h-3.5 w-3.5" /> Arquivar
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                <Archive className="h-3.5 w-3.5" /> Arquivar
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <ConfirmDialog
         open={confirmArquivar}
@@ -123,40 +304,66 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
         isPending={arquivando}
       />
 
-      <Dialog.Root open={gerarOpen} onOpenChange={(v) => { if (!gerando) setGerarOpen(v) }}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <Dialog.Content className={cn(
-            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-            'w-full max-w-sm rounded-xl bg-card p-6 shadow-lg',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-          )}>
-            <Dialog.Title className="text-base font-semibold mb-4">Gerar Estoque</Dialog.Title>
-            <p className="text-sm text-muted-foreground mb-4">{produto.nome}</p>
+      <Dialog open={gerarOpen} onOpenChange={(v) => { if (!gerando) { setGerarOpen(v); if (!v) resetGerar() } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Gerar Estoque</DialogTitle>
+            <DialogDescription>{produto.nome}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="lote-origem">Lote de origem <span className="text-muted-foreground">(opcional)</span></Label>
+              <Select value={loteId} onValueChange={setLoteId} disabled={gerando}>
+                <SelectTrigger id="lote-origem">
+                  <SelectValue placeholder="Selecione um lote..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sem vínculo com lote</SelectItem>
+                  {lotesAbertos.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.periodo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {loteId && capacidadeMaxima !== null && (
+                <p className={`text-xs ${acimaDaCapacidade ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  Máximo: {capacidadeMaxima} unidades disponíveis neste lote
+                </p>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="qtd-gerar">Quantidade *</Label>
               <Input
                 id="qtd-gerar"
                 type="number"
                 min={1}
+                max={capacidadeMaxima ?? undefined}
                 value={qtdGerar}
                 onChange={(e) => setQtdGerar(e.target.value)}
                 placeholder="Ex: 50"
+                disabled={gerando}
+                className={acimaDaCapacidade ? 'border-destructive' : ''}
               />
+              {acimaDaCapacidade && (
+                <p className="text-xs text-destructive">Quantidade excede a capacidade do lote.</p>
+              )}
             </div>
-            <div className="flex justify-end gap-3 mt-5">
-              <Dialog.Close asChild>
-                <Button type="button" variant="outline" size="sm" disabled={gerando}>Cancelar</Button>
-              </Dialog.Close>
-              <Button size="sm" onClick={handleGerarEstoque} disabled={gerando || !qtdGerar}>
-                {gerando ? 'Gerando...' : 'Gerar'}
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" disabled={gerando} onClick={() => setGerarOpen(false)}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleGerarEstoque} disabled={gerando || !qtdGerar || acimaDaCapacidade}>
+              {gerando ? 'Gerando...' : 'Gerar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ComposicaoDialog
+        produto={produto}
+        open={composicaoOpen}
+        onOpenChange={setComposicaoOpen}
+      />
     </>
   )
 }

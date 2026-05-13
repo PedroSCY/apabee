@@ -18,6 +18,14 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return record ? this.toDomain(record) : null
   }
 
+  async findByUsuarioId(usuarioId: string): Promise<Associado | null> {
+    const record = await this.prisma.associado.findUnique({
+      where: { usuarioId },
+      include: { usuario: true },
+    })
+    return record ? this.toDomain(record) : null
+  }
+
   async findAll(): Promise<Associado[]> {
     const records = await this.prisma.associado.findMany({
       include: { usuario: true },
@@ -32,6 +40,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
         usuarioId: associado.usuario.id,
         dataIngresso: associado.dataIngresso,
         observacoes: associado.observacoes,
+        status: associado.status,
       },
       include: { usuario: true },
     })
@@ -42,6 +51,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     const record = await this.prisma.associado.update({
       where: { id: associado.id },
       data: {
+        status: associado.status,
         dataIngresso: associado.dataIngresso,
         observacoes: associado.observacoes,
       },

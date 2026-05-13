@@ -58,6 +58,7 @@ export class PrismaProdutoRepository implements IProdutoRepository {
         preco: produto.preco,
         imagemUrl: produto.imagemUrl,
         status: produto.status,
+        loteOrigemId: produto.loteOrigemId,
       },
     })
     return this.toDomain(r)

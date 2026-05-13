@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { Tabs } from 'radix-ui'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -15,6 +14,7 @@ import {
   type Column,
 } from '@/components/shared'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { ColheitaResponse, LoteProducaoResponse } from '@/lib/api/producao'
 import { CriarLoteDialog } from './CriarLoteDialog'
 import { RegistrarColheitaDialog } from './RegistrarColheitaDialog'
@@ -82,17 +82,13 @@ export function AdminProducao() {
 
   return (
     <>
-      <Tabs.Root defaultValue="lotes">
-        <Tabs.List className="flex gap-1 border-b border-border mb-6">
-          {['lotes', 'colheitas'].map((v) => (
-            <Tabs.Trigger key={v} value={v}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-colors capitalize">
-              {v === 'lotes' ? 'Lotes' : 'Registrar Colheita'}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+      <Tabs defaultValue="lotes">
+        <TabsList className="mb-6">
+          <TabsTrigger value="lotes">Lotes</TabsTrigger>
+          <TabsTrigger value="colheitas">Registrar Colheita</TabsTrigger>
+        </TabsList>
 
-        <Tabs.Content value="lotes">
+        <TabsContent value="lotes">
           <div className="flex justify-end mb-4">
             <Button onClick={() => setCriarLoteOpen(true)}>+ Novo Lote</Button>
           </div>
@@ -110,17 +106,17 @@ export function AdminProducao() {
               )}
             </div>
           )}
-        </Tabs.Content>
+        </TabsContent>
 
-        <Tabs.Content value="colheitas">
+        <TabsContent value="colheitas">
           <div className="flex justify-end mb-4">
             <Button onClick={() => setColheitaOpen(true)}>+ Registrar Colheita</Button>
           </div>
           <EmptyState
             title="Selecione um lote para ver colheitas"
             description="Use a aba Lotes → Colheitas para visualizar registros por lote." />
-        </Tabs.Content>
-      </Tabs.Root>
+        </TabsContent>
+      </Tabs>
 
       <CriarLoteDialog open={criarLoteOpen} onOpenChange={setCriarLoteOpen} />
       <RegistrarColheitaDialog open={colheitaOpen} onOpenChange={setColheitaOpen} />

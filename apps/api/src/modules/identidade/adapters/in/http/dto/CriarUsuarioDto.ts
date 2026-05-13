@@ -20,4 +20,10 @@ export class CriarUsuarioDto {
   @IsOptional()
   @IsString()
   telefone?: string
+
+  @ApiPropertyOptional({ description: 'Senha inicial. Se omitida, um link de redefinição é enviado por e-mail.' })
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  senha?: string
 }

@@ -4,6 +4,7 @@ import { ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore } from '@/store/cart.store'
 import type { ProdutoResponse } from '@/lib/api/catalogo'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   produto: ProdutoResponse
@@ -26,13 +27,13 @@ export function AddToCartButton({ produto, esgotado }: Props) {
   }
 
   return (
-    <button
+    <Button
       onClick={handleAdd}
       disabled={esgotado}
-      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full gap-2 rounded-xl py-3.5"
     >
       <ShoppingCart className="h-4 w-4" />
       {esgotado ? 'Produto Indisponível' : 'Adicionar ao Carrinho'}
-    </button>
+    </Button>
   )
 }

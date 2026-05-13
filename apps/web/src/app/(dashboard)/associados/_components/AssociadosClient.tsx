@@ -1,31 +1,28 @@
 'use client'
 
 import * as React from 'react'
-import { toast } from 'sonner'
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { UserPlus } from 'lucide-react'
-import { useAssociados, useAtivarUsuario, useDesativarUsuario } from '@/hooks/useAssociados'
+import { UserPlus, Pencil, CheckCircle2, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAssociados, useExcluirAssociado } from '@/hooks/useAssociados'
 import { DataTable, StatusBadge, ConfirmDialog, type Column } from '@/components/shared'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { AssociadoResponse } from '@/lib/api/identidade'
 import { CadastrarAssociadoDialog } from './CadastrarAssociadoDialog'
+import { AprovarAssociadoDialog } from './AprovarAssociadoDialog'
 
 type StatusFilter = 'TODOS' | 'ATIVO' | 'PENDENTE' | 'SUSPENSO' | 'INATIVO'
 
 type AssociadoRow = {
   id: string
-  usuarioId: string
   nome: string
   email: string
   status: string
   dataIngresso: string
-}
-
-type ConfirmAction = {
-  type: 'ativar' | 'desativar'
-  usuarioId: string
-  nome: string
+  observacoes?: string
 }
 
 const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
@@ -36,32 +33,51 @@ const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
   { label: 'Inativos', value: 'INATIVO' },
 ]
 
+function countByStatus(rows: AssociadoRow[], status: StatusFilter): number {
+  return rows.filter((r) => r.status === status).length
+}
+
 function toRow(a: AssociadoResponse): AssociadoRow {
   return {
     id: a.id,
-    usuarioId: a.usuario.id,
     nome: a.usuario.nome,
     email: a.usuario.email,
     status: a.status,
-    dataIngresso: format(new Date(a.dataIngresso), 'dd/MM/yyyy', { locale: ptBR }),
+    dataIngresso: a.dataIngresso
+      ? format(new Date(a.dataIngresso), 'dd/MM/yyyy', { locale: ptBR })
+      : '—',
+    observacoes: a.observacoes,
   }
 }
 
 export function AssociadosClient() {
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('TODOS')
-  const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
   const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [aprovarId, setAprovarId] = React.useState<string | null>(null)
+  const [reprovarConfirm, setReprovarConfirm] = React.useState<AssociadoRow | null>(null)
 
   const { data, isLoading } = useAssociados()
-  const { mutateAsync: ativar, isPending: ativando } = useAtivarUsuario()
-  const { mutateAsync: desativar, isPending: desativando } = useDesativarUsuario()
+  const { mutateAsync: excluir, isPending: excluindo } = useExcluirAssociado()
 
-  const rows: AssociadoRow[] = React.useMemo(() => {
-    const all = (data ?? []).map(toRow)
-    return statusFilter === 'TODOS' ? all : all.filter((r) => r.status === statusFilter)
-  }, [data, statusFilter])
+  const allRows: AssociadoRow[] = React.useMemo(() => (data ?? []).map(toRow), [data])
 
-  const columns: Column<AssociadoRow>[] = [
+  const rows: AssociadoRow[] = React.useMemo(
+    () => statusFilter === 'TODOS' ? allRows : allRows.filter((r) => r.status === statusFilter),
+    [allRows, statusFilter],
+  )
+
+  const aprovarAssociado = aprovarId ? allRows.find((r) => r.id === aprovarId) : null
+
+  async function handleReprovar() {
+    if (!reprovarConfirm) return
+    try {
+      await excluir(reprovarConfirm.id)
+      toast.success(`Solicitação de ${reprovarConfirm.nome} reprovada.`)
+    } catch { toast.error('Erro ao reprovar associado.') }
+    finally { setReprovarConfirm(null) }
+  }
+
+  const defaultColumns: Column<AssociadoRow>[] = [
     { key: 'nome', label: 'Nome' },
     { key: 'email', label: 'E-mail', className: 'text-muted-foreground' },
     {
@@ -73,71 +89,69 @@ export function AssociadosClient() {
     {
       key: 'acoes',
       label: '',
-      className: 'w-28 text-right',
-      render: (row) => {
-        const isAtivo = row.status === 'ATIVO'
-        return isAtivo ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive"
-            onClick={() =>
-              setConfirmAction({ type: 'desativar', usuarioId: row.usuarioId, nome: row.nome })
-            }
-          >
-            Desativar
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setConfirmAction({ type: 'ativar', usuarioId: row.usuarioId, nome: row.nome })
-            }
-          >
-            Ativar
-          </Button>
-        )
-      },
+      className: 'w-24 text-right',
+      render: (row) => (
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/associados/${row.id}`}>
+            <Pencil className="h-3.5 w-3.5" />
+            Editar
+          </Link>
+        </Button>
+      ),
     },
   ]
 
-  async function handleConfirm() {
-    if (!confirmAction) return
-    try {
-      if (confirmAction.type === 'ativar') {
-        await ativar(confirmAction.usuarioId)
-        toast.success(`${confirmAction.nome} ativado com sucesso.`)
-      } else {
-        await desativar(confirmAction.usuarioId)
-        toast.success(`${confirmAction.nome} desativado.`)
-      }
-    } catch {
-      toast.error('Ocorreu um erro. Tente novamente.')
-    } finally {
-      setConfirmAction(null)
-    }
-  }
+  const pendenteColumns: Column<AssociadoRow>[] = [
+    { key: 'nome', label: 'Nome' },
+    { key: 'email', label: 'E-mail', className: 'text-muted-foreground' },
+    {
+      key: 'observacoes',
+      label: 'Observações',
+      render: (row) => <span className="text-muted-foreground text-sm">{row.observacoes ?? '—'}</span>,
+    },
+    {
+      key: 'acoes',
+      label: '',
+      className: 'w-40 text-right',
+      render: (row) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700"
+            onClick={() => setAprovarId(row.id)}>
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Aprovar
+          </Button>
+          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
+            onClick={() => setReprovarConfirm(row)}>
+            <XCircle className="h-3.5 w-3.5 mr-1" />Reprovar
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
+  const columns = statusFilter === 'PENDENTE' ? pendenteColumns : defaultColumns
 
   return (
     <>
-      {/* Toolbar: filtros + ação */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatusFilter(f.value)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              statusFilter === f.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-        </div>
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+          <TabsList>
+            {STATUS_FILTERS.map((f) => {
+              const count = f.value !== 'TODOS' && f.value !== 'ATIVO'
+                ? countByStatus(allRows, f.value)
+                : 0
+              return (
+                <TabsTrigger key={f.value} value={f.value}>
+                  {f.label}
+                  {count > 0 && (
+                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+                      {count}
+                    </span>
+                  )}
+                </TabsTrigger>
+              )
+            })}
+          </TabsList>
+        </Tabs>
 
         <Button size="sm" onClick={() => setDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -163,19 +177,24 @@ export function AssociadosClient() {
 
       <CadastrarAssociadoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
+      {aprovarAssociado && (
+        <AprovarAssociadoDialog
+          open={aprovarId !== null}
+          associadoId={aprovarAssociado.id}
+          nomeAssociado={aprovarAssociado.nome}
+          onOpenChange={(v) => { if (!v) setAprovarId(null) }}
+        />
+      )}
+
       <ConfirmDialog
-        open={confirmAction !== null}
-        onOpenChange={(open) => { if (!open) setConfirmAction(null) }}
-        title={confirmAction?.type === 'ativar' ? 'Ativar associado' : 'Desativar associado'}
-        description={
-          confirmAction?.type === 'ativar'
-            ? `Tem certeza que deseja ativar ${confirmAction?.nome}?`
-            : `Tem certeza que deseja desativar ${confirmAction?.nome}? O acesso ao sistema será bloqueado.`
-        }
-        confirmLabel={confirmAction?.type === 'ativar' ? 'Ativar' : 'Desativar'}
-        variant={confirmAction?.type === 'desativar' ? 'destructive' : 'default'}
-        onConfirm={handleConfirm}
-        isPending={ativando || desativando}
+        open={reprovarConfirm !== null}
+        onOpenChange={(o) => { if (!o) setReprovarConfirm(null) }}
+        title="Reprovar solicitação"
+        description={`Deseja reprovar a solicitação de "${reprovarConfirm?.nome}"? O usuário e os dados serão removidos permanentemente.`}
+        confirmLabel="Reprovar"
+        variant="destructive"
+        onConfirm={handleReprovar}
+        isPending={excluindo}
       />
     </>
   )

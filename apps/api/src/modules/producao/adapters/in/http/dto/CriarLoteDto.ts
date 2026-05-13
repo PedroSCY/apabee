@@ -1,5 +1,5 @@
-import { IsDateString, IsEnum, IsString, MinLength } from 'class-validator'
-import { ApiProperty } from '@nestjs/swagger'
+import { IsDateString, IsEnum, IsOptional, IsString, MinLength } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { TipoLote } from '@apa/shared'
 
 export class CriarLoteDto {
@@ -15,4 +15,9 @@ export class CriarLoteDto {
   @ApiProperty({ example: '2025-01-01' })
   @IsDateString()
   dataInicio!: string
+
+  @ApiPropertyOptional({ example: '2025-12-31', description: 'Data de encerramento planejada. Se omitida, o lote é encerrado manualmente.' })
+  @IsOptional()
+  @IsDateString()
+  dataFim?: string
 }

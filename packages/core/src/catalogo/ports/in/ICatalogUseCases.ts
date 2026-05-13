@@ -1,9 +1,15 @@
-import { StatusProduto } from '@apa/shared'
 import { ComposicaoProduto } from '../../entities/ComposicaoProduto'
 import { EstoqueProduto } from '../../entities/EstoqueProduto'
 import { Produto } from '../../entities/Produto'
 
 // ── Inputs ────────────────────────────────────────────────────────────────────
+
+export interface CriarComposicaoInput {
+  produtoId: string
+  tipoMateriaPrimaId: string
+  quantidadeNecessaria: number
+  unidade: string
+}
 
 export interface CriarProdutoInput {
   nome: string
@@ -26,6 +32,17 @@ export interface AtualizarProdutoInput {
 export interface GerarEstoqueInput {
   produtoId: string
   quantidade: number
+  loteOrigemId?: string
+}
+
+export interface ConsultarCapacidadeInput {
+  produtoId: string
+  loteId: string
+}
+
+export interface ConsultarCapacidadeResponse {
+  capacidadeMaxima: number
+  loteId: string
 }
 
 // ── Use Case Interfaces ───────────────────────────────────────────────────────
@@ -56,4 +73,16 @@ export interface IArquivarProdutoUseCase {
 
 export interface IGerarEstoqueProdutoUseCase {
   execute(input: GerarEstoqueInput): Promise<EstoqueProduto>
+}
+
+export interface ICriarComposicaoProdutoUseCase {
+  execute(input: CriarComposicaoInput): Promise<ComposicaoProduto>
+}
+
+export interface IRemoverComposicaoProdutoUseCase {
+  execute(composicaoId: string): Promise<void>
+}
+
+export interface IConsultarCapacidadeUseCase {
+  execute(input: ConsultarCapacidadeInput): Promise<ConsultarCapacidadeResponse>
 }

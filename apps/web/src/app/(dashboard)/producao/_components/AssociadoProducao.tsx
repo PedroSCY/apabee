@@ -1,11 +1,11 @@
 'use client'
 
-import { Tabs } from 'radix-ui'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useColheitasPorAssociado, useLotes, useParticipacoesPorLote } from '@/hooks/useProducao'
-import { useAssociados } from '@/hooks/useAssociados'
+import { useMeuPerfil } from '@/hooks/useAssociados'
 import { DataTable, EmptyState, StatusBadge, type Column } from '@/components/shared'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { ColheitaResponse, LoteProducaoResponse, ParticipacaoLoteResponse } from '@/lib/api/producao'
 
 const TIPO_LABEL: Record<string, string> = { PRODUCAO: 'Produção', AQUISICAO: 'Aquisição' }
@@ -25,13 +25,11 @@ const colheitaCols: Column<ColheitaResponse>[] = [
 ]
 
 function MinhasParticipacoes({ associadoId, lotes }: { associadoId: string; lotes: LoteProducaoResponse[] }) {
-  const participacoesPorLote = lotes.map((lote) => ({ lote, key: lote.id }))
-
   if (!lotes.length) return <EmptyState title="Nenhum lote disponível" description="Aguarde o administrador criar um lote." />
 
   return (
     <div className="space-y-6">
-      {participacoesPorLote.map(({ lote }) => (
+      {lotes.map((lote) => (
         <ParticipacaoDoLote key={lote.id} lote={lote} associadoId={associadoId} />
       ))}
     </div>
@@ -61,55 +59,50 @@ function ParticipacaoDoLote({ lote, associadoId }: { lote: LoteProducaoResponse;
   )
 }
 
-interface Props { userId: string }
+const TABS = [
+  { value: 'lotes', label: 'Lotes' },
+  { value: 'contribuicoes', label: 'Minhas Contribuições' },
+  { value: 'colheitas', label: 'Minhas Colheitas' },
+]
 
-export function AssociadoProducao({ userId }: Props) {
+export function AssociadoProducao() {
   const { data: lotes = [] } = useLotes()
-  const { data: associados = [] } = useAssociados()
+  const { data: meuPerfil } = useMeuPerfil()
 
-  const meuAssociadoId = associados.find((a) => a.usuario.id === userId)?.id ?? ''
+  const meuAssociadoId = meuPerfil?.id ?? ''
 
   const { data: colheitas = [] } = useColheitasPorAssociado(meuAssociadoId)
 
-  const TABS = [
-    { value: 'lotes', label: 'Lotes' },
-    { value: 'contribuicoes', label: 'Minhas Contribuições' },
-    { value: 'colheitas', label: 'Minhas Colheitas' },
-  ]
-
   return (
-    <Tabs.Root defaultValue="lotes">
-      <Tabs.List className="flex gap-1 border-b border-border mb-6">
+    <Tabs defaultValue="lotes">
+      <TabsList className="mb-6">
         {TABS.map((tab) => (
-          <Tabs.Trigger key={tab.value} value={tab.value}
-            className="px-4 py-2 text-sm font-medium text-muted-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground transition-colors">
-            {tab.label}
-          </Tabs.Trigger>
+          <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
         ))}
-      </Tabs.List>
+      </TabsList>
 
-      <Tabs.Content value="lotes">
+      <TabsContent value="lotes">
         <DataTable data={lotes} columns={loteCols} rowKey={(r) => r.id}
           searchable searchPlaceholder="Buscar período…" searchKeys={['periodo']}
           emptyTitle="Nenhum lote disponível" />
-      </Tabs.Content>
+      </TabsContent>
 
-      <Tabs.Content value="contribuicoes">
+      <TabsContent value="contribuicoes">
         {!meuAssociadoId ? (
           <EmptyState title="Perfil não encontrado" description="Entre em contato com o administrador." />
         ) : (
           <MinhasParticipacoes associadoId={meuAssociadoId} lotes={lotes} />
         )}
-      </Tabs.Content>
+      </TabsContent>
 
-      <Tabs.Content value="colheitas">
+      <TabsContent value="colheitas">
         {!meuAssociadoId ? (
           <EmptyState title="Perfil não encontrado" description="Entre em contato com o administrador." />
         ) : (
           <DataTable data={colheitas} columns={colheitaCols} rowKey={(r) => r.id}
             emptyTitle="Nenhuma colheita registrada" />
         )}
-      </Tabs.Content>
-    </Tabs.Root>
+      </TabsContent>
+    </Tabs>
   )
 }

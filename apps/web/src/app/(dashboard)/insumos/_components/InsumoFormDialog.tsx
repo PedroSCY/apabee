@@ -1,15 +1,27 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Dialog } from 'radix-ui'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useCriarInsumo, useAtualizarInsumo } from '@/hooks/useInsumos'
 import type { InsumoResponse } from '@/lib/api/patrimonio'
 
@@ -38,7 +50,7 @@ export function InsumoFormDialog({ open, onOpenChange, insumo }: Props) {
   const { mutateAsync: atualizar, isPending: atualizando } = useAtualizarInsumo()
   const isPending = criando || atualizando
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -68,55 +80,51 @@ export function InsumoFormDialog({ open, onOpenChange, insumo }: Props) {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className={cn(
-          'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-          'w-full max-w-md rounded-xl bg-card p-6 shadow-lg',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        )}>
-          <Dialog.Title className="text-base font-semibold mb-4">
-            {isEdit ? 'Editar Insumo' : 'Novo Insumo'}
-          </Dialog.Title>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="nome">Nome *</Label>
-              <Input id="nome" {...register('nome')} placeholder="Ex: Fumigador metálico" />
-              {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="categoria">Categoria *</Label>
-              <select
-                id="categoria"
-                {...register('categoria')}
-                disabled={isEdit}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
-              >
-                {CATEGORIAS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-              {errors.categoria && <p className="text-xs text-destructive">{errors.categoria.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="descricao">Descrição</Label>
-              <Input id="descricao" {...register('descricao')} placeholder="Descrição opcional" />
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Dialog.Close asChild>
-                <Button variant="outline" size="sm" type="button" disabled={isPending}>
-                  Cancelar
-                </Button>
-              </Dialog.Close>
-              <Button size="sm" type="submit" disabled={isPending}>
-                {isPending ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Editar Insumo' : 'Novo Insumo'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="nome">Nome *</Label>
+            <Input id="nome" {...register('nome')} placeholder="Ex: Fumigador metálico" disabled={isPending} />
+            {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="categoria">Categoria *</Label>
+            <Controller
+              control={control}
+              name="categoria"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isEdit || isPending}>
+                  <SelectTrigger id="categoria">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIAS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.categoria && <p className="text-xs text-destructive">{errors.categoria.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="descricao">Descrição</Label>
+            <Input id="descricao" {...register('descricao')} placeholder="Descrição opcional" disabled={isPending} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" type="button" disabled={isPending} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button size="sm" type="submit" disabled={isPending}>
+              {isPending ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

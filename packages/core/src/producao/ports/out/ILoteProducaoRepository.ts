@@ -5,6 +5,7 @@ export interface ILoteProducaoRepository {
   findById(id: string): Promise<LoteProducao | null>;
   findAtivos(): Promise<LoteProducao[]>;
   findAll(): Promise<LoteProducao[]>;
+  findAbertosVencidos(): Promise<LoteProducao[]>;
   save(lote: LoteProducao): Promise<LoteProducao>;
   update(lote: LoteProducao): Promise<LoteProducao>;
 }
@@ -14,4 +15,5 @@ export interface IParticipacaoLoteRepository {
   findByAssociadoELote(associadoId: string, loteId: string): Promise<ParticipacaoLote | null>;
   save(participacao: ParticipacaoLote): Promise<ParticipacaoLote>;
   update(participacao: ParticipacaoLote): Promise<ParticipacaoLote>;
+  updateMany(participacoes: ParticipacaoLote[]): Promise<void>;
 }

@@ -17,6 +17,7 @@ export class CriarLoteUseCase implements ICriarLoteUseCase {
       tipo: input.tipo,
       periodo: input.periodo.trim(),
       dataInicio: input.dataInicio,
+      dataFim: input.dataFim,
       status: StatusLote.ABERTO,
       custoTotal: 0,
     })

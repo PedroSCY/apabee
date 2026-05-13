@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatusBadge } from '@/components/shared'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -132,7 +133,7 @@ export function FinanceiroAdmin() {
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${v}`} />
               <Tooltip formatter={(v) => fmt(Number(v))} contentStyle={{ borderRadius: '8px', fontSize: '13px' }} />
@@ -148,21 +149,13 @@ export function FinanceiroAdmin() {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-sm font-medium">Lançamentos Recentes</CardTitle>
-            <div className="flex flex-wrap gap-2">
-              {FILTROS.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setFiltro(f.value)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    filtro === f.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
+            <Tabs value={filtro} onValueChange={(v) => setFiltro(v as TipoFiltro)}>
+              <TabsList>
+                {FILTROS.map((f) => (
+                  <TabsTrigger key={f.value} value={f.value}>{f.label}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
         </CardHeader>
         <CardContent className="p-0">
