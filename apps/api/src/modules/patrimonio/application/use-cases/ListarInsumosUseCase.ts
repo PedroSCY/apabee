@@ -9,7 +9,7 @@ export class ListarInsumosUseCase implements IListarInsumosUseCase {
     private readonly insumoRepository: IInsumoRepository,
   ) {}
 
-  async execute(): Promise<Insumo[]> {
-    return this.insumoRepository.findAll()
+  async execute(tipoInsumoId?: string): Promise<Insumo[]> {
+    return this.insumoRepository.findAll(tipoInsumoId)
   }
 }

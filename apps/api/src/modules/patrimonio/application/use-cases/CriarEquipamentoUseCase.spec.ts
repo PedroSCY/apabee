@@ -17,6 +17,7 @@ const makeRepo = (): jest.Mocked<IEquipamentoRepository> => ({
   findDisponiveis: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 })
 
 describe('CriarEquipamentoUseCase', () => {

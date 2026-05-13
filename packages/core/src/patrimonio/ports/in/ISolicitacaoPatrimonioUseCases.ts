@@ -1,13 +1,26 @@
 import { StatusSolicitacaoPatrimonio, TipoPatrimonio } from '@apa/shared'
 import { SolicitacaoPatrimonio } from '../../entities/SolicitacaoPatrimonio'
 
-/** Dados necessários para criar uma solicitação de patrimônio. */
-export interface CriarSolicitacaoInput {
+/** Dados para criar solicitação de equipamento específico. */
+export interface CriarSolicitacaoEquipamentoInput {
+  tipoPatrimonio: TipoPatrimonio.EQUIPAMENTO
   patrimonioId: string
-  tipoPatrimonio: TipoPatrimonio
   associadoId: string
   justificativa?: string
 }
+
+/** Dados para criar solicitação de insumo por tipo e quantidade. */
+export interface CriarSolicitacaoInsumoInput {
+  tipoPatrimonio: TipoPatrimonio.INSUMO
+  tipoInsumoId: string
+  quantidade: number
+  associadoId: string
+  justificativa?: string
+}
+
+export type CriarSolicitacaoInput =
+  | CriarSolicitacaoEquipamentoInput
+  | CriarSolicitacaoInsumoInput
 
 /** Caso de uso para criar solicitação de patrimônio. */
 export interface ICriarSolicitacaoUseCase {

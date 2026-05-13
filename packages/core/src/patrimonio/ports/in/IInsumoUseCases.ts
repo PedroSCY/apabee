@@ -1,50 +1,38 @@
-import { CategoriaInsumo } from '@apa/shared'
 import { Insumo } from '../../entities/Insumo'
 
-/** Dados necessários para criar um novo insumo. */
-export interface CriarInsumoInput {
-  nome: string
-  categoria: CategoriaInsumo
+/** Dados para adicionar unidades individuais de um tipo de insumo. */
+export interface AdicionarUnidadesInsumoInput {
+  tipoInsumoId: string
+  quantidade: number
   descricao?: string
 }
 
-/** Dados para atualização parcial de um insumo. */
-export interface AtualizarInsumoInput {
-  nome?: string
-  descricao?: string
+/** Caso de uso para adicionar N unidades de um tipo de insumo. */
+export interface IAdicionarUnidadesInsumoUseCase {
+  execute(input: AdicionarUnidadesInsumoInput): Promise<Insumo[]>
 }
 
-/** Caso de uso para criação de insumo. */
-export interface ICriarInsumoUseCase {
-  execute(input: CriarInsumoInput): Promise<Insumo>
-}
-
-/** Caso de uso para listagem de insumos. */
+/** Caso de uso para listagem de unidades de insumo. */
 export interface IListarInsumosUseCase {
-  execute(): Promise<Insumo[]>
+  execute(tipoInsumoId?: string): Promise<Insumo[]>
 }
 
-/** Caso de uso para busca de insumo por ID. */
+/** Caso de uso para busca de unidade de insumo por ID. */
 export interface IBuscarInsumoUseCase {
   execute(id: string): Promise<Insumo>
 }
 
-/** Caso de uso para atualização de insumo. */
-export interface IAtualizarInsumoUseCase {
-  execute(id: string, input: AtualizarInsumoInput): Promise<Insumo>
-}
-
-/** Caso de uso para colocar insumo em manutenção. */
+/** Caso de uso para colocar unidade de insumo em manutenção. */
 export interface IColocarInsumoEmManutencaoUseCase {
   execute(id: string): Promise<Insumo>
 }
 
-/** Caso de uso para exclusão de insumo. */
-export interface IExcluirInsumoUseCase {
-  execute(id: string): Promise<void>
-}
-
-/** Caso de uso para liberar insumo da manutenção. */
+/** Caso de uso para liberar unidade de insumo da manutenção. */
 export interface ILiberarInsumoManutencaoUseCase {
   execute(id: string): Promise<Insumo>
+}
+
+/** Caso de uso para exclusão de unidade de insumo. */
+export interface IExcluirInsumoUseCase {
+  execute(id: string): Promise<void>
 }

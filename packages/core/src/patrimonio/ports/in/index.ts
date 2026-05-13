@@ -1,6 +1,8 @@
 /** Reexporta contratos de casos de uso de equipamentos. */
 export * from './IEquipamentoUseCases'
-/** Reexporta contratos de casos de uso de insumos. */
+/** Reexporta contratos de casos de uso de tipos de insumo. */
+export * from './ITipoInsumoUseCases'
+/** Reexporta contratos de casos de uso de insumos (unidades individuais). */
 export * from './IInsumoUseCases'
 /** Reexporta contratos de casos de uso de atribuições de patrimônio. */
 export * from './IAtribuicaoPatrimonioUseCases'

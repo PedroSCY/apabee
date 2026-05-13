@@ -1,5 +1,5 @@
 import { CriarAtaUseCase } from './CriarAtaUseCase'
-import { IAtaRepository, Ata } from '@apa/core'
+import { IAtaRepository, IParticipanteAtaRepository, Ata } from '@apa/core'
 
 const mockRepo: jest.Mocked<IAtaRepository> = {
   findById: jest.fn(),
@@ -9,12 +9,18 @@ const mockRepo: jest.Mocked<IAtaRepository> = {
   update: jest.fn(),
 }
 
+const mockParticipanteRepo: jest.Mocked<IParticipanteAtaRepository> = {
+  findByAta: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+}
+
 describe('CriarAtaUseCase', () => {
   let useCase: CriarAtaUseCase
 
   beforeEach(() => {
     jest.clearAllMocks()
-    useCase = new CriarAtaUseCase(mockRepo)
+    useCase = new CriarAtaUseCase(mockRepo, mockParticipanteRepo)
   })
 
   it('cria e salva uma nova ata não publicada por padrão', async () => {

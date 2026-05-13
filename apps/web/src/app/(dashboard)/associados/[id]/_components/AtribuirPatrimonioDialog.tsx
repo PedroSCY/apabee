@@ -40,12 +40,15 @@ export function AtribuirPatrimonioDialog({ open, onOpenChange, associadoId }: Pr
   const { data: insumos = [] } = useInsumos()
   const { mutateAsync: atribuir, isPending } = useAtribuirPatrimonio()
 
-  const disponiveis =
+  const disponiveis: Array<{ id: string; displayNome: string }> =
     tipo === 'EQUIPAMENTO'
-      ? equipamentos.filter((e) => e.status === 'DISPONIVEL')
-      : insumos.filter((i) => i.status === 'DISPONIVEL')
+      ? equipamentos.filter((e) => e.status === 'DISPONIVEL').map((e) => ({ id: e.id, displayNome: e.nome }))
+      : insumos.filter((i) => i.status === 'DISPONIVEL').map((i) => ({
+          id: i.id,
+          displayNome: `${i.tipoInsumo.nome} — ${i.identificador}`,
+        }))
 
-  const nomeItem = disponiveis.find((i) => i.id === patrimonioId)?.nome ?? ''
+  const nomeItem = disponiveis.find((i) => i.id === patrimonioId)?.displayNome ?? ''
 
   function handleClose() {
     setTipo('EQUIPAMENTO')
@@ -105,7 +108,7 @@ export function AtribuirPatrimonioDialog({ open, onOpenChange, associadoId }: Pr
                   <SelectItem value="__none__" disabled>Nenhum item disponível</SelectItem>
                 )}
                 {disponiveis.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>
+                  <SelectItem key={item.id} value={item.id}>{item.displayNome}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -19,6 +19,7 @@ const makeAssociado = (id: string): Associado =>
 
 const makeRepo = (): jest.Mocked<IAssociadoRepository> => ({
   findById: jest.fn(),
+  findByUsuarioId: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),

@@ -46,9 +46,12 @@ export function PatrimonioTab({ associadoId }: Props) {
   const isLoading = loadingAtrib || loadingEq || loadingIn
 
   const enriched: AtribuicaoEnriquecida[] = atribuicoes.map((a) => {
-    const lista = a.tipoPatrimonio === 'EQUIPAMENTO' ? equipamentos : insumos
-    const item = lista.find((i) => i.id === a.patrimonioId)
-    return { ...a, nome: item?.nome ?? '—' }
+    if (a.tipoPatrimonio === 'EQUIPAMENTO') {
+      const item = equipamentos.find((e) => e.id === a.patrimonioId)
+      return { ...a, nome: item?.nome ?? '—' }
+    }
+    const item = insumos.find((i) => i.id === a.patrimonioId)
+    return { ...a, nome: item ? `${item.tipoInsumo.nome} — ${item.identificador}` : '—' }
   })
 
   const ativas = enriched.filter((a) => a.status === 'ATIVO')

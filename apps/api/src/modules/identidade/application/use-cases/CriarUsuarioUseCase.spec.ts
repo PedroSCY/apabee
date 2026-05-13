@@ -19,12 +19,17 @@ const makeRepo = (): jest.Mocked<IUsuarioRepository> => ({
   findByEmail: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
+  contemRegistrosDeAutoria: jest.fn(),
 })
 
 const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   criarCredencial: jest.fn().mockResolvedValue({ id: 'supabase-uuid' }),
   ativarAcesso: jest.fn(),
   revogarAcesso: jest.fn(),
+  definirSenha: jest.fn(),
+  removerCredencial: jest.fn(),
+  atualizarMetadata: jest.fn(),
 })
 
 describe('CriarUsuarioUseCase', () => {

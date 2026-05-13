@@ -1,9 +1,11 @@
-import { CategoriaInsumo, StatusPatrimonio } from '@apa/shared'
+import { StatusPatrimonio } from '@apa/shared'
+import { TipoInsumo } from './TipoInsumo'
 
 interface InsumoProps {
   id: string
-  nome: string
-  categoria: CategoriaInsumo
+  identificador: string
+  tipoInsumoId: string
+  tipoInsumo: TipoInsumo
   descricao?: string
   status: StatusPatrimonio
   criadoEm: Date
@@ -17,11 +19,15 @@ export class Insumo {
   }
 
   get id(): string { return this.props.id }
-  get nome(): string { return this.props.nome }
-  get categoria(): CategoriaInsumo { return this.props.categoria }
+  get identificador(): string { return this.props.identificador }
+  get tipoInsumoId(): string { return this.props.tipoInsumoId }
+  get tipoInsumo(): TipoInsumo { return this.props.tipoInsumo }
   get descricao(): string | undefined { return this.props.descricao }
   get status(): StatusPatrimonio { return this.props.status }
   get criadoEm(): Date { return this.props.criadoEm }
+
+  get nome(): string { return this.props.tipoInsumo.nome }
+  get categoria() { return this.props.tipoInsumo.categoria }
 
   estaDisponivel(): boolean {
     return this.props.status === StatusPatrimonio.DISPONIVEL
@@ -39,12 +45,8 @@ export class Insumo {
     return new Insumo({ ...this.props, status: StatusPatrimonio.MANUTENCAO })
   }
 
-  atualizarDados(input: { nome?: string; descricao?: string }): Insumo {
-    return new Insumo({
-      ...this.props,
-      nome: input.nome ?? this.props.nome,
-      descricao: input.descricao ?? this.props.descricao,
-    })
+  atualizarDescricao(descricao?: string): Insumo {
+    return new Insumo({ ...this.props, descricao })
   }
 
   toJSON(): InsumoProps {

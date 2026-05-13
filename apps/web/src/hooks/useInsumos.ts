@@ -3,81 +3,104 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   patrimonioApi,
-  type AtualizarInsumoInput,
-  type CriarInsumoInput,
+  type AdicionarUnidadesInput,
+  type AtualizarTipoInsumoInput,
+  type CriarTipoInsumoInput,
 } from '@/lib/api/patrimonio'
 
+export const TIPOS_INSUMO_KEY = ['tipos-insumo'] as const
 export const INSUMOS_KEY = ['insumos'] as const
+export const TIPO_INSUMO_KEY = (id: string) => [...TIPOS_INSUMO_KEY, id] as const
 
-/** Busca lista de todos os insumos. */
-export function useInsumos() {
+/** Lista todos os tipos de insumo. */
+export function useTiposInsumo() {
   return useQuery({
-    queryKey: INSUMOS_KEY,
-    queryFn: patrimonioApi.listarInsumos,
+    queryKey: TIPOS_INSUMO_KEY,
+    queryFn: patrimonioApi.listarTiposInsumo,
   })
 }
 
-/** Busca um insumo pelo ID. */
-export function useBuscarInsumo(id: string) {
+/** Lista unidades de insumo, opcionalmente filtradas por tipo. */
+export function useInsumos(tipoId?: string) {
   return useQuery({
-    queryKey: [...INSUMOS_KEY, id],
-    queryFn: () => patrimonioApi.buscarInsumo(id),
-    enabled: Boolean(id),
+    queryKey: tipoId ? [...INSUMOS_KEY, tipoId] : INSUMOS_KEY,
+    queryFn: () => patrimonioApi.listarInsumos(tipoId),
   })
 }
 
-/** Cadastra um novo insumo. */
-export function useCriarInsumo() {
-  const queryClient = useQueryClient()
+/** Lista unidades de um tipo específico. */
+export function useUnidadesPorTipo(tipoId: string) {
+  return useQuery({
+    queryKey: [...TIPOS_INSUMO_KEY, tipoId, 'unidades'] as const,
+    queryFn: () => patrimonioApi.listarUnidadesPorTipo(tipoId),
+    enabled: Boolean(tipoId),
+  })
+}
+
+/** Cria um novo tipo de insumo. */
+export function useCriarTipoInsumo() {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: (input: CriarInsumoInput) => patrimonioApi.criarInsumo(input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
-    },
+    mutationFn: (input: CriarTipoInsumoInput) => patrimonioApi.criarTipoInsumo(input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: TIPOS_INSUMO_KEY }),
   })
 }
 
-/** Atualiza dados de um insumo. */
-export function useAtualizarInsumo() {
-  const queryClient = useQueryClient()
+/** Atualiza um tipo de insumo. */
+export function useAtualizarTipoInsumo() {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: AtualizarInsumoInput }) =>
-      patrimonioApi.atualizarInsumo(id, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
-    },
+    mutationFn: ({ id, input }: { id: string; input: AtualizarTipoInsumoInput }) =>
+      patrimonioApi.atualizarTipoInsumo(id, input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: TIPOS_INSUMO_KEY }),
   })
 }
 
-/** Marca insumo como em manutenção. */
+/** Exclui um tipo de insumo. */
+export function useExcluirTipoInsumo() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => patrimonioApi.excluirTipoInsumo(id),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: TIPOS_INSUMO_KEY }),
+  })
+}
+
+/** Adiciona N unidades a um tipo de insumo. */
+export function useAdicionarUnidades() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ tipoId, input }: { tipoId: string; input: AdicionarUnidadesInput }) =>
+      patrimonioApi.adicionarUnidades(tipoId, input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: INSUMOS_KEY }),
+  })
+}
+
+/** Coloca unidade de insumo em manutenção. */
 export function useColocarInsumoEmManutencao() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => patrimonioApi.colocarInsumoEmManutencao(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
-    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: INSUMOS_KEY }),
   })
 }
 
-/** Libera insumo da manutenção. */
+/** Libera unidade de insumo da manutenção. */
 export function useLiberarInsumoManutencao() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => patrimonioApi.liberarInsumoManutencao(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
-    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: INSUMOS_KEY }),
   })
 }
 
-/** Exclui um insumo pelo ID. */
+/** Exclui uma unidade de insumo. */
 export function useExcluirInsumo() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => patrimonioApi.excluirInsumo(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: INSUMOS_KEY })
+      void qc.invalidateQueries({ queryKey: INSUMOS_KEY })
+      void qc.invalidateQueries({ queryKey: TIPOS_INSUMO_KEY })
     },
   })
 }

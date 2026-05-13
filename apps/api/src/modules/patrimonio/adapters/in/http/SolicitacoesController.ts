@@ -19,7 +19,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger'
-import { RoleUsuario, StatusSolicitacaoPatrimonio } from '@apa/shared'
+import { RoleUsuario, StatusSolicitacaoPatrimonio, TipoPatrimonio } from '@apa/shared'
 import {
   IAprovarSolicitacaoUseCase,
   IBuscarAssociadoPorUsuarioUseCase,
@@ -58,7 +58,11 @@ export class SolicitacoesController {
     @Request() req: { user: { sub: string; associadoId?: string } },
   ) {
     const associadoId = await this.resolveAssociadoId(req.user)
-    const s = await this.criar.execute({ ...dto, associadoId })
+    const input =
+      dto.tipoPatrimonio === TipoPatrimonio.EQUIPAMENTO
+        ? { tipoPatrimonio: TipoPatrimonio.EQUIPAMENTO as const, patrimonioId: dto.patrimonioId!, associadoId, justificativa: dto.justificativa }
+        : { tipoPatrimonio: TipoPatrimonio.INSUMO as const, tipoInsumoId: dto.tipoInsumoId!, quantidade: dto.quantidade!, associadoId, justificativa: dto.justificativa }
+    const s = await this.criar.execute(input)
     return this.toResponse(s)
   }
 
@@ -108,8 +112,10 @@ export class SolicitacoesController {
   private toResponse(s: SolicitacaoPatrimonio) {
     return {
       id: s.id,
-      patrimonioId: s.patrimonioId,
       tipoPatrimonio: s.tipoPatrimonio,
+      patrimonioId: s.patrimonioId,
+      tipoInsumoId: s.tipoInsumoId,
+      quantidade: s.quantidade,
       associadoId: s.associadoId,
       justificativa: s.justificativa,
       status: s.status,

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { PrismaModule } from '../../shared/database/prisma.module'
 import { IdentidadeModule } from '../identidade/identidade.module'
 import { EquipamentosController } from './adapters/in/http/EquipamentosController'
+import { TiposInsumoController } from './adapters/in/http/TiposInsumoController'
 import { InsumosController } from './adapters/in/http/InsumosController'
 import { AtribuicoesController } from './adapters/in/http/AtribuicoesController'
 import { SolicitacoesController } from './adapters/in/http/SolicitacoesController'
@@ -10,68 +11,86 @@ import {
   PrismaEquipamentoRepository,
   PrismaInsumoRepository,
   PrismaSolicitacaoPatrimonioRepository,
+  PrismaTipoInsumoRepository,
 } from './adapters/out/persistence'
 import {
+  AdicionarUnidadesInsumoUseCase,
   AprovarSolicitacaoUseCase,
   AtribuirPatrimonioUseCase,
   AtualizarEquipamentoUseCase,
-  AtualizarInsumoUseCase,
+  AtualizarTipoInsumoUseCase,
   BuscarEquipamentoUseCase,
   BuscarInsumoUseCase,
+  BuscarTipoInsumoUseCase,
   ColocarEquipamentoEmManutencaoUseCase,
   ColocarInsumoEmManutencaoUseCase,
   CriarEquipamentoUseCase,
-  CriarInsumoUseCase,
   CriarSolicitacaoUseCase,
+  CriarTipoInsumoUseCase,
   DevolverPatrimonioUseCase,
   ExcluirEquipamentoUseCase,
   ExcluirInsumoUseCase,
+  ExcluirTipoInsumoUseCase,
   LiberarEquipamentoManutencaoUseCase,
   LiberarInsumoManutencaoUseCase,
   ListarAtribuicoesPorAssociadoUseCase,
   ListarEquipamentosUseCase,
   ListarInsumosUseCase,
   ListarSolicitacoesUseCase,
+  ListarTiposInsumoUseCase,
   ListarTodasAtribuicoesUseCase,
   RejeitarSolicitacaoUseCase,
 } from './application/use-cases'
 import {
+  ADICIONAR_UNIDADES_INSUMO_USE_CASE,
   APROVAR_SOLICITACAO_USE_CASE,
   ATRIBUICAO_PATRIMONIO_REPOSITORY,
   ATRIBUIR_PATRIMONIO_USE_CASE,
   ATUALIZAR_EQUIPAMENTO_USE_CASE,
-  ATUALIZAR_INSUMO_USE_CASE,
+  ATUALIZAR_TIPO_INSUMO_USE_CASE,
   BUSCAR_EQUIPAMENTO_USE_CASE,
   BUSCAR_INSUMO_USE_CASE,
+  BUSCAR_TIPO_INSUMO_USE_CASE,
   COLOCAR_EQUIPAMENTO_MANUTENCAO_USE_CASE,
   COLOCAR_INSUMO_MANUTENCAO_USE_CASE,
   CRIAR_EQUIPAMENTO_USE_CASE,
-  CRIAR_INSUMO_USE_CASE,
   CRIAR_SOLICITACAO_USE_CASE,
+  CRIAR_TIPO_INSUMO_USE_CASE,
   DEVOLVER_PATRIMONIO_USE_CASE,
   EQUIPAMENTO_REPOSITORY,
   EXCLUIR_EQUIPAMENTO_USE_CASE,
   EXCLUIR_INSUMO_USE_CASE,
+  EXCLUIR_TIPO_INSUMO_USE_CASE,
+  INSUMO_REPOSITORY,
   LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE,
   LIBERAR_INSUMO_MANUTENCAO_USE_CASE,
-  INSUMO_REPOSITORY,
   LISTAR_ATRIBUICOES_ASSOCIADO_USE_CASE,
   LISTAR_EQUIPAMENTOS_USE_CASE,
   LISTAR_INSUMOS_USE_CASE,
   LISTAR_SOLICITACOES_USE_CASE,
+  LISTAR_TIPOS_INSUMO_USE_CASE,
   LISTAR_TODAS_ATRIBUICOES_USE_CASE,
   REJEITAR_SOLICITACAO_USE_CASE,
   SOLICITACAO_PATRIMONIO_REPOSITORY,
+  TIPO_INSUMO_REPOSITORY,
 } from './patrimonio.tokens'
 
 @Module({
   imports: [PrismaModule, IdentidadeModule],
-  controllers: [EquipamentosController, InsumosController, AtribuicoesController, SolicitacoesController],
+  controllers: [
+    EquipamentosController,
+    TiposInsumoController,
+    InsumosController,
+    AtribuicoesController,
+    SolicitacoesController,
+  ],
   providers: [
     { provide: EQUIPAMENTO_REPOSITORY, useClass: PrismaEquipamentoRepository },
+    { provide: TIPO_INSUMO_REPOSITORY, useClass: PrismaTipoInsumoRepository },
     { provide: INSUMO_REPOSITORY, useClass: PrismaInsumoRepository },
     { provide: ATRIBUICAO_PATRIMONIO_REPOSITORY, useClass: PrismaAtribuicaoPatrimonioRepository },
     { provide: SOLICITACAO_PATRIMONIO_REPOSITORY, useClass: PrismaSolicitacaoPatrimonioRepository },
+
     { provide: CRIAR_EQUIPAMENTO_USE_CASE, useClass: CriarEquipamentoUseCase },
     { provide: LISTAR_EQUIPAMENTOS_USE_CASE, useClass: ListarEquipamentosUseCase },
     { provide: BUSCAR_EQUIPAMENTO_USE_CASE, useClass: BuscarEquipamentoUseCase },
@@ -79,22 +98,29 @@ import {
     { provide: COLOCAR_EQUIPAMENTO_MANUTENCAO_USE_CASE, useClass: ColocarEquipamentoEmManutencaoUseCase },
     { provide: EXCLUIR_EQUIPAMENTO_USE_CASE, useClass: ExcluirEquipamentoUseCase },
     { provide: LIBERAR_EQUIPAMENTO_MANUTENCAO_USE_CASE, useClass: LiberarEquipamentoManutencaoUseCase },
-    { provide: CRIAR_INSUMO_USE_CASE, useClass: CriarInsumoUseCase },
+
+    { provide: CRIAR_TIPO_INSUMO_USE_CASE, useClass: CriarTipoInsumoUseCase },
+    { provide: LISTAR_TIPOS_INSUMO_USE_CASE, useClass: ListarTiposInsumoUseCase },
+    { provide: BUSCAR_TIPO_INSUMO_USE_CASE, useClass: BuscarTipoInsumoUseCase },
+    { provide: ATUALIZAR_TIPO_INSUMO_USE_CASE, useClass: AtualizarTipoInsumoUseCase },
+    { provide: EXCLUIR_TIPO_INSUMO_USE_CASE, useClass: ExcluirTipoInsumoUseCase },
+
+    { provide: ADICIONAR_UNIDADES_INSUMO_USE_CASE, useClass: AdicionarUnidadesInsumoUseCase },
     { provide: LISTAR_INSUMOS_USE_CASE, useClass: ListarInsumosUseCase },
     { provide: BUSCAR_INSUMO_USE_CASE, useClass: BuscarInsumoUseCase },
-    { provide: ATUALIZAR_INSUMO_USE_CASE, useClass: AtualizarInsumoUseCase },
     { provide: COLOCAR_INSUMO_MANUTENCAO_USE_CASE, useClass: ColocarInsumoEmManutencaoUseCase },
     { provide: EXCLUIR_INSUMO_USE_CASE, useClass: ExcluirInsumoUseCase },
     { provide: LIBERAR_INSUMO_MANUTENCAO_USE_CASE, useClass: LiberarInsumoManutencaoUseCase },
+
     { provide: ATRIBUIR_PATRIMONIO_USE_CASE, useClass: AtribuirPatrimonioUseCase },
     { provide: DEVOLVER_PATRIMONIO_USE_CASE, useClass: DevolverPatrimonioUseCase },
     { provide: LISTAR_ATRIBUICOES_ASSOCIADO_USE_CASE, useClass: ListarAtribuicoesPorAssociadoUseCase },
     { provide: LISTAR_TODAS_ATRIBUICOES_USE_CASE, useClass: ListarTodasAtribuicoesUseCase },
+
     { provide: CRIAR_SOLICITACAO_USE_CASE, useClass: CriarSolicitacaoUseCase },
     { provide: APROVAR_SOLICITACAO_USE_CASE, useClass: AprovarSolicitacaoUseCase },
     { provide: REJEITAR_SOLICITACAO_USE_CASE, useClass: RejeitarSolicitacaoUseCase },
     { provide: LISTAR_SOLICITACOES_USE_CASE, useClass: ListarSolicitacoesUseCase },
   ],
 })
-/** Módulo NestJS de patrimônio — equipamentos, insumos, atribuições e solicitações. */
 export class PatrimonioModule {}

@@ -30,13 +30,13 @@ export class PrismaSolicitacaoPatrimonioRepository implements ISolicitacaoPatrim
   }
 
   async save(s: SolicitacaoPatrimonio): Promise<SolicitacaoPatrimonio> {
-    const isEquipamento = s.tipoPatrimonio === TipoPatrimonio.EQUIPAMENTO
     const r = await this.prisma.solicitacaoPatrimonio.create({
       data: {
         id: s.id,
         tipoPatrimonio: s.tipoPatrimonio,
-        equipamentoId: isEquipamento ? s.patrimonioId : null,
-        insumoId: !isEquipamento ? s.patrimonioId : null,
+        equipamentoId: s.isEquipamento() ? s.patrimonioId : null,
+        tipoInsumoId: !s.isEquipamento() ? s.tipoInsumoId : null,
+        quantidade: !s.isEquipamento() ? s.quantidade : null,
         associadoId: s.associadoId,
         justificativa: s.justificativa,
         status: s.status,
@@ -57,15 +57,12 @@ export class PrismaSolicitacaoPatrimonioRepository implements ISolicitacaoPatrim
 
   private toDomain(r: PrismaSolicitacao): SolicitacaoPatrimonio {
     const tipo = r.tipoPatrimonio as TipoPatrimonio
-    const patrimonioId =
-      tipo === TipoPatrimonio.EQUIPAMENTO
-        ? (r.equipamentoId ?? '')
-        : (r.insumoId ?? '')
-
     return new SolicitacaoPatrimonio({
       id: r.id,
       tipoPatrimonio: tipo,
-      patrimonioId,
+      patrimonioId: tipo === TipoPatrimonio.EQUIPAMENTO ? (r.equipamentoId ?? undefined) : undefined,
+      tipoInsumoId: tipo === TipoPatrimonio.INSUMO ? (r.tipoInsumoId ?? undefined) : undefined,
+      quantidade: tipo === TipoPatrimonio.INSUMO ? (r.quantidade ?? undefined) : undefined,
       associadoId: r.associadoId,
       justificativa: r.justificativa ?? undefined,
       status: r.status as StatusSolicitacaoPatrimonio,

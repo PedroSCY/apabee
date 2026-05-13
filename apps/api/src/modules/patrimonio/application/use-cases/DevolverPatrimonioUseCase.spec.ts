@@ -28,17 +28,23 @@ const makeEquipamentoRepo = (): jest.Mocked<IEquipamentoRepository> => ({
   findDisponiveis: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 })
 
 const makeInsumoRepo = (): jest.Mocked<IInsumoRepository> => ({
   findById: jest.fn(),
   findAll: jest.fn(),
+  findAvailableByTipo: jest.fn(),
+  maxSequenceByTipo: jest.fn(),
   save: jest.fn(),
+  saveMany: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 })
 
 const makeAtribuicaoRepo = (): jest.Mocked<IAtribuicaoPatrimonioRepository> => ({
   findById: jest.fn(),
+  findAll: jest.fn(),
   findByAssociado: jest.fn(),
   findByAssociadoETipo: jest.fn(),
   findAtivaByPatrimonio: jest.fn(),

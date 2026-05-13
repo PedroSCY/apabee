@@ -175,16 +175,30 @@ model Equipamento {
   @@map("equipamentos")
 }
 
-model Insumo {
-  id        String           @id @default(uuid())
+model TipoInsumo {
+  id        String          @id @default(uuid())
   nome      String
-  categoria CategoriaInsumo
   descricao String?
-  status    StatusPatrimonio @default(DISPONIVEL)
-  criadoEm  DateTime         @default(now()) @map("criado_em")
+  categoria CategoriaInsumo
+  sigla     String          @unique
+  criadoEm  DateTime        @default(now()) @map("criado_em")
 
-  atribuicoes  AtribuicaoPatrimonio[]
+  unidades     Insumo[]
   solicitacoes SolicitacaoPatrimonio[]
+
+  @@map("tipos_insumo")
+}
+
+model Insumo {
+  id            String          @id @default(uuid())
+  identificador String          @unique
+  tipoInsumoId  String          @map("tipo_insumo_id")
+  descricao     String?
+  status        StatusPatrimonio @default(DISPONIVEL)
+  criadoEm      DateTime        @default(now()) @map("criado_em")
+
+  tipoInsumo  TipoInsumo             @relation(fields: [tipoInsumoId], references: [id])
+  atribuicoes AtribuicaoPatrimonio[]
 
   @@map("insumos")
 }
@@ -211,7 +225,8 @@ model SolicitacaoPatrimonio {
   id             String                      @id @default(uuid())
   tipoPatrimonio TipoPatrimonio              @map("tipo_patrimonio")
   equipamentoId  String?                     @map("equipamento_id")
-  insumoId       String?                     @map("insumo_id")
+  tipoInsumoId   String?                     @map("tipo_insumo_id")
+  quantidade     Int?
   associadoId    String                      @map("associado_id")
   justificativa  String?
   status         StatusSolicitacaoPatrimonio @default(PENDENTE)
@@ -220,7 +235,7 @@ model SolicitacaoPatrimonio {
 
   associado   Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
   equipamento Equipamento? @relation(fields: [equipamentoId], references: [id])
-  insumo      Insumo?      @relation(fields: [insumoId], references: [id])
+  tipoInsumo  TipoInsumo?  @relation(fields: [tipoInsumoId], references: [id])
 
   @@map("solicitacoes_patrimonio")
 }

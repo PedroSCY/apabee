@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -18,41 +19,62 @@ import {
 import { useCriarSolicitacao } from '@/hooks/useSolicitacoes'
 
 const schema = z.object({
+  quantidade: z.number().int().min(1).max(100).optional(),
   justificativa: z.string().max(500).optional(),
 })
 
 type FormData = z.infer<typeof schema>
 
-interface Props {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  patrimonioId: string
-  tipoPatrimonio: string
-  patrimonioNome: string
-}
+type Props =
+  | {
+      open: boolean
+      onOpenChange: (open: boolean) => void
+      tipoPatrimonio: 'EQUIPAMENTO'
+      patrimonioId: string
+      patrimonioNome: string
+    }
+  | {
+      open: boolean
+      onOpenChange: (open: boolean) => void
+      tipoPatrimonio: 'INSUMO'
+      tipoInsumoId: string
+      tipoInsumoNome: string
+      unidadesDisponiveis: number
+    }
 
-export function SolicitarDialog({
-  open,
-  onOpenChange,
-  patrimonioId,
-  tipoPatrimonio,
-  patrimonioNome,
-}: Props) {
+export function SolicitarDialog(props: Props) {
+  const { open, onOpenChange, tipoPatrimonio } = props
   const { mutateAsync: criar, isPending } = useCriarSolicitacao()
 
-  const { register, handleSubmit, reset } = useForm<FormData>({
+  const titulo = tipoPatrimonio === 'EQUIPAMENTO' ? props.patrimonioNome : props.tipoInsumoNome
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { justificativa: '' },
+    defaultValues: { quantidade: 1, justificativa: '' },
   })
 
   async function onSubmit(data: FormData) {
     try {
-      await criar({
-        patrimonioId,
-        tipoPatrimonio,
-        justificativa: data.justificativa || undefined,
-      })
-      toast.success(`Solicitação de uso de "${patrimonioNome}" enviada para aprovação.`)
+      if (tipoPatrimonio === 'EQUIPAMENTO') {
+        await criar({
+          tipoPatrimonio: 'EQUIPAMENTO',
+          patrimonioId: props.patrimonioId,
+          justificativa: data.justificativa || undefined,
+        })
+      } else {
+        const qtd = data.quantidade ?? 1
+        if (qtd > props.unidadesDisponiveis) {
+          toast.error(`Apenas ${props.unidadesDisponiveis} unidade(s) disponível(is).`)
+          return
+        }
+        await criar({
+          tipoPatrimonio: 'INSUMO',
+          tipoInsumoId: props.tipoInsumoId,
+          quantidade: qtd,
+          justificativa: data.justificativa || undefined,
+        })
+      }
+      toast.success(`Solicitação de "${titulo}" enviada para aprovação.`)
       reset()
       onOpenChange(false)
     } catch (err: unknown) {
@@ -67,16 +89,34 @@ export function SolicitarDialog({
         <DialogHeader>
           <DialogTitle>Solicitar uso</DialogTitle>
           <DialogDescription>
-            {patrimonioNome} — sua solicitação será analisada pelo administrador.
+            {titulo} — sua solicitação será analisada pelo administrador.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {tipoPatrimonio === 'INSUMO' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="quantidade">
+                Quantidade * <span className="text-muted-foreground text-xs">({props.unidadesDisponiveis} disponível(is))</span>
+              </Label>
+              <Input
+                id="quantidade"
+                type="number"
+                min={1}
+                max={props.unidadesDisponiveis}
+                {...register('quantidade', { valueAsNumber: true })}
+                disabled={isPending}
+              />
+              {errors.quantidade && <p className="text-xs text-destructive">{errors.quantidade.message}</p>}
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="justificativa">Justificativa <span className="text-muted-foreground">(opcional)</span></Label>
+            <Label htmlFor="justificativa">
+              Justificativa <span className="text-muted-foreground text-xs">(opcional)</span>
+            </Label>
             <Textarea
               id="justificativa"
               {...register('justificativa')}
-              placeholder="Ex: Utilização no apiário da Fazenda São João durante a colheita de inverno…"
+              placeholder="Ex: Utilização no apiário da Fazenda São João durante a colheita…"
               rows={3}
               disabled={isPending}
               className="resize-none"

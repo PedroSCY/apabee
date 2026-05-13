@@ -1,4 +1,5 @@
 export * from './PrismaEquipamentoRepository'
+export * from './PrismaTipoInsumoRepository'
 export * from './PrismaInsumoRepository'
 export * from './PrismaAtribuicaoPatrimonioRepository'
 export * from './PrismaSolicitacaoPatrimonioRepository'

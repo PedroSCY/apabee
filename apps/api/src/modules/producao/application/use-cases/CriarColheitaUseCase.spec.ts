@@ -26,6 +26,7 @@ const loteRepo: jest.Mocked<ILoteProducaoRepository> = {
   findById: jest.fn(),
   findAtivos: jest.fn(),
   findAll: jest.fn(),
+  findAbertosVencidos: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
 }

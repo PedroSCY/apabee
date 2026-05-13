@@ -2,11 +2,14 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import {
   IAprovarSolicitacaoUseCase,
   IAtribuirPatrimonioUseCase,
+  IInsumoRepository,
   ISolicitacaoPatrimonioRepository,
   SolicitacaoPatrimonio,
 } from '@apa/core'
+import { TipoPatrimonio } from '@apa/shared'
 import {
   ATRIBUIR_PATRIMONIO_USE_CASE,
+  INSUMO_REPOSITORY,
   SOLICITACAO_PATRIMONIO_REPOSITORY,
 } from '../../patrimonio.tokens'
 
@@ -17,6 +20,8 @@ export class AprovarSolicitacaoUseCase implements IAprovarSolicitacaoUseCase {
     private readonly solicitacaoRepository: ISolicitacaoPatrimonioRepository,
     @Inject(ATRIBUIR_PATRIMONIO_USE_CASE)
     private readonly atribuirPatrimonio: IAtribuirPatrimonioUseCase,
+    @Inject(INSUMO_REPOSITORY)
+    private readonly insumoRepository: IInsumoRepository,
   ) {}
 
   async execute(solicitacaoId: string): Promise<SolicitacaoPatrimonio> {
@@ -25,12 +30,34 @@ export class AprovarSolicitacaoUseCase implements IAprovarSolicitacaoUseCase {
     if (!solicitacao.isPendente())
       throw new BadRequestException('Apenas solicitações pendentes podem ser aprovadas.')
 
-    await this.atribuirPatrimonio.execute({
-      patrimonioId: solicitacao.patrimonioId,
-      tipoPatrimonio: solicitacao.tipoPatrimonio,
-      associadoId: solicitacao.associadoId,
-      observacao: solicitacao.justificativa,
-    })
+    if (solicitacao.tipoPatrimonio === TipoPatrimonio.EQUIPAMENTO) {
+      await this.atribuirPatrimonio.execute({
+        patrimonioId: solicitacao.patrimonioId!,
+        tipoPatrimonio: TipoPatrimonio.EQUIPAMENTO,
+        associadoId: solicitacao.associadoId,
+        observacao: solicitacao.justificativa,
+      })
+    } else {
+      // INSUMO: atribuir as N unidades disponíveis automaticamente
+      const quantidade = solicitacao.quantidade ?? 1
+      const unidades = await this.insumoRepository.findAvailableByTipo(
+        solicitacao.tipoInsumoId!,
+        quantidade,
+      )
+      if (unidades.length < quantidade) {
+        throw new BadRequestException(
+          `Estoque insuficiente: apenas ${unidades.length} unidade(s) disponível(is).`,
+        )
+      }
+      for (const unidade of unidades) {
+        await this.atribuirPatrimonio.execute({
+          patrimonioId: unidade.id,
+          tipoPatrimonio: TipoPatrimonio.INSUMO,
+          associadoId: solicitacao.associadoId,
+          observacao: solicitacao.justificativa,
+        })
+      }
+    }
 
     return this.solicitacaoRepository.update(solicitacao.aprovar())
   }

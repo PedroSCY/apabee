@@ -1,5 +1,7 @@
 import { apiFetch } from './client'
 
+// ─── Equipamento ─────────────────────────────────────────────────────────────
+
 export interface EquipamentoResponse {
   id: string
   nome: string
@@ -7,26 +9,6 @@ export interface EquipamentoResponse {
   descricao?: string
   status: string
   criadoEm: string
-}
-
-export interface InsumoResponse {
-  id: string
-  nome: string
-  categoria: string
-  descricao?: string
-  status: string
-  criadoEm: string
-}
-
-export interface AtribuicaoPatrimonioResponse {
-  id: string
-  patrimonioId: string
-  tipoPatrimonio: string
-  associadoId: string
-  dataInicio: string
-  dataFim?: string
-  status: string
-  observacao?: string
 }
 
 export interface CriarEquipamentoInput {
@@ -41,15 +23,58 @@ export interface AtualizarEquipamentoInput {
   descricao?: string
 }
 
-export interface CriarInsumoInput {
+// ─── Tipo de Insumo ───────────────────────────────────────────────────────────
+
+export interface TipoInsumoResponse {
+  id: string
   nome: string
   categoria: string
+  sigla: string
+  descricao?: string
+  criadoEm: string
+}
+
+export interface CriarTipoInsumoInput {
+  nome: string
+  categoria: string
+  sigla: string
   descricao?: string
 }
 
-export interface AtualizarInsumoInput {
+export interface AtualizarTipoInsumoInput {
   nome?: string
+  sigla?: string
   descricao?: string
+}
+
+export interface AdicionarUnidadesInput {
+  quantidade: number
+  descricao?: string
+}
+
+// ─── Insumo (unidade individual) ─────────────────────────────────────────────
+
+export interface InsumoResponse {
+  id: string
+  identificador: string
+  tipoInsumoId: string
+  tipoInsumo: Pick<TipoInsumoResponse, 'id' | 'nome' | 'categoria' | 'sigla'>
+  descricao?: string
+  status: string
+  criadoEm: string
+}
+
+// ─── Atribuição ───────────────────────────────────────────────────────────────
+
+export interface AtribuicaoPatrimonioResponse {
+  id: string
+  patrimonioId: string
+  tipoPatrimonio: string
+  associadoId: string
+  dataInicio: string
+  dataFim?: string
+  status: string
+  observacao?: string
 }
 
 export interface AtribuirPatrimonioInput {
@@ -60,10 +85,14 @@ export interface AtribuirPatrimonioInput {
   dataInicio?: string
 }
 
+// ─── Solicitação ──────────────────────────────────────────────────────────────
+
 export interface SolicitacaoPatrimonioResponse {
   id: string
-  patrimonioId: string
   tipoPatrimonio: string
+  patrimonioId?: string
+  tipoInsumoId?: string
+  quantidade?: number
   associadoId: string
   justificativa?: string
   status: 'PENDENTE' | 'APROVADA' | 'REJEITADA'
@@ -71,124 +100,64 @@ export interface SolicitacaoPatrimonioResponse {
   resolvidoEm?: string
 }
 
-export interface CriarSolicitacaoInput {
-  patrimonioId: string
-  tipoPatrimonio: string
-  justificativa?: string
-}
+export type CriarSolicitacaoInput =
+  | { tipoPatrimonio: 'EQUIPAMENTO'; patrimonioId: string; justificativa?: string }
+  | { tipoPatrimonio: 'INSUMO'; tipoInsumoId: string; quantidade: number; justificativa?: string }
+
+// ─── API ──────────────────────────────────────────────────────────────────────
 
 export const patrimonioApi = {
-  /** Lista todos os equipamentos. */
-  listarEquipamentos: () =>
-    apiFetch<EquipamentoResponse[]>('/patrimonio/equipamentos'),
-
-  /** Busca um equipamento pelo ID. */
-  buscarEquipamento: (id: string) =>
-    apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}`),
-
-  /** Cria um novo equipamento. */
+  // Equipamentos
+  listarEquipamentos: () => apiFetch<EquipamentoResponse[]>('/patrimonio/equipamentos'),
+  buscarEquipamento: (id: string) => apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}`),
   criarEquipamento: (input: CriarEquipamentoInput) =>
-    apiFetch<EquipamentoResponse>('/patrimonio/equipamentos', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-
-  /** Atualiza dados de um equipamento. */
+    apiFetch<EquipamentoResponse>('/patrimonio/equipamentos', { method: 'POST', body: JSON.stringify(input) }),
   atualizarEquipamento: (id: string, input: AtualizarEquipamentoInput) =>
-    apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(input),
-    }),
-
-  /** Marca um equipamento como em manutenção. */
+    apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   colocarEquipamentoEmManutencao: (id: string) =>
     apiFetch<void>(`/patrimonio/equipamentos/${id}/manutencao`, { method: 'PATCH' }),
-
-  /** Libera um equipamento da manutenção. */
   liberarEquipamentoManutencao: (id: string) =>
     apiFetch<EquipamentoResponse>(`/patrimonio/equipamentos/${id}/liberar-manutencao`, { method: 'PATCH' }),
+  excluirEquipamento: (id: string) => apiFetch<void>(`/patrimonio/equipamentos/${id}`, { method: 'DELETE' }),
 
-  /** Exclui um equipamento. */
-  excluirEquipamento: (id: string) =>
-    apiFetch<void>(`/patrimonio/equipamentos/${id}`, { method: 'DELETE' }),
+  // Tipos de Insumo
+  listarTiposInsumo: () => apiFetch<TipoInsumoResponse[]>('/patrimonio/tipos-insumo'),
+  buscarTipoInsumo: (id: string) => apiFetch<TipoInsumoResponse>(`/patrimonio/tipos-insumo/${id}`),
+  criarTipoInsumo: (input: CriarTipoInsumoInput) =>
+    apiFetch<TipoInsumoResponse>('/patrimonio/tipos-insumo', { method: 'POST', body: JSON.stringify(input) }),
+  atualizarTipoInsumo: (id: string, input: AtualizarTipoInsumoInput) =>
+    apiFetch<TipoInsumoResponse>(`/patrimonio/tipos-insumo/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  excluirTipoInsumo: (id: string) => apiFetch<void>(`/patrimonio/tipos-insumo/${id}`, { method: 'DELETE' }),
+  adicionarUnidades: (tipoId: string, input: AdicionarUnidadesInput) =>
+    apiFetch<InsumoResponse[]>(`/patrimonio/tipos-insumo/${tipoId}/unidades`, { method: 'POST', body: JSON.stringify(input) }),
+  listarUnidadesPorTipo: (tipoId: string) =>
+    apiFetch<InsumoResponse[]>(`/patrimonio/tipos-insumo/${tipoId}/unidades`),
 
-  /** Lista todos os insumos. */
-  listarInsumos: () =>
-    apiFetch<InsumoResponse[]>('/patrimonio/insumos'),
-
-  /** Busca um insumo pelo ID. */
-  buscarInsumo: (id: string) =>
-    apiFetch<InsumoResponse>(`/patrimonio/insumos/${id}`),
-
-  /** Cria um novo insumo. */
-  criarInsumo: (input: CriarInsumoInput) =>
-    apiFetch<InsumoResponse>('/patrimonio/insumos', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-
-  /** Atualiza dados de um insumo. */
-  atualizarInsumo: (id: string, input: AtualizarInsumoInput) =>
-    apiFetch<InsumoResponse>(`/patrimonio/insumos/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(input),
-    }),
-
-  /** Marca um insumo como em manutenção. */
+  // Insumos (unidades individuais)
+  listarInsumos: (tipoId?: string) =>
+    apiFetch<InsumoResponse[]>(`/patrimonio/insumos${tipoId ? `?tipoId=${tipoId}` : ''}`),
   colocarInsumoEmManutencao: (id: string) =>
     apiFetch<void>(`/patrimonio/insumos/${id}/manutencao`, { method: 'PATCH' }),
-
-  /** Libera um insumo da manutenção. */
   liberarInsumoManutencao: (id: string) =>
     apiFetch<InsumoResponse>(`/patrimonio/insumos/${id}/liberar-manutencao`, { method: 'PATCH' }),
+  excluirInsumo: (id: string) => apiFetch<void>(`/patrimonio/insumos/${id}`, { method: 'DELETE' }),
 
-  /** Exclui um insumo. */
-  excluirInsumo: (id: string) =>
-    apiFetch<void>(`/patrimonio/insumos/${id}`, { method: 'DELETE' }),
-
-  /** Lista todas as atribuições de patrimônio. */
-  listarTodasAtribuicoes: () =>
-    apiFetch<AtribuicaoPatrimonioResponse[]>('/patrimonio/atribuicoes'),
-
-  /** Atribui um patrimônio a um associado. */
+  // Atribuições
+  listarTodasAtribuicoes: () => apiFetch<AtribuicaoPatrimonioResponse[]>('/patrimonio/atribuicoes'),
   atribuirPatrimonio: (input: AtribuirPatrimonioInput) =>
-    apiFetch<AtribuicaoPatrimonioResponse>('/patrimonio/atribuicoes', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-
-  /** Devolve um patrimônio atribuído. */
+    apiFetch<AtribuicaoPatrimonioResponse>('/patrimonio/atribuicoes', { method: 'POST', body: JSON.stringify(input) }),
   devolverPatrimonio: (id: string) =>
     apiFetch<void>(`/patrimonio/atribuicoes/${id}/devolver`, { method: 'POST' }),
-
-  /** Lista atribuições de um associado específico. */
   listarAtribuicoesPorAssociado: (associadoId: string) =>
-    apiFetch<AtribuicaoPatrimonioResponse[]>(
-      `/patrimonio/atribuicoes/associado/${associadoId}`,
-    ),
+    apiFetch<AtribuicaoPatrimonioResponse[]>(`/patrimonio/atribuicoes/associado/${associadoId}`),
 
-  /** Cria uma solicitação de patrimônio. */
+  // Solicitações
   criarSolicitacao: (input: CriarSolicitacaoInput) =>
-    apiFetch<SolicitacaoPatrimonioResponse>('/patrimonio/solicitacoes', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-
-  /** Lista solicitações de patrimônio, opcionalmente filtradas por status. */
+    apiFetch<SolicitacaoPatrimonioResponse>('/patrimonio/solicitacoes', { method: 'POST', body: JSON.stringify(input) }),
   listarSolicitacoes: (status?: string) =>
-    apiFetch<SolicitacaoPatrimonioResponse[]>(
-      `/patrimonio/solicitacoes${status ? `?status=${status}` : ''}`,
-    ),
-
-  /** Aprova uma solicitação de patrimônio. */
+    apiFetch<SolicitacaoPatrimonioResponse[]>(`/patrimonio/solicitacoes${status ? `?status=${status}` : ''}`),
   aprovarSolicitacao: (id: string) =>
-    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/aprovar`, {
-      method: 'PATCH',
-    }),
-
-  /** Rejeita uma solicitação de patrimônio. */
+    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/aprovar`, { method: 'PATCH' }),
   rejeitarSolicitacao: (id: string) =>
-    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/rejeitar`, {
-      method: 'PATCH',
-    }),
+    apiFetch<SolicitacaoPatrimonioResponse>(`/patrimonio/solicitacoes/${id}/rejeitar`, { method: 'PATCH' }),
 }

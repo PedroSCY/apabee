@@ -1,6 +1,5 @@
 export * from './CriarEquipamentoDto'
 export * from './AtualizarEquipamentoDto'
-export * from './CriarInsumoDto'
-export * from './AtualizarInsumoDto'
+export * from './CriarTipoInsumoDto'
 export * from './AtribuirPatrimonioDto'
 export * from './CriarSolicitacaoDto'

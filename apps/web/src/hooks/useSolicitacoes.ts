@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { patrimonioApi, type CriarSolicitacaoInput } from '@/lib/api/patrimonio'
 import { EQUIPAMENTOS_KEY } from './useEquipamentos'
-import { INSUMOS_KEY } from './useInsumos'
+import { INSUMOS_KEY, TIPOS_INSUMO_KEY } from './useInsumos'
 
 export const SOLICITACOES_KEY = ['solicitacoes'] as const
 
@@ -33,6 +33,7 @@ export function useAprovarSolicitacao() {
       void qc.invalidateQueries({ queryKey: SOLICITACOES_KEY })
       void qc.invalidateQueries({ queryKey: EQUIPAMENTOS_KEY })
       void qc.invalidateQueries({ queryKey: INSUMOS_KEY })
+      void qc.invalidateQueries({ queryKey: TIPOS_INSUMO_KEY })
     },
   })
 }
