@@ -16,6 +16,7 @@ import {
 import { EmptyState } from './EmptyState'
 import { TableSkeleton } from './LoadingSkeleton'
 
+/** Coluna da tabela com chave, rótulo e renderizador opcional. */
 export interface Column<T> {
   key: string
   label: string
@@ -39,6 +40,7 @@ interface DataTableProps<T> {
 
 const DEFAULT_PAGE_SIZE = 10
 
+/** Tabela genérica com busca, paginação e estado de carregamento/vazio. */
 export function DataTable<T>({
   data,
   columns,
@@ -67,6 +69,7 @@ export function DataTable<T>({
   const currentPage = Math.min(page, totalPages)
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
+  /** Extrai o valor de uma célula usando o renderizador ou acesso direto. */
   function getValue(row: T, col: Column<T>): React.ReactNode {
     if (col.render) return col.render(row)
     return String((row as Record<string, unknown>)[col.key] ?? '')

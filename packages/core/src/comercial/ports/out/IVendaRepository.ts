@@ -1,5 +1,6 @@
 import { Venda } from '../../entities/Venda';
 
+/** Repositório de vendas. */
 export interface IVendaRepository {
   findById(id: string): Promise<Venda | null>;
   findByLote(loteId: string): Promise<Venda[]>;

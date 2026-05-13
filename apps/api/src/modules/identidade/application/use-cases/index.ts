@@ -1,3 +1,4 @@
+/** @module Casos de uso do módulo de identidade */
 export { CriarUsuarioUseCase } from './CriarUsuarioUseCase'
 export { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
 export { ListarAssociadosUseCase } from './ListarAssociadosUseCase'

@@ -1,9 +1,11 @@
+/** Propriedades da entidade ParticipanteAta. */
 interface ParticipanteAtaProps {
   id: string;
   ataId: string;
   associadoId: string;
 }
 
+/** Associado participante de uma ata. */
 export class ParticipanteAta {
   private readonly props: ParticipanteAtaProps;
 

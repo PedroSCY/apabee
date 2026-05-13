@@ -1,6 +1,7 @@
 import { StatusSolicitacaoContato } from '@apa/shared'
 import { SolicitacaoContato } from '../../entities/SolicitacaoContato'
 
+/** Repositório de solicitações de contato. */
 export interface ISolicitacaoContatoRepository {
   findById(id: string): Promise<SolicitacaoContato | null>
   findAll(status?: StatusSolicitacaoContato): Promise<SolicitacaoContato[]>

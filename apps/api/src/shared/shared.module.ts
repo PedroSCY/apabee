@@ -19,4 +19,5 @@ import { JwtStrategy } from './guards'
   providers: [JwtStrategy],
   exports: [JwtModule, PassportModule],
 })
+/** Módulo compartilhado que expõe autenticação JWT e estratégia Passport. */
 export class SharedModule {}

@@ -5,6 +5,7 @@ interface EstoqueProdutoProps {
   atualizadoEm: Date;
 }
 
+/** Entidade que representa o estoque disponível de um produto. */
 export class EstoqueProduto {
   private readonly props: EstoqueProdutoProps;
 
@@ -16,10 +17,12 @@ export class EstoqueProduto {
   get produtoId(): string { return this.props.produtoId; }
   get quantidadeDisponivel(): number { return this.props.quantidadeDisponivel; }
 
+  /** Verifica se há saldo suficiente para uma quantidade. */
   temSaldo(qtd: number): boolean {
     return this.props.quantidadeDisponivel >= qtd;
   }
 
+  /** Adiciona quantidade ao estoque. */
   entrada(qtd: number): EstoqueProduto {
     if (qtd <= 0) throw new Error('Quantidade deve ser positiva.');
     return new EstoqueProduto({
@@ -29,6 +32,7 @@ export class EstoqueProduto {
     });
   }
 
+  /** Remove quantidade do estoque. Lança erro se saldo for insuficiente. */
   saida(qtd: number): EstoqueProduto {
     if (qtd <= 0) throw new Error('Quantidade deve ser positiva.');
     if (!this.temSaldo(qtd)) throw new Error('Saldo insuficiente no estoque de produto.');

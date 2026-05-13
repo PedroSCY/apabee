@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
+/** Mapa de classes de cor por status. @internal */
 const STATUS_CLASS: Record<string, string> = {
   DISPONIVEL: 'bg-emerald-100 text-emerald-700 border-transparent dark:bg-emerald-950 dark:text-emerald-400',
   ATIVO: 'bg-emerald-100 text-emerald-700 border-transparent dark:bg-emerald-950 dark:text-emerald-400',
@@ -17,6 +18,7 @@ const STATUS_CLASS: Record<string, string> = {
   ARQUIVADO: 'bg-red-100 text-red-700 border-transparent dark:bg-red-950 dark:text-red-400',
 }
 
+/** Mapa de rótulos amigáveis por status. @internal */
 const STATUS_LABEL: Record<string, string> = {
   DISPONIVEL: 'Disponível',
   EM_USO: 'Em uso',
@@ -43,6 +45,7 @@ interface StatusBadgeProps {
   className?: string
 }
 
+/** Badge colorido que exibe um status com cor e rótulo padronizados. */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const label = STATUS_LABEL[status] ?? status
   const colorClass = STATUS_CLASS[status]

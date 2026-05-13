@@ -1,3 +1,4 @@
+/** Propriedades da entidade ConfiguracaoAssociacao. */
 interface ConfiguracaoAssociacaoProps {
   id: string;
   nomeExibido: string;
@@ -15,7 +16,7 @@ interface ConfiguracaoAssociacaoProps {
   atualizadoEm: Date;
 }
 
-// Singleton — existe apenas um registro por associação
+/** Configurações singleton da associação (dados e tema visual). */
 export class ConfiguracaoAssociacao {
   private readonly props: ConfiguracaoAssociacaoProps;
 
@@ -37,6 +38,7 @@ export class ConfiguracaoAssociacao {
   get corAccent(): string | undefined { return this.props.corAccent; }
   get atualizadoEm(): Date { return this.props.atualizadoEm; }
 
+  /** Atualiza campos da configuração e retorna nova instância. */
   atualizar(dados: Partial<Omit<ConfiguracaoAssociacaoProps, 'id' | 'atualizadoEm'>>): ConfiguracaoAssociacao {
     return new ConfiguracaoAssociacao({ ...this.props, ...dados, atualizadoEm: new Date() });
   }

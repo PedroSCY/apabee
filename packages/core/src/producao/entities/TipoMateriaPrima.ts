@@ -7,6 +7,7 @@ interface TipoMateriaPrimaProps {
   descricao?: string
 }
 
+/** Tipo de matéria-prima (ex.: mel, cera, própolis). */
 export class TipoMateriaPrima {
   private readonly props: TipoMateriaPrimaProps
 

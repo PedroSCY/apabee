@@ -13,6 +13,7 @@ interface ColheitaProps {
   criadoEm: Date
 }
 
+/** Registro de colheita de matéria-prima por um associado. */
 export class Colheita {
   private readonly props: ColheitaProps
 
@@ -51,6 +52,7 @@ export class Colheita {
     return this.props.criadoEm
   }
 
+  /** Valida se os dados da colheita são consistentes. */
   validar(): boolean {
     return this.props.volume > 0
   }

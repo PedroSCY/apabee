@@ -23,6 +23,7 @@ interface ConfirmDialogProps {
   isPending?: boolean
 }
 
+/** Diálogo de confirmação com suporte a modo destrutivo e estado de carregamento. */
 export function ConfirmDialog({
   open,
   onOpenChange,

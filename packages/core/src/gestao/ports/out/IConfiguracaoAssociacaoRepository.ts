@@ -1,6 +1,6 @@
 import { ConfiguracaoAssociacao } from '../../entities/ConfiguracaoAssociacao';
 
-// Singleton — findOne busca o único registro existente
+/** Repositório singleton da configuração da associação. */
 export interface IConfiguracaoAssociacaoRepository {
   findOne(): Promise<ConfiguracaoAssociacao | null>;
   save(config: ConfiguracaoAssociacao): Promise<ConfiguracaoAssociacao>;

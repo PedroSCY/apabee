@@ -1,6 +1,7 @@
 import { TipoMovimentoFinanceiro } from '@apa/shared'
 import { MovimentoFinanceiro } from './MovimentoFinanceiro'
 
+/** Propriedades da entidade ApuracaoLote. */
 interface ApuracaoLoteProps {
   id: string
   loteProducaoId: string
@@ -8,6 +9,7 @@ interface ApuracaoLoteProps {
   fechadoEm: Date
 }
 
+/** Apuração financeira final de um lote de produção. */
 export class ApuracaoLote {
   private readonly props: ApuracaoLoteProps
 
@@ -28,7 +30,7 @@ export class ApuracaoLote {
     return this.props.fechadoEm
   }
 
-  // RN10: valor_final = (percentual * faturamentoTotal) - antecipacoes
+  /** Calcula o valor final de um associado (RN10). */
   calcularValorFinal(percentual: number, antecipacoes: MovimentoFinanceiro[]): number {
     const direito = (percentual / 100) * this.props.faturamentoTotal
     const totalAntecipado = antecipacoes
@@ -37,6 +39,7 @@ export class ApuracaoLote {
     return direito - totalAntecipado
   }
 
+  /** Gera movimento de rateio final para um associado. */
   gerarRateio(
     associadoId: string,
     percentual: number,

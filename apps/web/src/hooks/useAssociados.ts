@@ -14,6 +14,7 @@ import {
 export const ASSOCIADOS_KEY = ['associados'] as const
 export const ASSOCIADO_KEY = (id: string) => ['associados', id] as const
 
+/** Busca lista de todos os associados. */
 export function useAssociados() {
   return useQuery({
     queryKey: ASSOCIADOS_KEY,
@@ -21,6 +22,7 @@ export function useAssociados() {
   })
 }
 
+/** Busca perfil do usuário logado. */
 export function useMeuPerfil() {
   return useQuery({
     queryKey: ['meu-perfil'] as const,
@@ -29,6 +31,7 @@ export function useMeuPerfil() {
   })
 }
 
+/** Busca um associado pelo ID. */
 export function useAssociado(id: string) {
   return useQuery({
     queryKey: ASSOCIADO_KEY(id),
@@ -37,6 +40,7 @@ export function useAssociado(id: string) {
   })
 }
 
+/** Cria um novo usuário no sistema. */
 export function useCriarUsuario() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -47,6 +51,7 @@ export function useCriarUsuario() {
   })
 }
 
+/** Cria um novo associado. */
 export function useCriarAssociado() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -57,6 +62,7 @@ export function useCriarAssociado() {
   })
 }
 
+/** Atualiza dados de um usuário. */
 export function useAtualizarUsuario(usuarioId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -68,6 +74,7 @@ export function useAtualizarUsuario(usuarioId: string) {
   })
 }
 
+/** Atualiza dados de um associado. */
 export function useAtualizarAssociado(associadoId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -79,6 +86,7 @@ export function useAtualizarAssociado(associadoId: string) {
   })
 }
 
+/** Exclui um associado pelo ID. */
 export function useExcluirAssociado() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -89,12 +97,14 @@ export function useExcluirAssociado() {
   })
 }
 
+/** Atualiza a senha de um usuário. */
 export function useAtualizarSenha(usuarioId: string) {
   return useMutation({
     mutationFn: (senha: string) => identidadeApi.atualizarSenha(usuarioId, senha),
   })
 }
 
+/** Cria um associado com status pendente. */
 export function useCriarAssociadoPendente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -105,6 +115,7 @@ export function useCriarAssociadoPendente() {
   })
 }
 
+/** Aprova um associado pendente. */
 export function useAprovarAssociadoPendente() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -116,6 +127,7 @@ export function useAprovarAssociadoPendente() {
   })
 }
 
+/** Ativa um usuário do sistema. */
 export function useAtivarUsuario() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -126,6 +138,7 @@ export function useAtivarUsuario() {
   })
 }
 
+/** Desativa um usuário do sistema. */
 export function useDesativarUsuario() {
   const queryClient = useQueryClient()
   return useMutation({

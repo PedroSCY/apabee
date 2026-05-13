@@ -1,5 +1,6 @@
 import { TipoMovimentoFinanceiro } from '@apa/shared'
 
+/** Propriedades da entidade MovimentoFinanceiro. */
 interface MovimentoFinanceiroProps {
   id: string
   associadoId: string
@@ -9,6 +10,7 @@ interface MovimentoFinanceiroProps {
   data: Date
 }
 
+/** Movimento financeiro de um associado em um lote. */
 export class MovimentoFinanceiro {
   private readonly props: MovimentoFinanceiroProps
 
@@ -35,6 +37,7 @@ export class MovimentoFinanceiro {
     return this.props.data
   }
 
+  /** Verifica se o movimento é do tipo antecipação. */
   isAntecipacao(): boolean {
     return this.props.tipo === TipoMovimentoFinanceiro.ANTECIPACAO
   }

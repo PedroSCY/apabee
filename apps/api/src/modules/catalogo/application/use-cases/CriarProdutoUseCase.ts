@@ -14,12 +14,14 @@ function toSlug(text: string): string {
 }
 
 @Injectable()
+/** Cria um novo produto em status rascunho com slug único. */
 export class CriarProdutoUseCase implements ICriarProdutoUseCase {
   constructor(
     @Inject(PRODUTO_REPOSITORY)
     private readonly produtoRepository: IProdutoRepository,
   ) {}
 
+  /** Executa a criação validando slug e persiste o produto. */
   async execute(input: CriarProdutoInput): Promise<Produto> {
     const slug = input.slug?.trim() || toSlug(input.nome)
 

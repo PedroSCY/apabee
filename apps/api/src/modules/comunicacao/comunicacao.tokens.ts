@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo de comunicação. */
 export const AVISO_REPOSITORY = 'AVISO_REPOSITORY'
 
 export const CRIAR_AVISO_USE_CASE = 'CRIAR_AVISO_USE_CASE'

@@ -1,5 +1,6 @@
 import { CategoriaAviso } from '@apa/shared'
 
+/** Propriedades da entidade Aviso. */
 interface AvisoProps {
   id: string
   titulo: string
@@ -10,6 +11,7 @@ interface AvisoProps {
   criadoEm: Date
 }
 
+/** Aviso interno publicado pela associação. */
 export class Aviso {
   private readonly props: AvisoProps
 
@@ -25,10 +27,12 @@ export class Aviso {
   get fixado(): boolean { return this.props.fixado }
   get criadoEm(): Date { return this.props.criadoEm }
 
+  /** Marca o aviso como publicado. */
   publicar(): Aviso {
     return new Aviso({ ...this.props, publicado: true })
   }
 
+  /** Marca o aviso como não publicado. */
   despublicar(): Aviso {
     return new Aviso({ ...this.props, publicado: false })
   }

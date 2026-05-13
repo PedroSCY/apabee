@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo comercial. */
 export const PEDIDO_REPOSITORY = 'PEDIDO_REPOSITORY'
 export const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
 export const VENDA_REPOSITORY = 'VENDA_REPOSITORY'

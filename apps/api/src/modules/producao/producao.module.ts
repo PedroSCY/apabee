@@ -79,4 +79,5 @@ import {
   ],
   exports: [COLHEITA_REPOSITORY, LOTE_PRODUCAO_REPOSITORY, ESTOQUE_MATERIA_PRIMA_REPOSITORY],
 })
+/** Módulo NestJS de produção — tipos de matéria-prima, colheitas, lotes e participações. */
 export class ProducaoModule {}

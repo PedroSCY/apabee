@@ -56,6 +56,7 @@ import {
 @ApiTags('Catálogo')
 @ApiBearerAuth('JWT')
 @Controller('catalogo/produtos')
+/** Controller REST do catálogo — CRUD de produtos, estoque e composição. */
 export class ProdutosController {
   constructor(
     @Inject(CRIAR_PRODUTO_USE_CASE) private readonly criar: ICriarProdutoUseCase,

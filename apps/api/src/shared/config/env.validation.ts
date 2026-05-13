@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer'
 import { IsNumber, IsString, IsUrl, Max, Min, validateSync } from 'class-validator'
 
+/** Esquema validado das variáveis de ambiente obrigatórias. */
 class EnvVars {
   @IsNumber()
   @Min(1024)
@@ -20,6 +21,7 @@ class EnvVars {
   JWT_SECRET!: string
 }
 
+/** Valida e transforma as variáveis de ambiente segundo o esquema EnvVars. */
 export function validateEnv(config: Record<string, unknown>) {
   const validated = plainToInstance(EnvVars, config, { enableImplicitConversion: true })
   const errors = validateSync(validated, { skipMissingProperties: false })

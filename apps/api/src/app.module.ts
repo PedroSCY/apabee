@@ -34,4 +34,5 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
+/** Módulo raiz da aplicação — importa todos os módulos de domínio e configurações globais. */
 export class AppModule {}

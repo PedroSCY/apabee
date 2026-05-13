@@ -18,6 +18,7 @@ import {
 } from '../../producao.tokens'
 
 @Injectable()
+/** Registra uma colheita e atualiza o estoque de matéria-prima (RN03). */
 export class CriarColheitaUseCase implements ICriarColheitaUseCase {
   constructor(
     @Inject(COLHEITA_REPOSITORY)
@@ -28,6 +29,7 @@ export class CriarColheitaUseCase implements ICriarColheitaUseCase {
     private readonly estoqueRepository: IEstoqueMateriaPrimaRepository,
   ) {}
 
+  /** Executa o registro da colheita com validação do lote e entrada automática no estoque. */
   async execute(input: CriarColheitaInput): Promise<Colheita> {
     const lote = await this.loteRepository.findById(input.loteProducaoId)
     if (!lote) throw new NotFoundException('Lote de produção não encontrado')

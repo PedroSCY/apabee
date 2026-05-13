@@ -9,6 +9,7 @@ export const DOCUMENTOS_KEY = ['gestao', 'documentos']
 
 // ── Configuração ─────────────────────────────────────────────────────────────
 
+/** Busca configuração da associação. */
 export function useConfiguracao() {
   return useQuery({
     queryKey: CONFIGURACAO_KEY,
@@ -17,6 +18,7 @@ export function useConfiguracao() {
   })
 }
 
+/** Atualiza configuração da associação. */
 export function useAtualizarConfiguracao() {
   const qc = useQueryClient()
   return useMutation({
@@ -27,10 +29,12 @@ export function useAtualizarConfiguracao() {
 
 // ── Atas ──────────────────────────────────────────────────────────────────────
 
+/** Busca lista de atas registradas. */
 export function useAtas() {
   return useQuery({ queryKey: ATAS_KEY, queryFn: gestaoApi.listarAtas })
 }
 
+/** Cria uma nova ata de reunião. */
 export function useCriarAta() {
   const qc = useQueryClient()
   return useMutation({
@@ -39,6 +43,7 @@ export function useCriarAta() {
   })
 }
 
+/** Publica uma ata para os associados. */
 export function usePublicarAta() {
   const qc = useQueryClient()
   return useMutation({
@@ -47,6 +52,7 @@ export function usePublicarAta() {
   })
 }
 
+/** Despublica uma ata. */
 export function useDespublicarAta() {
   const qc = useQueryClient()
   return useMutation({
@@ -55,6 +61,7 @@ export function useDespublicarAta() {
   })
 }
 
+/** Busca participantes de uma ata. */
 export function useParticipantesAta(ataId: string) {
   return useQuery({
     queryKey: [...ATAS_KEY, ataId, 'participantes'],
@@ -63,6 +70,7 @@ export function useParticipantesAta(ataId: string) {
   })
 }
 
+/** Adiciona participante a uma ata. */
 export function useAdicionarParticipante(ataId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -71,6 +79,7 @@ export function useAdicionarParticipante(ataId: string) {
   })
 }
 
+/** Remove participante de uma ata. */
 export function useRemoverParticipante(ataId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -81,6 +90,7 @@ export function useRemoverParticipante(ataId: string) {
 
 // ── Documentos ────────────────────────────────────────────────────────────────
 
+/** Busca documentos por categoria. */
 export function useDocumentos(categoria?: string) {
   return useQuery({
     queryKey: [...DOCUMENTOS_KEY, categoria],
@@ -88,6 +98,7 @@ export function useDocumentos(categoria?: string) {
   })
 }
 
+/** Cria um novo documento. */
 export function useCriarDocumento() {
   const qc = useQueryClient()
   return useMutation({
@@ -96,6 +107,7 @@ export function useCriarDocumento() {
   })
 }
 
+/** Publica um documento para os associados. */
 export function usePublicarDocumento() {
   const qc = useQueryClient()
   return useMutation({
@@ -104,6 +116,7 @@ export function usePublicarDocumento() {
   })
 }
 
+/** Despublica um documento. */
 export function useDespublicarDocumento() {
   const qc = useQueryClient()
   return useMutation({
@@ -112,6 +125,7 @@ export function useDespublicarDocumento() {
   })
 }
 
+/** Exclui um documento pelo ID. */
 export function useExcluirDocumento() {
   const qc = useQueryClient()
   return useMutation({

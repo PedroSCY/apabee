@@ -1,3 +1,4 @@
+/** Barrel — entidades do módulo de produção. */
 export * from './TipoMateriaPrima';
 export * from './Colheita';
 export * from './EstoqueMateriaPrima';

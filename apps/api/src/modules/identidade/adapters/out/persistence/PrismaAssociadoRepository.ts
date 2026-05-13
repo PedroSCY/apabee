@@ -7,9 +7,11 @@ import { PrismaService } from '../../../../../shared/database/prisma.service'
 type AssociadoWithUsuario = PrismaAssociado & { usuario: PrismaUsuario }
 
 @Injectable()
+/** Adaptador Prisma para o repositório de associados */
 export class PrismaAssociadoRepository implements IAssociadoRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Busca um associado pelo ID */
   async findById(id: string): Promise<Associado | null> {
     const record = await this.prisma.associado.findUnique({
       where: { id },
@@ -18,6 +20,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return record ? this.toDomain(record) : null
   }
 
+  /** Busca um associado pelo ID do usuário vinculado */
   async findByUsuarioId(usuarioId: string): Promise<Associado | null> {
     const record = await this.prisma.associado.findUnique({
       where: { usuarioId },
@@ -26,6 +29,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return record ? this.toDomain(record) : null
   }
 
+  /** Retorna todos os associados cadastrados */
   async findAll(): Promise<Associado[]> {
     const records = await this.prisma.associado.findMany({
       include: { usuario: true },
@@ -33,6 +37,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return records.map((r) => this.toDomain(r))
   }
 
+  /** Persiste um novo associado no banco */
   async save(associado: Associado): Promise<Associado> {
     const record = await this.prisma.associado.create({
       data: {
@@ -47,6 +52,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return this.toDomain(record)
   }
 
+  /** Atualiza os dados de um associado existente */
   async update(associado: Associado): Promise<Associado> {
     const record = await this.prisma.associado.update({
       where: { id: associado.id },
@@ -60,6 +66,7 @@ export class PrismaAssociadoRepository implements IAssociadoRepository {
     return this.toDomain(record)
   }
 
+  /** Remove um associado pelo ID */
   async delete(id: string): Promise<void> {
     await this.prisma.associado.delete({ where: { id } })
   }

@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo de produção. */
 export const TIPO_MATERIA_PRIMA_REPOSITORY = 'TIPO_MATERIA_PRIMA_REPOSITORY'
 export const COLHEITA_REPOSITORY = 'COLHEITA_REPOSITORY'
 export const LOTE_PRODUCAO_REPOSITORY = 'LOTE_PRODUCAO_REPOSITORY'

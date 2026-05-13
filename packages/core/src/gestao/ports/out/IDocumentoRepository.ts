@@ -1,6 +1,7 @@
 import { Documento } from '../../entities/Documento';
 import { CategoriaDocumento } from '@apa/shared';
 
+/** Repositório de documentos. */
 export interface IDocumentoRepository {
   findById(id: string): Promise<Documento | null>;
   findAll(): Promise<Documento[]>;

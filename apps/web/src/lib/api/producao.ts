@@ -82,62 +82,71 @@ export interface CriarColheitaInput {
 }
 
 export const producaoApi = {
-  // Tipos de matéria-prima
+  /** Lista todos os tipos de matéria-prima. */
   listarTipos: () =>
     apiFetch<TipoMateriaPrimaResponse[]>('/producao/tipos-materia-prima'),
 
+  /** Cria um novo tipo de matéria-prima. */
   criarTipo: (input: CriarTipoMateriaPrimaInput) =>
     apiFetch<TipoMateriaPrimaResponse>('/producao/tipos-materia-prima', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
-  // Lotes
+  /** Lista todos os lotes de produção. */
   listarLotes: () =>
     apiFetch<LoteProducaoResponse[]>('/producao/lotes'),
 
+  /** Busca um lote de produção pelo ID. */
   buscarLote: (id: string) =>
     apiFetch<LoteProducaoResponse>(`/producao/lotes/${id}`),
 
+  /** Cria um novo lote de produção. */
   criarLote: (input: CriarLoteInput) =>
     apiFetch<LoteProducaoResponse>('/producao/lotes', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Encerra um lote de produção. */
   encerrarLote: (id: string) =>
     apiFetch<LoteProducaoResponse>(`/producao/lotes/${id}/encerrar`, { method: 'PATCH' }),
 
-  // Participações
+  /** Lista as participações de um lote. */
   listarParticipacoes: (loteId: string) =>
     apiFetch<ParticipacaoLoteResponse[]>(`/producao/lotes/${loteId}/participacoes`),
 
+  /** Registra a participação de um associado em um lote. */
   registrarParticipacao: (loteId: string, input: RegistrarParticipacaoInput) =>
     apiFetch<ParticipacaoLoteResponse>(`/producao/lotes/${loteId}/participacoes`, {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Atualiza a participação de um associado em um lote. */
   atualizarParticipacao: (loteId: string, associadoId: string, input: AtualizarParticipacaoInput) =>
     apiFetch<ParticipacaoLoteResponse>(`/producao/lotes/${loteId}/participacoes/${associadoId}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
 
+  /** Calcula o rateio financeiro de um lote. */
   calcularRateio: (loteId: string) =>
     apiFetch<ParticipacaoLoteResponse[]>(`/producao/lotes/${loteId}/rateio`, { method: 'POST' }),
 
-  // Participações por associado
+  /** Lista participações de um associado em todos os lotes. */
   listarParticipacoesPorAssociado: (associadoId: string) =>
     apiFetch<ParticipacaoLoteResponse[]>(`/producao/participacoes/associado/${associadoId}`),
 
-  // Colheitas
+  /** Lista colheitas de um associado. */
   listarColheitasPorAssociado: (associadoId: string) =>
     apiFetch<ColheitaResponse[]>(`/producao/colheitas/associado/${associadoId}`),
 
+  /** Lista colheitas de um lote específico. */
   listarColheitasPorLote: (loteId: string) =>
     apiFetch<ColheitaResponse[]>(`/producao/colheitas/lote/${loteId}`),
 
+  /** Registra uma nova colheita. */
   criarColheita: (input: CriarColheitaInput) =>
     apiFetch<ColheitaResponse>('/producao/colheitas', {
       method: 'POST',

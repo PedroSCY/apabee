@@ -1,3 +1,4 @@
+/** @module DTOs do controller de identidade */
 export { CriarUsuarioDto } from './CriarUsuarioDto'
 export { CriarAssociadoDto } from './CriarAssociadoDto'
 export { CriarAssociadoPendenteDto } from './CriarAssociadoPendenteDto'

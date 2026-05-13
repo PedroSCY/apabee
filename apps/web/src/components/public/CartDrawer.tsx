@@ -14,6 +14,7 @@ import {
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+/** Drawer lateral do carrinho de compras com lista de itens e total. */
 export function CartDrawer() {
   const items = useCartStore((s) => s.items)
   const open = useCartStore((s) => s.drawerOpen)

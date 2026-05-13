@@ -10,6 +10,7 @@ interface LoteProducaoProps {
   custoTotal: number
 }
 
+/** Lote de produção (colheita) ou aquisição. */
 export class LoteProducao {
   private readonly props: LoteProducaoProps
 
@@ -25,10 +26,12 @@ export class LoteProducao {
   get status(): StatusLote { return this.props.status }
   get custoTotal(): number { return this.props.custoTotal }
 
+  /** Verifica se o lote ainda está aberto para movimentações. */
   estaAberto(): boolean {
     return this.props.status === StatusLote.ABERTO
   }
 
+  /** Encerra o lote alterando status para FECHADO (imutável). */
   encerrar(): LoteProducao {
     if (!this.estaAberto()) {
       throw new Error('Lote já está encerrado.')

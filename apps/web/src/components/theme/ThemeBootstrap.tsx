@@ -5,6 +5,7 @@ import { useConfiguracao } from '@/hooks/useGestao'
 import { useTemaStore } from '@/store/tema.store'
 import type { ConfiguracaoTema } from '@/store/tema.store'
 
+/** Carrega configuração de tema da API e alimenta a store de tema. */
 export function ThemeBootstrap() {
   const { data: config } = useConfiguracao()
   const setConfiguracao = useTemaStore((s) => s.setConfiguracao)

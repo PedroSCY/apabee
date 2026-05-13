@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo de gestão. */
 export const ATA_REPOSITORY = 'ATA_REPOSITORY'
 export const PARTICIPANTE_ATA_REPOSITORY = 'PARTICIPANTE_ATA_REPOSITORY'
 export const DOCUMENTO_REPOSITORY = 'DOCUMENTO_REPOSITORY'

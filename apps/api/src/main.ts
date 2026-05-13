@@ -8,6 +8,7 @@ import cors from '@fastify/cors'
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './shared/filters/http-exception.filter'
 
+/** Inicializa a aplicação NestJS com CORS, Helmet, Swagger e ValidationPipe. */
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

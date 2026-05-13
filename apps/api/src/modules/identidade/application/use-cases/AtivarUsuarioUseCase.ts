@@ -8,6 +8,7 @@ import {
 import { PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Ativa o acesso de um usuário no banco e no Supabase Auth */
 export class AtivarUsuarioUseCase implements IAtivarUsuarioUseCase {
   constructor(
     @Inject(USUARIO_REPOSITORY)
@@ -16,6 +17,7 @@ export class AtivarUsuarioUseCase implements IAtivarUsuarioUseCase {
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Reativa o usuário e libera o acesso no Supabase */
   async execute(input: AlterarStatusUsuarioInput): Promise<void> {
     const usuario = await this.usuarioRepository.findById(input.usuarioId)
     if (!usuario) throw new NotFoundException('Usuário não encontrado')

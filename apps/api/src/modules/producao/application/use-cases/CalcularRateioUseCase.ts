@@ -9,6 +9,7 @@ import {
 import { LOTE_PRODUCAO_REPOSITORY, PARTICIPACAO_LOTE_REPOSITORY } from '../../producao.tokens'
 
 @Injectable()
+/** Recalcula os percentuais de rateio entre os participantes de um lote. */
 export class CalcularRateioUseCase implements ICalcularRateioUseCase {
   constructor(
     @Inject(LOTE_PRODUCAO_REPOSITORY)
@@ -17,6 +18,7 @@ export class CalcularRateioUseCase implements ICalcularRateioUseCase {
     private readonly participacaoRepository: IParticipacaoLoteRepository,
   ) {}
 
+  /** Executa o rateio proporcional ao volume (produção) ou valor investido (aquisição). */
   async execute(loteId: string): Promise<ParticipacaoLote[]> {
     const lote = await this.loteRepository.findById(loteId)
     if (!lote) throw new NotFoundException('Lote não encontrado')

@@ -5,4 +5,5 @@ import { PrismaService } from './prisma.service'
   providers: [PrismaService],
   exports: [PrismaService],
 })
+/** Módulo global que provê PrismaService para toda a aplicação. */
 export class PrismaModule {}

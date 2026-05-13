@@ -10,6 +10,7 @@ import {
 
 export const AVISOS_KEY = ['avisos'] as const
 
+/** Busca lista de avisos publicados. */
 export function useAvisos(apenasPublicados = false) {
   return useQuery({
     queryKey: [...AVISOS_KEY, { apenasPublicados }],
@@ -17,6 +18,7 @@ export function useAvisos(apenasPublicados = false) {
   })
 }
 
+/** Cria um novo aviso. */
 export function useCriarAviso() {
   const qc = useQueryClient()
   return useMutation({
@@ -25,6 +27,7 @@ export function useCriarAviso() {
   })
 }
 
+/** Publica um aviso para os associados. */
 export function usePublicarAviso() {
   const qc = useQueryClient()
   return useMutation({
@@ -33,6 +36,7 @@ export function usePublicarAviso() {
   })
 }
 
+/** Despublica um aviso. */
 export function useDespublicarAviso() {
   const qc = useQueryClient()
   return useMutation({
@@ -41,6 +45,7 @@ export function useDespublicarAviso() {
   })
 }
 
+/** Exclui um aviso pelo ID. */
 export function useExcluirAviso() {
   const qc = useQueryClient()
   return useMutation({
@@ -51,6 +56,7 @@ export function useExcluirAviso() {
 
 export const SOLICITACOES_CONTATO_KEY = ['solicitacoes-contato'] as const
 
+/** Busca solicitações de contato por status. */
 export function useSolicitacoesContato(status?: StatusSolicitacaoContato) {
   return useQuery({
     queryKey: [...SOLICITACOES_CONTATO_KEY, status],
@@ -58,6 +64,7 @@ export function useSolicitacoesContato(status?: StatusSolicitacaoContato) {
   })
 }
 
+/** Cria uma nova solicitação de contato. */
 export function useCriarSolicitacaoContato() {
   return useMutation({
     mutationFn: (input: CriarSolicitacaoContatoInput) =>
@@ -65,6 +72,7 @@ export function useCriarSolicitacaoContato() {
   })
 }
 
+/** Atualiza o status de uma solicitação de contato. */
 export function useAtualizarStatusSolicitacaoContato() {
   const qc = useQueryClient()
   return useMutation({
@@ -74,6 +82,7 @@ export function useAtualizarStatusSolicitacaoContato() {
   })
 }
 
+/** Exclui uma solicitação de contato. */
 export function useExcluirSolicitacaoContato() {
   const qc = useQueryClient()
   return useMutation({

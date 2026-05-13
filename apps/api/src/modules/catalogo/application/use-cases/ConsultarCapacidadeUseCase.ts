@@ -11,6 +11,7 @@ import { COMPOSICAO_PRODUTO_REPOSITORY, PRODUTO_REPOSITORY } from '../../catalog
 import { COLHEITA_REPOSITORY } from '../../../producao/producao.tokens'
 
 @Injectable()
+/** Consulta a capacidade máxima de produção de um produto a partir de um lote. */
 export class ConsultarCapacidadeUseCase implements IConsultarCapacidadeUseCase {
   constructor(
     @Inject(PRODUTO_REPOSITORY)
@@ -21,6 +22,7 @@ export class ConsultarCapacidadeUseCase implements IConsultarCapacidadeUseCase {
     private readonly colheitaRepository: IColheitaRepository,
   ) {}
 
+  /** Executa o cálculo com base na composição do produto e volume disponível no lote. */
   async execute({ produtoId, loteId }: ConsultarCapacidadeInput): Promise<ConsultarCapacidadeResponse> {
     const produto = await this.produtoRepository.findById(produtoId)
     if (!produto) throw new NotFoundException(`Produto ${produtoId} não encontrado.`)

@@ -10,6 +10,7 @@ interface VendaProps {
   data: Date;
 }
 
+/** Entidade que representa uma venda de produção (individual ou coletiva). */
 export class Venda {
   private readonly props: VendaProps;
 
@@ -25,11 +26,12 @@ export class Venda {
   get valor(): number { return this.props.valor; }
   get data(): Date { return this.props.data; }
 
+  /** Verifica se a venda é do tipo individual. */
   isIndividual(): boolean {
     return this.props.tipo === TipoVenda.INDIVIDUAL;
   }
 
-  // RN11: venda individual deve gerar antecipação — validação de pré-condição
+  /** Valida pré-condição da RN11: venda individual exige associadoId. */
   validarIndividual(): void {
     if (this.isIndividual() && !this.props.associadoId) {
       throw new Error('Venda individual requer associadoId.');

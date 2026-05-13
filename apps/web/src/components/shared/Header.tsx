@@ -25,6 +25,7 @@ interface HeaderProps {
   userEmail: string
 }
 
+/** Barra superior com informações do usuário e ações rápidas. */
 export function Header({ role, userName, userEmail }: HeaderProps) {
   const [isPending, startTransition] = useTransition()
   const [senhaDialogOpen, setSenhaDialogOpen] = useState(false)

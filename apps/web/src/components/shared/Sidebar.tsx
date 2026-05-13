@@ -24,6 +24,7 @@ interface AppSidebarProps {
   role: 'ADMIN' | 'ASSOCIADO'
 }
 
+/** Navegação lateral com menu colapsável e itens por role. */
 export function AppSidebar({ role }: AppSidebarProps) {
   const pathname = usePathname()
   const { state } = useSidebar()

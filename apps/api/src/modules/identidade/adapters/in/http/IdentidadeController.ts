@@ -60,6 +60,7 @@ import {
 @ApiBearerAuth('JWT')
 @Controller('identidade')
 @Roles(RoleUsuario.ADMIN)
+/** Controller REST do módulo de identidade (usuários e associados) */
 export class IdentidadeController {
   constructor(
     @Inject(CRIAR_USUARIO_USE_CASE)
@@ -95,6 +96,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 409, description: 'E-mail já cadastrado.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
   @ApiResponse({ status: 403, description: 'Sem permissão (requer ADMIN).' })
+  /** Cria um usuário com credencial no Supabase Auth */
   @Post('usuarios')
   @HttpCode(HttpStatus.CREATED)
   async criarUsuarioHandler(@Body() dto: CriarUsuarioDto) {
@@ -105,6 +107,7 @@ export class IdentidadeController {
   @ApiOperation({ summary: 'Solicitar associação (pendente)', description: 'Cria um usuário sem senha e um Associado com status PENDENTE. Acesso liberado somente após aprovação.' })
   @ApiResponse({ status: 201, description: 'Solicitação registrada. Associado aguarda aprovação.' })
   @ApiResponse({ status: 409, description: 'E-mail já cadastrado.' })
+  /** Registra uma solicitação de associação pendente (auto-cadastro) */
   @Post('associados/pendentes')
   @HttpCode(HttpStatus.CREATED)
   async criarAssociadoPendenteHandler(@Body() dto: CriarAssociadoPendenteDto) {
@@ -122,6 +125,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 200, description: 'Associado aprovado e ativado.' })
   @ApiResponse({ status: 400, description: 'Associado não está com status PENDENTE.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
+  /** Aprova um associado pendente: define senha e libera acesso */
   @Post('associados/:id/aprovar')
   async aprovarAssociadoPendenteHandler(@Param('id') id: string, @Body() dto: AprovarAssociadoPendenteDto) {
     const associado = await this.aprovarAssociadoPendente.execute({
@@ -136,6 +140,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 201, description: 'Associado criado com sucesso.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
   @ApiResponse({ status: 409, description: 'Usuário já é associado.' })
+  /** Vincula um usuário existente como associado da APA */
   @Post('associados')
   @HttpCode(HttpStatus.CREATED)
   async criarAssociadoHandler(@Body() dto: CriarAssociadoDto) {
@@ -150,6 +155,7 @@ export class IdentidadeController {
   @ApiOperation({ summary: 'Perfil do usuário logado (ASSOCIADO e ADMIN)' })
   @ApiResponse({ status: 200, description: 'Perfil do associado logado.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado para este usuário.' })
+  /** Retorna o perfil do associado logado */
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get('me')
   async meuPerfilHandler(@Req() req: { user: { sub: string } }) {
@@ -160,6 +166,7 @@ export class IdentidadeController {
 
   @ApiOperation({ summary: 'Listar associados', description: 'Retorna todos os associados com dados do usuário vinculado.' })
   @ApiResponse({ status: 200, description: 'Lista de associados.' })
+  /** Lista todos os associados cadastrados */
   @Get('associados')
   async listarAssociadosHandler() {
     const lista = await this.listarAssociados.execute()
@@ -170,6 +177,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do usuário' })
   @ApiNoContentResponse({ description: 'Usuário ativado.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  /** Ativa o acesso de um usuário */
   @Patch('usuarios/:id/ativar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async ativarUsuarioHandler(@Param('id') id: string) {
@@ -180,6 +188,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do usuário' })
   @ApiNoContentResponse({ description: 'Usuário desativado.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  /** Desativa o acesso de um usuário (ban permanente) */
   @Patch('usuarios/:id/desativar')
   @HttpCode(HttpStatus.NO_CONTENT)
   async desativarUsuarioHandler(@Param('id') id: string) {
@@ -191,6 +200,7 @@ export class IdentidadeController {
   @ApiNoContentResponse({ description: 'Associado excluído.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   @ApiResponse({ status: 409, description: 'Usuário possui atas ou documentos de autoria.' })
+  /** Exclui um associado, seu usuário e credencial Supabase */
   @Delete('associados/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async excluirAssociadoHandler(@Param('id') id: string) {
@@ -201,6 +211,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do associado' })
   @ApiResponse({ status: 200, description: 'Dados do associado.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
+  /** Busca um associado pelo ID */
   @Get('associados/:id')
   async buscarAssociadoHandler(@Param('id') id: string) {
     const associado = await this.buscarAssociado.execute(id)
@@ -211,6 +222,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do associado' })
   @ApiResponse({ status: 200, description: 'Associado atualizado.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
+  /** Atualiza dados cadastrais do associado e sincroniza status */
   @Patch('associados/:id')
   async atualizarAssociadoHandler(@Param('id') id: string, @Body() dto: AtualizarAssociadoDto) {
     const associado = await this.atualizarAssociado.execute({
@@ -226,6 +238,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do usuário' })
   @ApiResponse({ status: 200, description: 'Usuário atualizado.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  /** Atualiza dados cadastrais do usuário (nome, email, role) */
   @Patch('usuarios/:id')
   async atualizarUsuarioHandler(@Param('id') id: string, @Body() dto: AtualizarUsuarioDto) {
     const usuario = await this.atualizarUsuario.execute({
@@ -241,6 +254,7 @@ export class IdentidadeController {
   @ApiParam({ name: 'id', description: 'UUID do usuário' })
   @ApiNoContentResponse({ description: 'Senha redefinida.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  /** Redefine a senha de um usuário (admin) */
   @Patch('usuarios/:id/senha')
   @HttpCode(HttpStatus.NO_CONTENT)
   async atualizarSenhaHandler(@Param('id') id: string, @Body() dto: AtualizarSenhaDto) {

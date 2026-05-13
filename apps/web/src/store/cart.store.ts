@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/** Item do carrinho de compras da loja pública. */
 export interface CartItem {
   produtoId: string
   nome: string
@@ -21,6 +22,7 @@ interface CartState {
   totalPreco: () => number
 }
 
+/** Store persistida do carrinho de compras. */
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({

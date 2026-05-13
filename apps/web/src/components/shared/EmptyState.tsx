@@ -9,6 +9,7 @@ interface EmptyStateProps {
   className?: string
 }
 
+/** Estado vazio com título, descrição, ícone e ação opcional. */
 export function EmptyState({ title, description, icon: Icon, action, className }: EmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>

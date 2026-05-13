@@ -42,6 +42,7 @@ function CartIcon() {
   )
 }
 
+/** Cabeçalho público com navegação, carrinho e menu responsivo. */
 export function PublicHeader() {
   const pathname = usePathname()
 

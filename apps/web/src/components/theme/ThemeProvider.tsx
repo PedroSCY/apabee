@@ -12,6 +12,7 @@ const CSS_VAR_MAP: Record<keyof ConfiguracaoTema, string> = {
   corAccent: '--accent-base',
 }
 
+/** Injeta variáveis CSS do tema no `<html>` com base na store de configuração. */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const configuracao = useTemaStore((s) => s.configuracao)
 

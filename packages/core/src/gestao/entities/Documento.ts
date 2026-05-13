@@ -1,5 +1,6 @@
 import { CategoriaDocumento } from '@apa/shared';
 
+/** Propriedades da entidade Documento. */
 interface DocumentoProps {
   id: string;
   titulo: string;
@@ -11,6 +12,7 @@ interface DocumentoProps {
   criadoEm: Date;
 }
 
+/** Documento da associação (atas, regulamentos, etc.). */
 export class Documento {
   private readonly props: DocumentoProps;
 
@@ -27,14 +29,17 @@ export class Documento {
   get autorId(): string { return this.props.autorId; }
   get criadoEm(): Date { return this.props.criadoEm; }
 
+  /** Marca o documento como publicado. */
   publicar(): Documento {
     return new Documento({ ...this.props, publicado: true });
   }
 
+  /** Marca o documento como não publicado. */
   despublicar(): Documento {
     return new Documento({ ...this.props, publicado: false });
   }
 
+  /** Retorna o tamanho do arquivo em MB com duas casas decimais. */
   tamanhoEmMB(): number {
     return Math.round((this.props.tamanhoBytes / 1_048_576) * 100) / 100;
   }

@@ -11,6 +11,7 @@ import { StatusAssociado } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Vincula um usuário existente como associado da APA */
 export class CriarAssociadoUseCase implements ICriarAssociadoUseCase {
   constructor(
     @Inject(USUARIO_REPOSITORY)
@@ -21,6 +22,7 @@ export class CriarAssociadoUseCase implements ICriarAssociadoUseCase {
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa a criação do associado com validações de role e duplicidade */
   async execute(input: CriarAssociadoInput): Promise<Associado> {
     const usuario = await this.usuarioRepository.findById(input.usuarioId)
     if (!usuario) throw new NotFoundException('Usuário não encontrado')

@@ -7,6 +7,7 @@ import { INSUMOS_KEY } from './useInsumos'
 
 export const SOLICITACOES_KEY = ['solicitacoes'] as const
 
+/** Busca solicitações de patrimônio por status. */
 export function useSolicitacoes(status?: string) {
   return useQuery({
     queryKey: [...SOLICITACOES_KEY, status],
@@ -14,6 +15,7 @@ export function useSolicitacoes(status?: string) {
   })
 }
 
+/** Cria uma nova solicitação de patrimônio. */
 export function useCriarSolicitacao() {
   const qc = useQueryClient()
   return useMutation({
@@ -22,6 +24,7 @@ export function useCriarSolicitacao() {
   })
 }
 
+/** Aprova uma solicitação de patrimônio. */
 export function useAprovarSolicitacao() {
   const qc = useQueryClient()
   return useMutation({
@@ -34,6 +37,7 @@ export function useAprovarSolicitacao() {
   })
 }
 
+/** Rejeita uma solicitação de patrimônio. */
 export function useRejeitarSolicitacao() {
   const qc = useQueryClient()
   return useMutation({

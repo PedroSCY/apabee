@@ -1,3 +1,4 @@
+/** Barreira de exportação dos use cases de produção. */
 export { CriarTipoMateriaPrimaUseCase } from './CriarTipoMateriaPrimaUseCase'
 export { ListarTiposMateriaPrimaUseCase } from './ListarTiposMateriaPrimaUseCase'
 export { BuscarTipoMateriaPrimaUseCase } from './BuscarTipoMateriaPrimaUseCase'

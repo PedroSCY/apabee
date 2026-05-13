@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+/** Redireciona rotas não autenticadas para /login e autenticadas para /dashboard. */
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 

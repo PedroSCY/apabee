@@ -63,4 +63,5 @@ import {
   ],
   exports: [BUSCAR_ASSOCIADO_POR_USUARIO_USE_CASE],
 })
+/** Módulo NestJS de identidade: usuários, associados e autenticação */
 export class IdentidadeModule {}

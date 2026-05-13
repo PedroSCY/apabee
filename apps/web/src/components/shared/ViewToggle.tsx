@@ -3,8 +3,10 @@
 import { LayoutList, LayoutGrid } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+/** Modo de visualização: lista ou grid. */
 export type ViewMode = 'list' | 'grid'
 
+/** Alternador entre visualização em lista e em grid. */
 export function ViewToggle({ view, onViewChange }: { view: ViewMode; onViewChange: (v: ViewMode) => void }) {
   return (
     <div className="flex overflow-hidden rounded-md border">

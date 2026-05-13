@@ -45,43 +45,52 @@ export interface CriarAvisoInput {
 }
 
 export const comunicacaoApi = {
+  /** Lista avisos, opcionalmente apenas os publicados. */
   listarAvisos: (apenasPublicados = false) =>
     apiFetch<AvisoResponse[]>(
       `/comunicacao/avisos${apenasPublicados ? '?publicos=true' : ''}`,
     ),
 
+  /** Cria um novo aviso. */
   criarAviso: (input: CriarAvisoInput) =>
     apiFetch<AvisoResponse>('/comunicacao/avisos', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Publica um aviso (torna visível). */
   publicarAviso: (id: string) =>
     apiFetch<AvisoResponse>(`/comunicacao/avisos/${id}/publicar`, { method: 'PATCH' }),
 
+  /** Despublica um aviso. */
   despublicarAviso: (id: string) =>
     apiFetch<AvisoResponse>(`/comunicacao/avisos/${id}/despublicar`, { method: 'PATCH' }),
 
+  /** Exclui um aviso. */
   excluirAviso: (id: string) =>
     apiFetch<void>(`/comunicacao/avisos/${id}`, { method: 'DELETE' }),
 
+  /** Envia uma solicitação de contato pública. */
   criarSolicitacaoContato: (input: CriarSolicitacaoContatoInput) =>
     apiFetch<SolicitacaoContatoResponse>('/contato/solicitacoes', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Lista solicitações de contato, opcionalmente filtradas por status. */
   listarSolicitacoesContato: (status?: StatusSolicitacaoContato) =>
     apiFetch<SolicitacaoContatoResponse[]>(
       `/contato/solicitacoes${status ? `?status=${status}` : ''}`,
     ),
 
+  /** Atualiza o status de uma solicitação de contato. */
   atualizarStatusSolicitacaoContato: (id: string, status: StatusSolicitacaoContato) =>
     apiFetch<SolicitacaoContatoResponse>(`/contato/solicitacoes/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
 
+  /** Exclui uma solicitação de contato. */
   excluirSolicitacaoContato: (id: string) =>
     apiFetch<void>(`/contato/solicitacoes/${id}`, { method: 'DELETE' }),
 }

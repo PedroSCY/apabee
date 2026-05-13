@@ -8,6 +8,7 @@ interface ParticipacaoLoteProps {
   valorInvestido?: number;
 }
 
+/** Participação de um associado em um lote (percentual de direito). */
 export class ParticipacaoLote {
   private readonly props: ParticipacaoLoteProps;
 
@@ -23,6 +24,7 @@ export class ParticipacaoLote {
   get volume(): number | undefined { return this.props.volume; }
   get valorInvestido(): number | undefined { return this.props.valorInvestido; }
 
+  /** Calcula o valor financeiro devido ao associado com base no percentual. */
   calcularDireito(faturamentoTotal: number): number {
     return (this.props.percentual / 100) * faturamentoTotal;
   }

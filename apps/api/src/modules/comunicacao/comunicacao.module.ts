@@ -46,4 +46,5 @@ import {
     { provide: EXCLUIR_SOLICITACAO_CONTATO_USE_CASE, useClass: ExcluirSolicitacaoContatoUseCase },
   ],
 })
+/** Módulo NestJS de comunicação — avisos e solicitações de contato. */
 export class ComunicacaoModule {}

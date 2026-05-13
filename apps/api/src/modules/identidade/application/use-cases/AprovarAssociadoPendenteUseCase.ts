@@ -11,6 +11,7 @@ import { StatusAssociado } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Aprova um associado pendente: define senha, libera acesso e ativa o registro */
 export class AprovarAssociadoPendenteUseCase implements IAprovarAssociadoPendenteUseCase {
   constructor(
     @Inject(ASSOCIADO_REPOSITORY)
@@ -21,6 +22,7 @@ export class AprovarAssociadoPendenteUseCase implements IAprovarAssociadoPendent
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa a aprovação: define senha, ativa no Supabase e atualiza o banco */
   async execute(input: AprovarAssociadoPendenteInput): Promise<Associado> {
     const associado = await this.associadoRepository.findById(input.associadoId)
     if (!associado) throw new NotFoundException('Associado não encontrado')

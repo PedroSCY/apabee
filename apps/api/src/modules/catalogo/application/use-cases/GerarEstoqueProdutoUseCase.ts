@@ -19,6 +19,7 @@ import {
 import { ESTOQUE_MATERIA_PRIMA_REPOSITORY } from '../../../producao/producao.tokens'
 
 @Injectable()
+/** Gera estoque de produto consumindo matéria-prima conforme composição (RN05). */
 export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
   constructor(
     @Inject(PRODUTO_REPOSITORY)
@@ -31,6 +32,7 @@ export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
     private readonly estoqueMateriaPrimaRepository: IEstoqueMateriaPrimaRepository,
   ) {}
 
+  /** Executa a validação de saldo, consumo de insumos e atualização do estoque final. */
   async execute(input: GerarEstoqueInput): Promise<EstoqueProduto> {
     const produto = await this.produtoRepository.findById(input.produtoId)
     if (!produto) throw new NotFoundException(`Produto ${input.produtoId} não encontrado.`)

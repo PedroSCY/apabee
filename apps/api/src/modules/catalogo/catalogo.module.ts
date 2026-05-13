@@ -55,4 +55,5 @@ import {
   ],
   exports: [PRODUTO_REPOSITORY, ESTOQUE_PRODUTO_REPOSITORY],
 })
+/** Módulo NestJS de catálogo — produtos, estoque e composição. */
 export class CatalogoModule {}

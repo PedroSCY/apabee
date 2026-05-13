@@ -10,6 +10,7 @@ export interface MovimentoFinanceiroResponse {
 }
 
 export const financeiroApi = {
+  /** Lista movimentos financeiros de um associado. */
   listarMovimentosPorAssociado: (associadoId: string) =>
     apiFetch<MovimentoFinanceiroResponse[]>(
       `/financeiro/movimentos/associado/${associadoId}`,

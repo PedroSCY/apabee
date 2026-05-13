@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/contato', label: 'Contato' },
 ]
 
+/** Rodapé público com links, marca, contato e redes sociais. */
 export function PublicFooter() {
   const year = new Date().getFullYear()
 

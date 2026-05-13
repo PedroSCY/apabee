@@ -9,6 +9,7 @@ import {
 
 export const INSUMOS_KEY = ['insumos'] as const
 
+/** Busca lista de todos os insumos. */
 export function useInsumos() {
   return useQuery({
     queryKey: INSUMOS_KEY,
@@ -16,6 +17,7 @@ export function useInsumos() {
   })
 }
 
+/** Busca um insumo pelo ID. */
 export function useBuscarInsumo(id: string) {
   return useQuery({
     queryKey: [...INSUMOS_KEY, id],
@@ -24,6 +26,7 @@ export function useBuscarInsumo(id: string) {
   })
 }
 
+/** Cadastra um novo insumo. */
 export function useCriarInsumo() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -34,6 +37,7 @@ export function useCriarInsumo() {
   })
 }
 
+/** Atualiza dados de um insumo. */
 export function useAtualizarInsumo() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -45,6 +49,7 @@ export function useAtualizarInsumo() {
   })
 }
 
+/** Marca insumo como em manutenção. */
 export function useColocarInsumoEmManutencao() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -55,6 +60,7 @@ export function useColocarInsumoEmManutencao() {
   })
 }
 
+/** Libera insumo da manutenção. */
 export function useLiberarInsumoManutencao() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -65,6 +71,7 @@ export function useLiberarInsumoManutencao() {
   })
 }
 
+/** Exclui um insumo pelo ID. */
 export function useExcluirInsumo() {
   const queryClient = useQueryClient()
   return useMutation({

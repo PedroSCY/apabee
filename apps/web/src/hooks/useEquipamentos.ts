@@ -9,6 +9,7 @@ import {
 
 export const EQUIPAMENTOS_KEY = ['equipamentos'] as const
 
+/** Busca lista de todos os equipamentos. */
 export function useEquipamentos() {
   return useQuery({
     queryKey: EQUIPAMENTOS_KEY,
@@ -16,6 +17,7 @@ export function useEquipamentos() {
   })
 }
 
+/** Busca um equipamento pelo ID. */
 export function useBuscarEquipamento(id: string) {
   return useQuery({
     queryKey: [...EQUIPAMENTOS_KEY, id],
@@ -24,6 +26,7 @@ export function useBuscarEquipamento(id: string) {
   })
 }
 
+/** Cadastra um novo equipamento. */
 export function useCriarEquipamento() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -34,6 +37,7 @@ export function useCriarEquipamento() {
   })
 }
 
+/** Atualiza dados de um equipamento. */
 export function useAtualizarEquipamento() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -45,6 +49,7 @@ export function useAtualizarEquipamento() {
   })
 }
 
+/** Marca equipamento como em manutenção. */
 export function useColocarEquipamentoEmManutencao() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -55,6 +60,7 @@ export function useColocarEquipamentoEmManutencao() {
   })
 }
 
+/** Libera equipamento da manutenção. */
 export function useLiberarEquipamentoManutencao() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -65,6 +71,7 @@ export function useLiberarEquipamentoManutencao() {
   })
 }
 
+/** Exclui um equipamento pelo ID. */
 export function useExcluirEquipamento() {
   const queryClient = useQueryClient()
   return useMutation({

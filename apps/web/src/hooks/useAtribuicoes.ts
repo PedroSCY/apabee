@@ -7,6 +7,7 @@ import { INSUMOS_KEY } from './useInsumos'
 
 export const ATRIBUICOES_KEY = ['atribuicoes'] as const
 
+/** Busca todas as atribuições de patrimônio. */
 export function useTodasAtribuicoes() {
   return useQuery({
     queryKey: ATRIBUICOES_KEY,
@@ -14,6 +15,7 @@ export function useTodasAtribuicoes() {
   })
 }
 
+/** Busca atribuições de patrimônio de um associado. */
 export function useAtribuicoesPorAssociado(associadoId: string) {
   return useQuery({
     queryKey: [...ATRIBUICOES_KEY, 'associado', associadoId],
@@ -22,6 +24,7 @@ export function useAtribuicoesPorAssociado(associadoId: string) {
   })
 }
 
+/** Atribui um patrimônio a um associado. */
 export function useAtribuirPatrimonio() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -34,6 +37,7 @@ export function useAtribuirPatrimonio() {
   })
 }
 
+/** Registra devolução de um patrimônio atribuído. */
 export function useDevolverPatrimonio() {
   const queryClient = useQueryClient()
   return useMutation({

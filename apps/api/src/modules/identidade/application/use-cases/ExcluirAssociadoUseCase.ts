@@ -12,6 +12,7 @@ import {
 } from '../../identidade.tokens'
 
 @Injectable()
+/** Exclui um associado, seu usuário e a credencial no Supabase Auth */
 export class ExcluirAssociadoUseCase implements IExcluirAssociadoUseCase {
   constructor(
     @Inject(ASSOCIADO_REPOSITORY)
@@ -22,6 +23,7 @@ export class ExcluirAssociadoUseCase implements IExcluirAssociadoUseCase {
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa a exclusão com verificação de autoria em atas/documentos */
   async execute(id: string): Promise<void> {
     const associado = await this.associadoRepository.findById(id)
     if (!associado) throw new NotFoundException('Associado não encontrado')

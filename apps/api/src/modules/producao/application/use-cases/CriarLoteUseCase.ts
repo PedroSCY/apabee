@@ -5,12 +5,14 @@ import { randomUUID } from 'crypto'
 import { LOTE_PRODUCAO_REPOSITORY } from '../../producao.tokens'
 
 @Injectable()
+/** Cria um novo lote de produção ou aquisição com status ABERTO. */
 export class CriarLoteUseCase implements ICriarLoteUseCase {
   constructor(
     @Inject(LOTE_PRODUCAO_REPOSITORY)
     private readonly repository: ILoteProducaoRepository,
   ) {}
 
+  /** Executa a criação e persiste o lote. */
   execute(input: CriarLoteInput): Promise<LoteProducao> {
     const lote = new LoteProducao({
       id: randomUUID(),

@@ -12,6 +12,7 @@ import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Cria auto-cadastro de associado com status PENDENTE (sem acesso liberado) */
 export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUseCase {
   constructor(
     @Inject(USUARIO_REPOSITORY)
@@ -22,6 +23,7 @@ export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUse
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa o cadastro pendente: cria credencial sem senha e bloqueia acesso */
   async execute(input: CriarAssociadoPendenteInput): Promise<Associado> {
     const email = input.email.toLowerCase().trim()
 

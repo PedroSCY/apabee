@@ -7,6 +7,7 @@ interface TableSkeletonProps {
   columns?: number
 }
 
+/** Esqueleto de carregamento para tabelas com linhas e colunas configuráveis. */
 export function TableSkeleton({ rows = 5, columns = 4 }: TableSkeletonProps) {
   return (
     <div className="w-full space-y-2">

@@ -9,6 +9,7 @@ interface MovimentacaoEstoqueProps {
   criadoEm: Date;
 }
 
+/** Movimentação (entrada/saída) no estoque de matéria-prima. */
 export class MovimentacaoEstoque {
   private readonly props: MovimentacaoEstoqueProps;
 
@@ -23,10 +24,12 @@ export class MovimentacaoEstoque {
   get referenciaId(): string { return this.props.referenciaId; }
   get criadoEm(): Date { return this.props.criadoEm; }
 
+  /** Retorna true se for movimentação de entrada. */
   isEntrada(): boolean {
     return this.props.tipo === TipoMovimentacao.ENTRADA;
   }
 
+  /** Retorna descrição legível da movimentação. */
   descrever(): string {
     const acao = this.isEntrada() ? 'Entrada' : 'Saída';
     return `${acao} de ${this.props.quantidade} unidades — ref: ${this.props.referenciaId}`;

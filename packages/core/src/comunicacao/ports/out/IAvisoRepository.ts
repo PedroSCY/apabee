@@ -1,5 +1,6 @@
 import { Aviso } from '../../entities/Aviso'
 
+/** Repositório de avisos. */
 export interface IAvisoRepository {
   findAll(apenasPublicados?: boolean): Promise<Aviso[]>
   findById(id: string): Promise<Aviso | null>

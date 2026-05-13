@@ -51,59 +51,71 @@ export interface AtualizarProdutoInput {
 }
 
 export const catalogoApi = {
+  /** Lista produtos, opcionalmente apenas os publicados. */
   listarProdutos: (apenasPublicados = false) =>
     apiFetch<ProdutoResponse[]>(
       `/catalogo/produtos${apenasPublicados ? '?publicos=true' : ''}`,
     ),
 
+  /** Busca um produto pelo ID com estoque. */
   buscarProduto: (id: string) =>
     apiFetch<ProdutoResponse & { estoque: { quantidadeDisponivel: number } | null }>(`/catalogo/produtos/${id}`),
 
+  /** Cria um novo produto. */
   criarProduto: (input: CriarProdutoInput) =>
     apiFetch<ProdutoResponse>('/catalogo/produtos', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Atualiza dados de um produto. */
   atualizarProduto: (id: string, input: AtualizarProdutoInput) =>
     apiFetch<ProdutoResponse>(`/catalogo/produtos/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),
 
+  /** Publica um produto (torna visível na loja). */
   publicarProduto: (id: string) =>
     apiFetch<void>(`/catalogo/produtos/${id}/publicar`, { method: 'PATCH' }),
 
+  /** Arquiiva um produto (oculta da loja). */
   arquivarProduto: (id: string) =>
     apiFetch<void>(`/catalogo/produtos/${id}/arquivar`, { method: 'PATCH' }),
 
+  /** Gera ou atualiza o estoque de um produto. */
   gerarEstoque: (id: string, quantidade: number, loteOrigemId?: string) =>
     apiFetch<{ id: string; produtoId: string; quantidadeDisponivel: number }>(
       `/catalogo/produtos/${id}/gerar-estoque`,
       { method: 'POST', body: JSON.stringify({ quantidade, loteOrigemId }) },
     ),
 
+  /** Consulta a capacidade máxima de produção de um lote para um produto. */
   consultarCapacidade: (produtoId: string, loteId: string) =>
     apiFetch<{ capacidadeMaxima: number; loteId: string }>(
       `/catalogo/produtos/${produtoId}/capacidade?loteId=${loteId}`,
     ),
 
+  /** Retorna a composição (matérias-primas) de um produto. */
   buscarComposicoes: (id: string) =>
     apiFetch<{ composicoes: ComposicaoResponse[] }>(`/catalogo/produtos/${id}`).then(
       (r) => r.composicoes ?? [],
     ),
 
+  /** Adiciona matéria-prima à composição de um produto. */
   adicionarComposicao: (id: string, input: AdicionarComposicaoInput) =>
     apiFetch<ComposicaoResponse>(`/catalogo/produtos/${id}/composicoes`, {
       method: 'POST',
       body: JSON.stringify(input),
     }),
 
+  /** Remove uma matéria-prima da composição de um produto. */
   removerComposicao: (produtoId: string, composicaoId: string) =>
     apiFetch<void>(`/catalogo/produtos/${produtoId}/composicoes/${composicaoId}`, {
       method: 'DELETE',
     }),
 
+  /** Lista todos os tipos de matéria-prima disponíveis. */
   listarTiposMateriaPrima: () =>
     apiFetch<TipoMateriaPrimaResponse[]>('/producao/tipos-materia-prima'),
 }

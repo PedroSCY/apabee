@@ -16,6 +16,7 @@ import {
 } from '../../producao.tokens'
 
 @Injectable()
+/** Registra a participação de um associado em um lote com recálculo automático do rateio. */
 export class RegistrarParticipacaoUseCase implements IRegistrarParticipacaoUseCase {
   constructor(
     @Inject(LOTE_PRODUCAO_REPOSITORY)
@@ -26,6 +27,7 @@ export class RegistrarParticipacaoUseCase implements IRegistrarParticipacaoUseCa
     private readonly calcularRateio: ICalcularRateioUseCase,
   ) {}
 
+  /** Executa o registro validando lote aberto, duplicidade e campos obrigatórios por tipo. */
   async execute(input: RegistrarParticipacaoInput): Promise<ParticipacaoLote> {
     const lote = await this.loteRepository.findById(input.loteProducaoId)
     if (!lote) throw new NotFoundException('Lote não encontrado')

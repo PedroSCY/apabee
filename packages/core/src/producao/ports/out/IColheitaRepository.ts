@@ -1,5 +1,6 @@
 import { Colheita } from '../../entities/Colheita';
 
+/** Repositório para colheitas. */
 export interface IColheitaRepository {
   findById(id: string): Promise<Colheita | null>;
   findByAssociado(associadoId: string): Promise<Colheita[]>;

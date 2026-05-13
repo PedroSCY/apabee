@@ -19,6 +19,7 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
+/** Diálogo para alteração de senha com validação e integração Supabase Auth. */
 export function AlterarSenhaDialog({ open, onOpenChange }: Props) {
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 
+/** Configuração visual do tema (cores HSL injetadas via CSS variables). */
 export interface ConfiguracaoTema {
   corFundo: string
   corTexto: string
@@ -15,6 +16,7 @@ interface TemaState {
   resetConfiguracao: () => void
 }
 
+/** Store global do tema da aplicação. */
 export const useTemaStore = create<TemaState>((set) => ({
   configuracao: null,
   setConfiguracao: (configuracao) => set({ configuracao }),

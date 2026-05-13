@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo de patrimônio. */
 export const EQUIPAMENTO_REPOSITORY = 'EQUIPAMENTO_REPOSITORY'
 export const INSUMO_REPOSITORY = 'INSUMO_REPOSITORY'
 export const ATRIBUICAO_PATRIMONIO_REPOSITORY = 'ATRIBUICAO_PATRIMONIO_REPOSITORY'

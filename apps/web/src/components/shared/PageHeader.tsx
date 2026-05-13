@@ -8,6 +8,7 @@ interface PageHeaderProps {
   className?: string
 }
 
+/** Cabeçalho de página com título, descrição opcional e ação. */
 export function PageHeader({ title, description, action, className }: PageHeaderProps) {
   return (
     <div className={cn('flex items-start justify-between gap-4', className)}>

@@ -11,6 +11,7 @@ import { StatusAssociado } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Atualiza dados do associado e sincroniza status com acesso do usuário */
 export class AtualizarAssociadoUseCase implements IAtualizarAssociadoUseCase {
   constructor(
     @Inject(ASSOCIADO_REPOSITORY)
@@ -21,6 +22,7 @@ export class AtualizarAssociadoUseCase implements IAtualizarAssociadoUseCase {
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa a atualização e sincroniza status com o provedor de auth */
   async execute(input: AtualizarAssociadoInput): Promise<Associado> {
     const associado = await this.associadoRepository.findById(input.associadoId)
     if (!associado) throw new NotFoundException('Associado não encontrado')

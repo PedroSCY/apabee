@@ -12,6 +12,7 @@ interface DashboardShellProps {
   children: React.ReactNode
 }
 
+/** Layout principal do dashboard com sidebar e header. */
 export function DashboardShell({
   role,
   userName,

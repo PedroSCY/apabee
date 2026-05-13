@@ -8,7 +8,9 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 @Catch()
+/** Filtro global que captura exceções e retorna respostas HTTP padronizadas. */
 export class GlobalExceptionFilter implements ExceptionFilter {
+  /** Intercepta a exceção e monta resposta JSON com status, path e timestamp. */
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp()
     const reply = ctx.getResponse<FastifyReply>()

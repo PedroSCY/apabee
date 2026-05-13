@@ -1,3 +1,4 @@
+/** Propriedades da entidade Ata. */
 interface AtaProps {
   id: string;
   titulo: string;
@@ -8,6 +9,7 @@ interface AtaProps {
   criadoEm: Date;
 }
 
+/** Ata de reunião da associação. */
 export class Ata {
   private readonly props: AtaProps;
 
@@ -23,10 +25,12 @@ export class Ata {
   get publicada(): boolean { return this.props.publicada; }
   get criadoEm(): Date { return this.props.criadoEm; }
 
+  /** Marca a ata como publicada. */
   publicar(): Ata {
     return new Ata({ ...this.props, publicada: true });
   }
 
+  /** Marca a ata como não publicada. */
   despublicar(): Ata {
     return new Ata({ ...this.props, publicada: false });
   }

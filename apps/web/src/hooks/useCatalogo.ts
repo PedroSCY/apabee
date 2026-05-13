@@ -10,6 +10,7 @@ import {
 
 export const PRODUTOS_KEY = ['produtos'] as const
 
+/** Busca lista de produtos do catálogo. */
 export function useProdutos(apenasPublicados = false) {
   return useQuery({
     queryKey: [...PRODUTOS_KEY, { apenasPublicados }],
@@ -17,6 +18,7 @@ export function useProdutos(apenasPublicados = false) {
   })
 }
 
+/** Cria um novo produto no catálogo. */
 export function useCriarProduto() {
   const qc = useQueryClient()
   return useMutation({
@@ -25,6 +27,7 @@ export function useCriarProduto() {
   })
 }
 
+/** Atualiza dados de um produto. */
 export function useAtualizarProduto() {
   const qc = useQueryClient()
   return useMutation({
@@ -34,6 +37,7 @@ export function useAtualizarProduto() {
   })
 }
 
+/** Publica um produto no catálogo. */
 export function usePublicarProduto() {
   const qc = useQueryClient()
   return useMutation({
@@ -42,6 +46,7 @@ export function usePublicarProduto() {
   })
 }
 
+/** Arquiwa um produto do catálogo. */
 export function useArquivarProduto() {
   const qc = useQueryClient()
   return useMutation({
@@ -50,6 +55,7 @@ export function useArquivarProduto() {
   })
 }
 
+/** Gera estoque de um produto a partir de lote. */
 export function useGerarEstoque() {
   const qc = useQueryClient()
   return useMutation({
@@ -59,6 +65,7 @@ export function useGerarEstoque() {
   })
 }
 
+/** Consulta capacidade disponível de um lote. */
 export function useCapacidadeLote(produtoId: string, loteId: string | null) {
   return useQuery({
     queryKey: ['capacidade-lote', produtoId, loteId],
@@ -67,6 +74,7 @@ export function useCapacidadeLote(produtoId: string, loteId: string | null) {
   })
 }
 
+/** Busca composições de um produto. */
 export function useComposicoes(produtoId: string) {
   return useQuery({
     queryKey: ['composicoes', produtoId],
@@ -75,6 +83,7 @@ export function useComposicoes(produtoId: string) {
   })
 }
 
+/** Adiciona item à composição de um produto. */
 export function useAdicionarComposicao(produtoId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -84,6 +93,7 @@ export function useAdicionarComposicao(produtoId: string) {
   })
 }
 
+/** Remove item da composição de um produto. */
 export function useRemoverComposicao(produtoId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -93,6 +103,7 @@ export function useRemoverComposicao(produtoId: string) {
   })
 }
 
+/** Busca lista de tipos de matéria-prima. */
 export function useTiposMateriaPrima() {
   return useQuery({
     queryKey: ['tipos-materia-prima'],

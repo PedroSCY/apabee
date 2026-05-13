@@ -9,6 +9,7 @@ import {
 import { PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
 
 @Injectable()
+/** Cria um usuário no banco e a credencial no Supabase Auth */
 export class CriarUsuarioUseCase implements ICriarUsuarioUseCase {
   constructor(
     @Inject(USUARIO_REPOSITORY)
@@ -17,6 +18,7 @@ export class CriarUsuarioUseCase implements ICriarUsuarioUseCase {
     private readonly provedorAuth: IProvedorAuth,
   ) {}
 
+  /** Executa a criação do usuário com validação de e-mail duplicado */
   async execute(input: CriarUsuarioInput): Promise<Usuario> {
     const email = input.email.toLowerCase().trim()
 

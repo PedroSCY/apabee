@@ -1,6 +1,7 @@
 import { Ata } from '../../entities/Ata';
 import { ParticipanteAta } from '../../entities/ParticipanteAta';
 
+/** Repositório de atas. */
 export interface IAtaRepository {
   findById(id: string): Promise<Ata | null>;
   findAll(): Promise<Ata[]>;
@@ -9,6 +10,7 @@ export interface IAtaRepository {
   update(ata: Ata): Promise<Ata>;
 }
 
+/** Repositório de participantes de ata. */
 export interface IParticipanteAtaRepository {
   findByAta(ataId: string): Promise<ParticipanteAta[]>;
   save(participante: ParticipanteAta): Promise<ParticipanteAta>;

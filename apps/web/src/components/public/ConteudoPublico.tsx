@@ -1,5 +1,6 @@
 import React from 'react'
 
+/** Container responsivo para páginas públicas. */
 function ConteudoPublico({
   children,
   className,

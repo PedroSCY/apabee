@@ -49,4 +49,5 @@ import {
     { provide: LISTAR_VENDAS_USE_CASE, useClass: ListarVendasUseCase },
   ],
 })
+/** Módulo NestJS comercial — pedidos, itens e vendas. */
 export class ComercialModule {}

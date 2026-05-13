@@ -8,6 +8,7 @@ interface ComposicaoProdutoProps {
   unidade: UnidadeMedida;
 }
 
+/** Entidade que define a receita (matéria-prima necessária) de um produto. */
 export class ComposicaoProduto {
   private readonly props: ComposicaoProdutoProps;
 
@@ -21,11 +22,12 @@ export class ComposicaoProduto {
   get quantidadeNecessaria(): number { return this.props.quantidadeNecessaria; }
   get unidade(): UnidadeMedida { return this.props.unidade; }
 
-  // RN05: verifica se há matéria-prima suficiente para produzir uma quantidade de produto
+  /** Verifica se há matéria-prima suficiente para produzir N unidades (RN05). */
   verificarDisponibilidade(estoqueDisponivel: number, quantidadeProdutos: number): boolean {
     return estoqueDisponivel >= this.props.quantidadeNecessaria * quantidadeProdutos;
   }
 
+  /** Calcula o consumo total de matéria-prima para produzir N unidades. */
   consumoTotal(quantidadeProdutos: number): number {
     return this.props.quantidadeNecessaria * quantidadeProdutos;
   }

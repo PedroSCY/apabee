@@ -1,5 +1,6 @@
 import { Pedido } from '../../entities/Pedido';
 
+/** Repositório de pedidos. */
 export interface IPedidoRepository {
   findById(id: string): Promise<Pedido | null>;
   findAll(): Promise<Pedido[]>;

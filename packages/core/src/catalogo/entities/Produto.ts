@@ -12,6 +12,7 @@ interface ProdutoProps {
   criadoEm: Date
 }
 
+/** Entidade que representa um produto do catálogo da associação. */
 export class Produto {
   private readonly props: ProdutoProps
 
@@ -29,27 +30,33 @@ export class Produto {
   get loteOrigemId(): string | undefined { return this.props.loteOrigemId }
   get criadoEm(): Date { return this.props.criadoEm }
 
+  /** Verifica se o produto está publicado e disponível para venda. */
   estaDisponivel(): boolean {
     return this.props.status === StatusProduto.PUBLICADO
   }
 
+  /** Altera o status para PUBLICADO. */
   publicar(): Produto {
     return new Produto({ ...this.props, status: StatusProduto.PUBLICADO })
   }
 
+  /** Reverte o status para RASCUNHO. */
   despublicar(): Produto {
     return new Produto({ ...this.props, status: StatusProduto.RASCUNHO })
   }
 
+  /** Arquiva o produto (status ARQUIVADO). */
   arquivar(): Produto {
     return new Produto({ ...this.props, status: StatusProduto.ARQUIVADO })
   }
 
+  /** Atualiza o preço do produto. Lança erro se o valor não for positivo. */
   atualizarPreco(preco: number): Produto {
     if (preco <= 0) throw new Error('Preço deve ser positivo.')
     return new Produto({ ...this.props, preco })
   }
 
+  /** Associa o produto a um lote de origem. */
   comLoteOrigem(loteOrigemId: string): Produto {
     return new Produto({ ...this.props, loteOrigemId })
   }

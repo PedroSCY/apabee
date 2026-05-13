@@ -1,3 +1,4 @@
+/** Tokens de injeção de dependência do módulo de catálogo. */
 export const PRODUTO_REPOSITORY = 'PRODUTO_REPOSITORY'
 export const ESTOQUE_PRODUTO_REPOSITORY = 'ESTOQUE_PRODUTO_REPOSITORY'
 export const COMPOSICAO_PRODUTO_REPOSITORY = 'COMPOSICAO_PRODUTO_REPOSITORY'

@@ -1,3 +1,4 @@
+/** Barrisa de entidades do módulo gestão. */
 export * from './Ata';
 export * from './ParticipanteAta';
 export * from './RelatorioProducao';

@@ -9,6 +9,7 @@ import {
 import { CALCULAR_RATEIO_USE_CASE, PARTICIPACAO_LOTE_REPOSITORY } from '../../producao.tokens'
 
 @Injectable()
+/** Atualiza os dados de participação de um associado em um lote e recalcula o rateio. */
 export class AtualizarParticipacaoUseCase implements IAtualizarParticipacaoUseCase {
   constructor(
     @Inject(PARTICIPACAO_LOTE_REPOSITORY)
@@ -17,6 +18,7 @@ export class AtualizarParticipacaoUseCase implements IAtualizarParticipacaoUseCa
     private readonly calcularRateio: ICalcularRateioUseCase,
   ) {}
 
+  /** Executa a atualização e aciona o recálculo dos percentuais do lote. */
   async execute(loteId: string, associadoId: string, input: AtualizarParticipacaoInput): Promise<ParticipacaoLote> {
     const existente = await this.repository.findByAssociadoELote(associadoId, loteId)
     if (!existente) throw new NotFoundException('Participação não encontrada')

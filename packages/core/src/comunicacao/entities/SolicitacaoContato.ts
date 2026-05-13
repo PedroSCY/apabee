@@ -1,5 +1,6 @@
 import { TipoSolicitacaoContato, StatusSolicitacaoContato } from '@apa/shared'
 
+/** Propriedades da entidade SolicitacaoContato. */
 interface SolicitacaoContatoProps {
   id: string
   tipo: TipoSolicitacaoContato
@@ -13,6 +14,7 @@ interface SolicitacaoContatoProps {
   criadoEm: Date
 }
 
+/** Solicitação de contato de visitante (público). */
 export class SolicitacaoContato {
   private readonly props: SolicitacaoContatoProps
 
@@ -31,10 +33,12 @@ export class SolicitacaoContato {
   get municipio(): string | undefined { return this.props.municipio }
   get criadoEm(): Date { return this.props.criadoEm }
 
+  /** Marca a solicitação como visualizada. */
   visualizar(): SolicitacaoContato {
     return new SolicitacaoContato({ ...this.props, status: StatusSolicitacaoContato.VISUALIZADA })
   }
 
+  /** Marca a solicitação como resolvida. */
   resolver(): SolicitacaoContato {
     return new SolicitacaoContato({ ...this.props, status: StatusSolicitacaoContato.RESOLVIDA })
   }

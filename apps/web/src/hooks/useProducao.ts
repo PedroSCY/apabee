@@ -16,10 +16,12 @@ export const COLHEITAS_KEY = ['colheitas'] as const
 export const PARTICIPACOES_KEY = ['participacoes'] as const
 
 // Tipos de matéria-prima
+/** Busca lista de tipos de matéria-prima. */
 export function useTiposMateriaPrima() {
   return useQuery({ queryKey: TIPOS_KEY, queryFn: producaoApi.listarTipos })
 }
 
+/** Cadastra um novo tipo de matéria-prima. */
 export function useCriarTipoMateriaPrima() {
   const qc = useQueryClient()
   return useMutation({
@@ -29,10 +31,12 @@ export function useCriarTipoMateriaPrima() {
 }
 
 // Lotes
+/** Busca lista de todos os lotes. */
 export function useLotes() {
   return useQuery({ queryKey: LOTES_KEY, queryFn: producaoApi.listarLotes })
 }
 
+/** Cria um novo lote de produção ou aquisição. */
 export function useCriarLote() {
   const qc = useQueryClient()
   return useMutation({
@@ -41,6 +45,7 @@ export function useCriarLote() {
   })
 }
 
+/** Encerra um lote ativo. */
 export function useEncerrarLote() {
   const qc = useQueryClient()
   return useMutation({
@@ -50,6 +55,7 @@ export function useEncerrarLote() {
 }
 
 // Colheitas
+/** Busca colheitas de um associado. */
 export function useColheitasPorAssociado(associadoId: string) {
   return useQuery({
     queryKey: [...COLHEITAS_KEY, 'associado', associadoId],
@@ -58,6 +64,7 @@ export function useColheitasPorAssociado(associadoId: string) {
   })
 }
 
+/** Busca colheitas de um lote. */
 export function useColheitasPorLote(loteId: string) {
   return useQuery({
     queryKey: [...COLHEITAS_KEY, 'lote', loteId],
@@ -66,6 +73,7 @@ export function useColheitasPorLote(loteId: string) {
   })
 }
 
+/** Registra uma nova colheita. */
 export function useCriarColheita() {
   const qc = useQueryClient()
   return useMutation({
@@ -78,6 +86,7 @@ export function useCriarColheita() {
 }
 
 // Participações
+/** Busca participações de um lote. */
 export function useParticipacoesPorLote(loteId: string) {
   return useQuery({
     queryKey: [...PARTICIPACOES_KEY, loteId],
@@ -86,6 +95,7 @@ export function useParticipacoesPorLote(loteId: string) {
   })
 }
 
+/** Busca participações de um associado. */
 export function useParticipacoesPorAssociado(associadoId: string) {
   return useQuery({
     queryKey: [...PARTICIPACOES_KEY, 'associado', associadoId],
@@ -94,6 +104,7 @@ export function useParticipacoesPorAssociado(associadoId: string) {
   })
 }
 
+/** Registra participação de associado em lote. */
 export function useRegistrarParticipacao() {
   const qc = useQueryClient()
   return useMutation({
@@ -103,6 +114,7 @@ export function useRegistrarParticipacao() {
   })
 }
 
+/** Atualiza participação de associado em lote. */
 export function useAtualizarParticipacao() {
   const qc = useQueryClient()
   return useMutation({
@@ -119,6 +131,7 @@ export function useAtualizarParticipacao() {
   })
 }
 
+/** Calcula rateio financeiro de um lote. */
 export function useCalcularRateio() {
   const qc = useQueryClient()
   return useMutation({

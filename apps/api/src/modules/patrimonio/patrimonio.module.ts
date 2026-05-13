@@ -96,4 +96,5 @@ import {
     { provide: LISTAR_SOLICITACOES_USE_CASE, useClass: ListarSolicitacoesUseCase },
   ],
 })
+/** Módulo NestJS de patrimônio — equipamentos, insumos, atribuições e solicitações. */
 export class PatrimonioModule {}

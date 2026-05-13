@@ -4,6 +4,7 @@ import { IEncerrarLoteUseCase, ILoteProducaoRepository } from '@apa/core'
 import { ENCERRAR_LOTE_USE_CASE, LOTE_PRODUCAO_REPOSITORY } from '../../producao.tokens'
 
 @Injectable()
+/** Serviço agendado que encerra automaticamente lotes vencidos (diariamente à meia-noite). */
 export class EncerrarLotesVencidosService {
   private readonly logger = new Logger(EncerrarLotesVencidosService.name)
 
@@ -15,6 +16,7 @@ export class EncerrarLotesVencidosService {
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  /** Encerra lotes abertos cuja data fim já passou. */
   async encerrarVencidos(): Promise<void> {
     const vencidos = await this.loteRepository.findAbertosVencidos()
     if (vencidos.length === 0) return

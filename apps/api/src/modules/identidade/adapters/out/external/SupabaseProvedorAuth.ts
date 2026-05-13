@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CriarCredencialInput, IProvedorAuth } from '@apa/core'
 
 @Injectable()
+/** Adaptador para autenticação via Supabase Auth (Admin API) */
 export class SupabaseProvedorAuth implements IProvedorAuth {
   private readonly client: SupabaseClient
 
@@ -14,6 +15,7 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     )
   }
 
+  /** Cria uma credencial de usuário no Supabase Auth */
   async criarCredencial({ email, role, nome, telefone, senha, enviarEmail = true }: CriarCredencialInput): Promise<{ id: string }> {
     const { data, error } = await this.client.auth.admin.createUser({
       email,
@@ -34,6 +36,7 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     return { id: data.user.id }
   }
 
+  /** Remove o ban do usuário no Supabase Auth (libera acesso) */
   async ativarAcesso(id: string): Promise<void> {
     const { error } = await this.client.auth.admin.updateUserById(id, {
       ban_duration: 'none',
@@ -41,6 +44,7 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
   }
 
+  /** Aplica ban permanente ao usuário no Supabase Auth */
   async revogarAcesso(id: string): Promise<void> {
     const { error } = await this.client.auth.admin.updateUserById(id, {
       ban_duration: '876000h',
@@ -48,6 +52,7 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
   }
 
+  /** Define/redefine a senha de um usuário no Supabase Auth */
   async definirSenha(usuarioId: string, senha: string): Promise<void> {
     const { error } = await this.client.auth.admin.updateUserById(usuarioId, {
       password: senha,
@@ -55,11 +60,13 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
   }
 
+  /** Remove a credencial de um usuário no Supabase Auth */
   async removerCredencial(usuarioId: string): Promise<void> {
     const { error } = await this.client.auth.admin.deleteUser(usuarioId)
     if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
   }
 
+  /** Atualiza os metadados (app_metadata) de um usuário no Supabase Auth */
   async atualizarMetadata(usuarioId: string, metadata: Record<string, unknown>): Promise<void> {
     const { error } = await this.client.auth.admin.updateUserById(usuarioId, {
       app_metadata: metadata,

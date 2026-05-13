@@ -15,6 +15,7 @@ interface SupabaseJwtPayload {
   }
 }
 
+/** Payload extraído do JWT após validação. Disponibilizado como req.user nos controllers. */
 export interface JwtPayload {
   sub: string
   email: string
@@ -22,6 +23,7 @@ export interface JwtPayload {
   associadoId?: string
 }
 
+/** Estratégia Passport para validação de JWT usando JWKS do Supabase. Algoritmo ES256 (assimétrico). */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
@@ -38,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     })
   }
 
+  /** Converte o payload do JWT Supabase para o formato interno JwtPayload usado pelos controllers. */
   async validate(payload: SupabaseJwtPayload): Promise<JwtPayload> {
     return {
       sub: payload.sub,
