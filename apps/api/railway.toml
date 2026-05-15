@@ -3,6 +3,6 @@ builder = "dockerfile"
 dockerfilePath = "apps/api/Dockerfile"
 
 [deploy]
-startCommand = "node apps/api/dist/main"
+startCommand = "node apps/api/dist/src/main"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
