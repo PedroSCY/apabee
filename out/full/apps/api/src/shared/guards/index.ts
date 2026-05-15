@@ -1,0 +1,6 @@
+/** Barrel dos guards, estratégia e decoradores de autenticação/autorização. */
+export { JwtAuthGuard } from './jwt-auth.guard'
+export { JwtStrategy, type JwtPayload } from './jwt.strategy'
+export { RolesGuard } from './roles.guard'
+export { Roles, ROLES_KEY } from './roles.decorator'
+export { Public, IS_PUBLIC_KEY } from './public.decorator'

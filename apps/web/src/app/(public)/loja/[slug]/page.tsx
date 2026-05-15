@@ -15,6 +15,7 @@ async function getProduto(slug: string): Promise<ProdutoDetalhe | null> {
   try {
     const listRes = await fetch(`${API_URL}/catalogo/produtos?publicos=true`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!listRes.ok) return null
     const lista: ProdutoResponse[] = await listRes.json()
@@ -23,6 +24,7 @@ async function getProduto(slug: string): Promise<ProdutoDetalhe | null> {
 
     const detRes = await fetch(`${API_URL}/catalogo/produtos/${produto.id}`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!detRes.ok) return null
     return detRes.json()

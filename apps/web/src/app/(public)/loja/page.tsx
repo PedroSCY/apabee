@@ -16,6 +16,7 @@ async function getProdutos(): Promise<ProdutoResponse[]> {
   try {
     const res = await fetch(`${API_URL}/catalogo/produtos?publicos=true`, {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return []
     return res.json()
