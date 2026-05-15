@@ -1,9 +1,0 @@
-[build]
-builder = "dockerfile"
-# Caminho relativo à raiz do repositório
-dockerfilePath = "apps/api/Dockerfile"
-# Contexto de build = raiz do monorepo (Railway usa "." por padrão ao detectar Dockerfile)
-
-[deploy]
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3

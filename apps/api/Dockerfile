@@ -19,6 +19,9 @@ RUN turbo prune @apa/api --docker
 #   /app/apps/api/node_modules/  → packages NÃO hoistados (@nestjs/cli, @swc/*)
 FROM base AS installer
 COPY --from=pruner /app/out/json/ .
+# turbo prune copies apps/web/package.json (glob workspaces) but the pruned
+# lockfile has no web deps — remove it so npm ci does not fail.
+RUN rm -rf apps/web
 COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
@@ -48,6 +51,7 @@ ENV NODE_ENV=production \
     PORT=3001
 
 COPY --from=pruner /app/out/json/ .
+RUN rm -rf apps/web
 COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 RUN npm ci --omit=dev
 
