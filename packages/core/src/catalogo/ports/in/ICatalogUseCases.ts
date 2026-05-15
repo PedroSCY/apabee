@@ -19,7 +19,7 @@ export interface CriarProdutoInput {
   descricao: string
   preco: number
   imagemUrl?: string
-  loteOrigemId?: string
+  campanhaId?: string
 }
 
 /** Dados de entrada para atualizar um produto existente. */
@@ -32,23 +32,23 @@ export interface AtualizarProdutoInput {
   imagemUrl?: string
 }
 
-/** Dados de entrada para gerar estoque de produto a partir de um lote. */
+/** Dados de entrada para gerar estoque de produto a partir de uma campanha. */
 export interface GerarEstoqueInput {
   produtoId: string
   quantidade: number
-  loteOrigemId?: string
+  campanhaId?: string
 }
 
-/** Dados de entrada para consultar capacidade de produção a partir de um lote. */
+/** Dados de entrada para consultar capacidade de produção a partir de uma campanha. */
 export interface ConsultarCapacidadeInput {
   produtoId: string
-  loteId: string
+  campanhaId: string
 }
 
 /** Resposta da consulta de capacidade de produção. */
 export interface ConsultarCapacidadeResponse {
   capacidadeMaxima: number
-  loteId: string
+  campanhaId: string
 }
 
 // ── Use Case Interfaces ───────────────────────────────────────────────────────
@@ -81,6 +81,11 @@ export interface IPublicarProdutoUseCase {
 /** Use case: arquivar um produto (status ARQUIVADO). */
 export interface IArquivarProdutoUseCase {
   execute(produtoId: string): Promise<Produto>
+}
+
+/** Use case: excluir permanentemente um produto (apenas RASCUNHO ou ARQUIVADO). */
+export interface IDeletarProdutoUseCase {
+  execute(produtoId: string): Promise<void>
 }
 
 /** Use case: gerar estoque de produto consumindo matéria-prima. */

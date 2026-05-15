@@ -1,12 +1,15 @@
 import { UnidadeMedida } from '@apa/shared'
 import { Colheita } from '../../entities/Colheita'
 
-/** Dados para registro de uma nova colheita. */
+/** Dados para registro de uma nova colheita. campanhaId é opcional — colheita sem vínculo vai ao pool diretamente (RN14). */
 export interface CriarColheitaInput {
   associadoId: string
   tipoMateriaPrimaId: string
   equipamentoId?: string
-  loteProducaoId: string
+  /** Campanha à qual esta colheita está vinculada (RN14). */
+  campanhaId?: string
+  /** Safra para calcular tier de qualidade no rateio (RN28). */
+  safraId?: string
   volume: number
   unidade: UnidadeMedida
   dataColheita: Date
@@ -18,12 +21,17 @@ export interface ICriarColheitaUseCase {
   execute(input: CriarColheitaInput): Promise<Colheita>
 }
 
+/** Lista todas as colheitas (visão admin). */
+export interface IListarColheitasUseCase {
+  execute(): Promise<Colheita[]>
+}
+
 /** Lista colheitas de um associado específico. */
 export interface IListarColheitasPorAssociadoUseCase {
   execute(associadoId: string): Promise<Colheita[]>
 }
 
-/** Lista colheitas vinculadas a um lote de produção. */
-export interface IListarColheitasPorLoteUseCase {
-  execute(loteId: string): Promise<Colheita[]>
+/** Lista colheitas vinculadas a uma campanha. */
+export interface IListarColheitasPorCampanhaUseCase {
+  execute(campanhaId: string): Promise<Colheita[]>
 }

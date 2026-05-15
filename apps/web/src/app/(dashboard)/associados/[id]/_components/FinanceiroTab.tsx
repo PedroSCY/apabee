@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/shared'
 import { useMovimentosPorAssociado } from '@/hooks/useFinanceiro'
-import { useLotes } from '@/hooks/useProducao'
 
 interface Props {
   associadoId: string
@@ -62,14 +61,7 @@ function KpiCard({ title, value, icon: Icon, valueClass }: KpiCardProps) {
 }
 
 export function FinanceiroTab({ associadoId }: Props) {
-  const { data: movimentos = [], isLoading: loadingM } = useMovimentosPorAssociado(associadoId)
-  const { data: lotes = [], isLoading: loadingL } = useLotes()
-
-  const isLoading = loadingM || loadingL
-
-  function getLotePeriodo(id: string) {
-    return lotes.find((l) => l.id === id)?.periodo ?? '—'
-  }
+  const { data: movimentos = [], isLoading } = useMovimentosPorAssociado(associadoId)
 
   const totalAntecipacoes = movimentos
     .filter((m) => m.tipo === 'ANTECIPACAO')
@@ -131,7 +123,7 @@ export function FinanceiroTab({ associadoId }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>Lote</TableHead>
+                  <TableHead>Campanha</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
@@ -149,7 +141,7 @@ export function FinanceiroTab({ associadoId }: Props) {
                             {config.label}
                           </Badge>
                         </TableCell>
-                        <TableCell>{getLotePeriodo(m.loteProducaoId)}</TableCell>
+                        <TableCell>{m.campanhaId ?? '—'}</TableCell>
                         <TableCell>
                           {format(parseISO(m.data), 'dd/MM/yyyy', { locale: ptBR })}
                         </TableCell>

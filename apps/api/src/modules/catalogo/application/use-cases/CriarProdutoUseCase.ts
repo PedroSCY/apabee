@@ -36,7 +36,7 @@ export class CriarProdutoUseCase implements ICriarProdutoUseCase {
       preco: input.preco,
       imagemUrl: input.imagemUrl?.trim(),
       status: StatusProduto.RASCUNHO,
-      loteOrigemId: input.loteOrigemId,
+      campanhaId: input.campanhaId,
       criadoEm: new Date(),
     })
 

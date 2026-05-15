@@ -28,7 +28,7 @@ export interface ProdutoResponse {
   preco: number
   imagemUrl?: string
   status: 'RASCUNHO' | 'PUBLICADO' | 'ARQUIVADO'
-  loteOrigemId?: string
+  campanhaId?: string
   criadoEm: string
   quantidadeEstoque: number
 }
@@ -39,7 +39,7 @@ export interface CriarProdutoInput {
   preco: number
   slug?: string
   imagemUrl?: string
-  loteOrigemId?: string
+  campanhaId?: string
 }
 
 export interface AtualizarProdutoInput {
@@ -79,21 +79,25 @@ export const catalogoApi = {
   publicarProduto: (id: string) =>
     apiFetch<void>(`/catalogo/produtos/${id}/publicar`, { method: 'PATCH' }),
 
-  /** Arquiiva um produto (oculta da loja). */
+  /** Arquiva um produto (oculta da loja). */
   arquivarProduto: (id: string) =>
     apiFetch<void>(`/catalogo/produtos/${id}/arquivar`, { method: 'PATCH' }),
 
+  /** Exclui permanentemente um produto (apenas RASCUNHO ou ARQUIVADO). */
+  deletarProduto: (id: string) =>
+    apiFetch<void>(`/catalogo/produtos/${id}`, { method: 'DELETE' }),
+
   /** Gera ou atualiza o estoque de um produto. */
-  gerarEstoque: (id: string, quantidade: number, loteOrigemId?: string) =>
+  gerarEstoque: (id: string, quantidade: number, campanhaId?: string) =>
     apiFetch<{ id: string; produtoId: string; quantidadeDisponivel: number }>(
       `/catalogo/produtos/${id}/gerar-estoque`,
-      { method: 'POST', body: JSON.stringify({ quantidade, loteOrigemId }) },
+      { method: 'POST', body: JSON.stringify({ quantidade, campanhaId }) },
     ),
 
-  /** Consulta a capacidade máxima de produção de um lote para um produto. */
-  consultarCapacidade: (produtoId: string, loteId: string) =>
-    apiFetch<{ capacidadeMaxima: number; loteId: string }>(
-      `/catalogo/produtos/${produtoId}/capacidade?loteId=${loteId}`,
+  /** Consulta a capacidade máxima de produção de uma campanha para um produto. */
+  consultarCapacidade: (produtoId: string, campanhaId: string) =>
+    apiFetch<{ capacidadeMaxima: number; campanhaId: string }>(
+      `/catalogo/produtos/${produtoId}/capacidade?campanhaId=${campanhaId}`,
     ),
 
   /** Retorna a composição (matérias-primas) de um produto. */

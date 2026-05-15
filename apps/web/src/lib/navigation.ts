@@ -3,11 +3,13 @@ import {
   Users,
   Package,
   Layers,
+  Target,
   ShoppingBag,
   Wallet,
   FileText,
   Settings,
   Megaphone,
+  Sprout,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -35,7 +37,9 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { label: 'Associados', href: '/associados', icon: Users },
       { label: 'Insumos', href: '/insumos', icon: Package },
-      { label: 'Lotes', href: '/lotes', icon: Layers },
+      { label: 'Produção', href: '/producao', icon: Layers },
+      { label: 'Campanhas', href: '/campanhas', icon: Target },
+      { label: 'Safras', href: '/safras', icon: Sprout },
       { label: 'Produtos & Loja', href: '/produtos', icon: ShoppingBag },
     ],
   },
@@ -63,6 +67,7 @@ export const ASSOCIADO_NAV: NavGroup[] = [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Insumos', href: '/insumos', icon: Package },
       { label: 'Produção', href: '/producao', icon: Layers },
+      { label: 'Campanhas', href: '/campanhas', icon: Target },
       { label: 'Produtos', href: '/produtos', icon: ShoppingBag },
       { label: 'Documentos', href: '/documentos', icon: FileText },
     ],

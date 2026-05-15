@@ -3,14 +3,16 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import {
   Colheita,
   ICriarColheitaUseCase,
+  IListarColheitasUseCase,
   IListarColheitasPorAssociadoUseCase,
-  IListarColheitasPorLoteUseCase,
+  IListarColheitasPorCampanhaUseCase,
 } from '@apa/core'
 import { CriarColheitaDto } from './dto'
 import {
   CRIAR_COLHEITA_USE_CASE,
+  LISTAR_COLHEITAS_USE_CASE,
   LISTAR_COLHEITAS_ASSOCIADO_USE_CASE,
-  LISTAR_COLHEITAS_LOTE_USE_CASE,
+  LISTAR_COLHEITAS_CAMPANHA_USE_CASE,
 } from '../../../producao.tokens'
 
 @ApiTags('Produção — Colheitas')
@@ -20,11 +22,21 @@ export class ColheitasController {
   constructor(
     @Inject(CRIAR_COLHEITA_USE_CASE)
     private readonly criarColheita: ICriarColheitaUseCase,
+    @Inject(LISTAR_COLHEITAS_USE_CASE)
+    private readonly listarColheitas: IListarColheitasUseCase,
     @Inject(LISTAR_COLHEITAS_ASSOCIADO_USE_CASE)
     private readonly listarPorAssociado: IListarColheitasPorAssociadoUseCase,
-    @Inject(LISTAR_COLHEITAS_LOTE_USE_CASE)
-    private readonly listarPorLote: IListarColheitasPorLoteUseCase,
+    @Inject(LISTAR_COLHEITAS_CAMPANHA_USE_CASE)
+    private readonly listarPorCampanha: IListarColheitasPorCampanhaUseCase,
   ) {}
+
+  @ApiOperation({ summary: 'Listar todas as colheitas (admin)' })
+  @ApiResponse({ status: 200 })
+  @Get()
+  async listar() {
+    const lista = await this.listarColheitas.execute()
+    return lista.map((c) => this.toResponse(c))
+  }
 
   @ApiOperation({ summary: 'Registrar colheita' })
   @ApiResponse({ status: 201, description: 'Colheita registrada.' })
@@ -44,12 +56,12 @@ export class ColheitasController {
     return lista.map((c) => this.toResponse(c))
   }
 
-  @ApiOperation({ summary: 'Listar colheitas por lote' })
-  @ApiParam({ name: 'loteId', type: String })
+  @ApiOperation({ summary: 'Listar colheitas por campanha' })
+  @ApiParam({ name: 'campanhaId', type: String })
   @ApiResponse({ status: 200 })
-  @Get('lote/:loteId')
-  async listarLote(@Param('loteId') loteId: string) {
-    const lista = await this.listarPorLote.execute(loteId)
+  @Get('campanha/:campanhaId')
+  async listarCampanha(@Param('campanhaId') campanhaId: string) {
+    const lista = await this.listarPorCampanha.execute(campanhaId)
     return lista.map((c) => this.toResponse(c))
   }
 
@@ -59,7 +71,8 @@ export class ColheitasController {
       associadoId: c.associadoId,
       tipoMateriaPrimaId: c.tipoMateriaPrimaId,
       equipamentoId: c.equipamentoId,
-      loteProducaoId: c.loteProducaoId,
+      campanhaId: c.campanhaId,
+      safraId: c.safraId,
       volume: c.volume,
       unidade: c.unidade,
       dataColheita: c.dataColheita,

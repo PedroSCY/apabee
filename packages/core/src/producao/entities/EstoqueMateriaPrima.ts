@@ -28,6 +28,9 @@ export class EstoqueMateriaPrima {
   get unidade(): UnidadeMedida {
     return this.props.unidade
   }
+  get atualizadoEm(): Date {
+    return this.props.atualizadoEm
+  }
 
   /** Verifica se há saldo suficiente para determinada quantidade. */
   temSaldo(qtd: number): boolean {

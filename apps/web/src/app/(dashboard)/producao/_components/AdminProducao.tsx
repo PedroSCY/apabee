@@ -3,138 +3,295 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { toast } from 'sonner'
-import { useColheitasPorLote, useEncerrarLote, useLotes } from '@/hooks/useProducao'
+import { AlertCircle, Package, Plus, X } from 'lucide-react'
+import { useColheitas, useEstoquePool, useTiposMateriaPrima } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
-import {
-  ConfirmDialog,
-  DataTable,
-  EmptyState,
-  StatusBadge,
-  type Column,
-} from '@/components/shared'
+import { useCampanhas } from '@/hooks/useCampanhas'
+import { DataTable, EmptyState, type Column } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import type { ColheitaResponse, LoteProducaoResponse } from '@/lib/api/producao'
-import { CriarLoteDialog } from './CriarLoteDialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { ColheitaResponse } from '@/lib/api/producao'
+import { Badge } from '@/components/ui/badge'
 import { RegistrarColheitaDialog } from './RegistrarColheitaDialog'
-import { RegistrarParticipacaoDialog } from './RegistrarParticipacaoDialog'
+import { CriarTipoMateriaPrimaDialog } from './CriarTipoMateriaPrimaDialog'
 
-const TIPO_LABEL: Record<string, string> = { PRODUCAO: 'Produção', AQUISICAO: 'Aquisição' }
+// Sentinel value para "sem filtro" — evita o problema de value="" no Radix Select
+const TODOS = '__todos__'
 
-function ColheitasDoLote({ loteId, associados }: { loteId: string; associados: { id: string; usuario: { nome: string } }[] }) {
-  const { data: colheitas = [] } = useColheitasPorLote(loteId)
+// ---------- Aba Colheitas ----------
+
+function ColheitasTab() {
+  const { data: colheitas = [], isLoading } = useColheitas()
+  const { data: tipos = [] } = useTiposMateriaPrima()
+  const { data: associados = [] } = useAssociados()
+  const { data: campanhas = [] } = useCampanhas()
+
+  const [filtroAssociado, setFiltroAssociado] = React.useState(TODOS)
+  const [filtroTipo, setFiltroTipo] = React.useState(TODOS)
+  const [colheitaOpen, setColheitaOpen] = React.useState(false)
+
+  const temFiltro = filtroAssociado !== TODOS || filtroTipo !== TODOS
+
+  const tipoNome = (id: string) => tipos.find(t => t.id === id)?.nome ?? '—'
+  const associadoNome = (id: string) => associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)
+  const campanhaNome = (id?: string) => id ? campanhas.find(c => c.id === id)?.nome ?? id.slice(0, 8) : null
+
+  const filtradas = React.useMemo(() => colheitas.filter(c => {
+    if (filtroAssociado !== TODOS && c.associadoId !== filtroAssociado) return false
+    if (filtroTipo !== TODOS && c.tipoMateriaPrimaId !== filtroTipo) return false
+    return true
+  }), [colheitas, filtroAssociado, filtroTipo])
 
   const cols: Column<ColheitaResponse>[] = [
-    { key: 'associadoId', label: 'Associado', render: (r) => associados.find((a) => a.id === r.associadoId)?.usuario.nome ?? r.associadoId },
-    { key: 'volume', label: 'Volume', render: (r) => `${r.volume} ${r.unidade}` },
-    { key: 'dataColheita', label: 'Data', render: (r) => format(new Date(r.dataColheita), 'dd/MM/yyyy', { locale: ptBR }) },
-    { key: 'observacao', label: 'Obs', render: (r) => r.observacao ?? '—' },
-  ]
-
-  if (!colheitas.length) return <p className="text-sm text-muted-foreground py-2">Sem colheitas registradas.</p>
-  return <DataTable data={colheitas} columns={cols} rowKey={(r) => r.id} />
-}
-
-export function AdminProducao() {
-  const { data: lotes = [] } = useLotes()
-  const { data: associados = [] } = useAssociados()
-  const { mutateAsync: encerrar } = useEncerrarLote()
-
-  const [criarLoteOpen, setCriarLoteOpen] = React.useState(false)
-  const [colheitaOpen, setColheitaOpen] = React.useState(false)
-  const [encerrarConfirm, setEncerrarConfirm] = React.useState<{ id: string; periodo: string } | null>(null)
-  const [participacaoLoteId, setParticipacaoLoteId] = React.useState<string | null>(null)
-  const [expandedLoteId, setExpandedLoteId] = React.useState<string | null>(null)
-
-  const loteCols: Column<LoteProducaoResponse>[] = [
-    { key: 'periodo', label: 'Período' },
-    { key: 'tipo', label: 'Tipo', render: (r) => TIPO_LABEL[r.tipo] ?? r.tipo },
-    { key: 'dataInicio', label: 'Início', render: (r) => format(new Date(r.dataInicio), 'dd/MM/yyyy', { locale: ptBR }) },
-    { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
-      key: 'acoes', label: '', className: 'w-64 text-right',
-      render: (r) => (
-        <div className="flex gap-1 justify-end">
-          <Button variant="ghost" size="sm" onClick={() => setExpandedLoteId(expandedLoteId === r.id ? null : r.id)}>
-            {expandedLoteId === r.id ? 'Ocultar' : 'Colheitas'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setParticipacaoLoteId(r.id)}>+ Participação</Button>
-          {r.status === 'ABERTO' && (
-            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
-              onClick={() => setEncerrarConfirm({ id: r.id, periodo: r.periodo })}>
-              Encerrar
-            </Button>
-          )}
-        </div>
-      ),
+      key: 'associadoId',
+      label: 'Associado',
+      render: (r) => associadoNome(r.associadoId),
+    },
+    {
+      key: 'tipoMateriaPrimaId',
+      label: 'Tipo',
+      render: (r) => tipoNome(r.tipoMateriaPrimaId),
+    },
+    {
+      key: 'volume',
+      label: 'Volume',
+      render: (r) => `${r.volume} ${r.unidade}`,
+    },
+    {
+      key: 'dataColheita',
+      label: 'Data',
+      render: (r) => format(new Date(r.dataColheita), 'dd/MM/yyyy', { locale: ptBR }),
+    },
+    {
+      key: 'campanhaId',
+      label: 'Destino',
+      render: (r) => {
+        const nome = campanhaNome(r.campanhaId)
+        return nome
+          ? <span className="font-medium">{nome}</span>
+          : <span className="text-muted-foreground text-xs">Pool geral</span>
+      },
+    },
+    {
+      key: 'observacao',
+      label: 'Obs',
+      render: (r) => r.observacao ?? '—',
     },
   ]
 
-  async function handleEncerrar() {
-    if (!encerrarConfirm) return
-    try {
-      await encerrar(encerrarConfirm.id)
-      toast.success(`Lote ${encerrarConfirm.periodo} encerrado.`)
-    } catch { toast.error('Erro ao encerrar lote.') }
-    finally { setEncerrarConfirm(null) }
+  function limparFiltros() {
+    setFiltroAssociado(TODOS)
+    setFiltroTipo(TODOS)
   }
 
   return (
-    <>
-      <Tabs defaultValue="lotes">
-        <TabsList className="mb-6">
-          <TabsTrigger value="lotes">Lotes</TabsTrigger>
-          <TabsTrigger value="colheitas">Registrar Colheita</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="lotes">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => setCriarLoteOpen(true)}>+ Novo Lote</Button>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex flex-wrap gap-3 flex-1 items-end">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Associado</p>
+            <Select value={filtroAssociado} onValueChange={setFiltroAssociado}>
+              <SelectTrigger className="h-9 w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODOS}>Todos os associados</SelectItem>
+                {associados.map(a => (
+                  <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          {lotes.length === 0 ? (
-            <EmptyState title="Nenhum lote criado" description="Crie o primeiro lote de produção." />
-          ) : (
-            <div className="space-y-4">
-              <DataTable data={lotes} columns={loteCols} rowKey={(r) => r.id}
-                searchable searchPlaceholder="Buscar período…" searchKeys={['periodo']} />
-              {expandedLoteId && (
-                <div className="border border-border rounded-lg p-4 bg-muted/30">
-                  <p className="text-sm font-medium mb-3">Colheitas do lote</p>
-                  <ColheitasDoLote loteId={expandedLoteId} associados={associados} />
-                </div>
-              )}
-            </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Tipo de matéria-prima</p>
+            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+              <SelectTrigger className="h-9 w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODOS}>Todos os tipos</SelectItem>
+                {tipos.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {temFiltro && (
+            <Button variant="ghost" size="sm" className="h-9" onClick={limparFiltros}>
+              <X className="h-3.5 w-3.5" /> Limpar filtros
+            </Button>
           )}
-        </TabsContent>
+        </div>
+        <Button size="sm" onClick={() => setColheitaOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> Registrar Colheita
+        </Button>
+      </div>
 
-        <TabsContent value="colheitas">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => setColheitaOpen(true)}>+ Registrar Colheita</Button>
-          </div>
-          <EmptyState
-            title="Selecione um lote para ver colheitas"
-            description="Use a aba Lotes → Colheitas para visualizar registros por lote." />
-        </TabsContent>
-      </Tabs>
+      <DataTable
+        data={filtradas}
+        columns={cols}
+        rowKey={(r) => r.id}
+        isLoading={isLoading}
+        emptyTitle="Nenhuma colheita encontrada"
+        emptyDescription={
+          temFiltro
+            ? 'Nenhuma colheita corresponde aos filtros selecionados.'
+            : 'As colheitas aparecerão aqui após serem registradas.'
+        }
+      />
 
-      <CriarLoteDialog open={criarLoteOpen} onOpenChange={setCriarLoteOpen} />
       <RegistrarColheitaDialog open={colheitaOpen} onOpenChange={setColheitaOpen} />
+    </div>
+  )
+}
 
-      {participacaoLoteId && (
-        <RegistrarParticipacaoDialog
-          loteId={participacaoLoteId}
-          open={true}
-          onOpenChange={(o) => { if (!o) setParticipacaoLoteId(null) }} />
+// ---------- Aba Tipos de Matéria-Prima ----------
+
+function TiposTab() {
+  const { data: tipos = [], isLoading } = useTiposMateriaPrima()
+  const [criarOpen, setCriarOpen] = React.useState(false)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setCriarOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> Novo Tipo
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <Skeleton className="h-32 w-full" />
+      ) : tipos.length === 0 ? (
+        <EmptyState
+          title="Nenhum tipo cadastrado"
+          description="Cadastre os tipos de matéria-prima que os associados podem colher (mel, cera, própolis…)."
+          className="py-8"
+          action={
+            <Button size="sm" onClick={() => setCriarOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> Cadastrar primeiro tipo
+            </Button>
+          }
+        />
+      ) : (
+        <div className="rounded-lg border overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow className="hover:bg-transparent border-b-0">
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Nome</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Unidade</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Descrição</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tipos.map(t => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium px-4 py-3">{t.nome}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground px-4 py-3">{t.unidade}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground px-4 py-3">{t.descricao ?? '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
-      <ConfirmDialog
-        open={encerrarConfirm !== null}
-        onOpenChange={(o) => { if (!o) setEncerrarConfirm(null) }}
-        title="Encerrar Lote"
-        description={`Confirma o encerramento do lote "${encerrarConfirm?.periodo}"? Esta ação não pode ser desfeita.`}
-        confirmLabel="Encerrar" variant="destructive"
-        onConfirm={handleEncerrar} />
-    </>
+      <CriarTipoMateriaPrimaDialog open={criarOpen} onOpenChange={setCriarOpen} />
+    </div>
+  )
+}
+
+// ---------- Aba Pool ----------
+
+function PoolTab() {
+  const { data: pool = [], isLoading } = useEstoquePool()
+  const { data: tipos = [] } = useTiposMateriaPrima()
+
+  const tipoNome = (id: string) => tipos.find(t => t.id === id)?.nome ?? id.slice(0, 8)
+
+  const saldoBadge = (qtd: number) => {
+    if (qtd <= 0) return <Badge variant="destructive">Sem saldo</Badge>
+    if (qtd < 5) return <Badge variant="outline" className="border-yellow-500 text-yellow-600">Baixo</Badge>
+    return <Badge variant="secondary" className="text-green-700 bg-green-50">Disponível</Badge>
+  }
+
+  if (isLoading) return <Skeleton className="h-32 w-full" />
+
+  if (pool.length === 0) {
+    return (
+      <EmptyState
+        title="Pool vazio"
+        description="Nenhuma matéria-prima disponível no pool. Registre colheitas sem campanha para alimentar o estoque compartilhado."
+        className="py-8"
+        icon={AlertCircle}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Estoque compartilhado alimentado por colheitas sem campanha (RN14). Consumido por ordens de produção (RN15).
+      </p>
+      <div className="rounded-lg border overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent border-b-0">
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Tipo</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Saldo</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Unidade</TableHead>
+              <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pool.map(item => (
+              <TableRow key={item.tipoMateriaPrimaId}>
+                <TableCell className="font-medium px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    {tipoNome(item.tipoMateriaPrimaId)}
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-3 tabular-nums">
+                  {item.quantidadeDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground px-4 py-3">{item.unidade}</TableCell>
+                <TableCell className="px-4 py-3">{saldoBadge(item.quantidadeDisponivel)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Componente principal ----------
+
+export function AdminProducao() {
+  return (
+    <Tabs defaultValue="colheitas">
+      <TabsList>
+        <TabsTrigger value="colheitas">Colheitas</TabsTrigger>
+        <TabsTrigger value="pool">Pool de Estoque</TabsTrigger>
+        <TabsTrigger value="tipos">Tipos de Matéria-Prima</TabsTrigger>
+      </TabsList>
+      <TabsContent value="colheitas" className="mt-4">
+        <ColheitasTab />
+      </TabsContent>
+      <TabsContent value="pool" className="mt-4">
+        <PoolTab />
+      </TabsContent>
+      <TabsContent value="tipos" className="mt-4">
+        <TiposTab />
+      </TabsContent>
+    </Tabs>
   )
 }

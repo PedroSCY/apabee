@@ -1,0 +1,26 @@
+# Dependências — o Docker reinstala do zero em cada estágio
+node_modules
+**/node_modules
+
+# Variáveis de ambiente — injetadas pelo Railway/Vercel, nunca no repositório
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Artefatos de build — gerados durante o build Docker
+**/dist
+**/.next
+**/build
+
+# Cache de ferramentas
+**/.turbo
+**/coverage
+**/*.log
+npm-debug.log*
+
+# Git e IDEs
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea

@@ -8,6 +8,13 @@ import { PrismaService } from '../../../../../shared/database/prisma.service'
 export class PrismaColheitaRepository implements IColheitaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAll(): Promise<Colheita[]> {
+    const records = await this.prisma.colheita.findMany({
+      orderBy: { dataColheita: 'desc' },
+    })
+    return records.map(this.toDomain)
+  }
+
   async findById(id: string): Promise<Colheita | null> {
     const record = await this.prisma.colheita.findUnique({ where: { id } })
     return record ? this.toDomain(record) : null
@@ -21,9 +28,9 @@ export class PrismaColheitaRepository implements IColheitaRepository {
     return records.map(this.toDomain)
   }
 
-  async findByLote(loteId: string): Promise<Colheita[]> {
+  async findByCampanha(campanhaId: string): Promise<Colheita[]> {
     const records = await this.prisma.colheita.findMany({
-      where: { loteProducaoId: loteId },
+      where: { campanhaId },
       orderBy: { dataColheita: 'desc' },
     })
     return records.map(this.toDomain)
@@ -36,7 +43,8 @@ export class PrismaColheitaRepository implements IColheitaRepository {
         associadoId: colheita.associadoId,
         tipoMateriaPrimaId: colheita.tipoMateriaPrimaId,
         equipamentoId: colheita.equipamentoId ?? null,
-        loteProducaoId: colheita.loteProducaoId,
+        campanhaId: colheita.campanhaId ?? null,
+        safraId: colheita.safraId ?? null,
         volume: colheita.volume,
         unidade: colheita.unidade,
         dataColheita: colheita.dataColheita,
@@ -53,7 +61,8 @@ export class PrismaColheitaRepository implements IColheitaRepository {
       associadoId: record.associadoId,
       tipoMateriaPrimaId: record.tipoMateriaPrimaId,
       equipamentoId: record.equipamentoId ?? undefined,
-      loteProducaoId: record.loteProducaoId,
+      campanhaId: record.campanhaId ?? undefined,
+      safraId: record.safraId ?? undefined,
       volume: Number(record.volume),
       unidade: record.unidade as UnidadeMedida,
       dataColheita: record.dataColheita,

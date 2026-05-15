@@ -10,6 +10,7 @@ export interface IProdutoRepository {
   findAll(): Promise<Produto[]>;
   save(produto: Produto): Promise<Produto>;
   update(produto: Produto): Promise<Produto>;
+  delete(id: string): Promise<void>;
 }
 
 /** Repositório de estoque de produtos. */

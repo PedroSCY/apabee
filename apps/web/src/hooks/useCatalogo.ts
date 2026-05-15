@@ -55,22 +55,30 @@ export function useArquivarProduto() {
   })
 }
 
-/** Gera estoque de um produto a partir de lote. */
-export function useGerarEstoque() {
+export function useDeletarProduto() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, quantidade, loteOrigemId }: { id: string; quantidade: number; loteOrigemId?: string }) =>
-      catalogoApi.gerarEstoque(id, quantidade, loteOrigemId),
+    mutationFn: (id: string) => catalogoApi.deletarProduto(id),
     onSuccess: () => void qc.invalidateQueries({ queryKey: PRODUTOS_KEY }),
   })
 }
 
-/** Consulta capacidade disponível de um lote. */
-export function useCapacidadeLote(produtoId: string, loteId: string | null) {
+/** Gera estoque de um produto (opcionalmente vinculado a uma campanha). */
+export function useGerarEstoque() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, quantidade, campanhaId }: { id: string; quantidade: number; campanhaId?: string }) =>
+      catalogoApi.gerarEstoque(id, quantidade, campanhaId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: PRODUTOS_KEY }),
+  })
+}
+
+/** Consulta capacidade disponível de uma campanha para um produto. */
+export function useCapacidadeCampanha(produtoId: string, campanhaId: string | null) {
   return useQuery({
-    queryKey: ['capacidade-lote', produtoId, loteId],
-    queryFn: () => catalogoApi.consultarCapacidade(produtoId, loteId!),
-    enabled: !!loteId,
+    queryKey: ['capacidade-campanha', produtoId, campanhaId],
+    queryFn: () => catalogoApi.consultarCapacidade(produtoId, campanhaId!),
+    enabled: !!campanhaId,
   })
 }
 

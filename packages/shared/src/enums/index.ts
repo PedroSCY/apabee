@@ -10,10 +10,11 @@ export enum StatusAtribuicao {
   DEVOLVIDO = 'DEVOLVIDO',
 }
 
-/** Categoria do insumo: FERRAMENTA (durável) ou INSUMO (consumível). */
+/** Categoria do insumo: FERRAMENTA (patrimônio atribuível) ou CONSUMIVEL (estoque que se consome). INSUMO mantido para compatibilidade de dados existentes. */
 export enum CategoriaInsumo {
   FERRAMENTA = 'FERRAMENTA',
   INSUMO = 'INSUMO',
+  CONSUMIVEL = 'CONSUMIVEL',
 }
 
 /** Discrimina o tipo de patrimônio para unificar Equipamento e Insumo em AtribuicaoPatrimonio. */
@@ -48,10 +49,11 @@ export enum TipoVenda {
   INDIVIDUAL = 'INDIVIDUAL',
 }
 
-/** Tipo de movimento financeiro: ANTECIPACAO (venda individual) ou RATEIO_FINAL (fechamento do lote). */
+/** Tipo de movimento financeiro: ANTECIPACAO (venda individual), RATEIO_FINAL (fechamento) ou CUSTO (despesa da campanha adiantada por associado). */
 export enum TipoMovimentoFinanceiro {
   ANTECIPACAO = 'ANTECIPACAO',
   RATEIO_FINAL = 'RATEIO_FINAL',
+  CUSTO = 'CUSTO',
 }
 
 /** Ciclo de vida de um pedido da loja. Cancelamento só permitido até PENDENTE. */
@@ -86,12 +88,6 @@ export enum StatusPatrimonio {
   DISPONIVEL = 'DISPONIVEL',
   EM_USO = 'EM_USO',
   MANUTENCAO = 'MANUTENCAO',
-}
-
-/** Status de um lote de produção/aquisição. */
-export enum StatusLote {
-  ABERTO = 'ABERTO',
-  FECHADO = 'FECHADO',
 }
 
 /** Ciclo de publicação de um produto no catálogo. */
@@ -136,4 +132,72 @@ export enum StatusSolicitacaoContato {
   PENDENTE = 'PENDENTE',
   VISUALIZADA = 'VISUALIZADA',
   RESOLVIDA = 'RESOLVIDA',
+}
+
+/** Tipo de florada apícola. Define a qualidade e o preço de referência do mel. */
+export enum TipoFlorada {
+  LARANJEIRA = 'LARANJEIRA',
+  EUCALIPTO = 'EUCALIPTO',
+  SILVESTRE = 'SILVESTRE',
+  AROEIRA = 'AROEIRA',
+  OUTRO = 'OUTRO',
+}
+
+/** Ciclo de vida de uma safra apícola. */
+export enum StatusSafra {
+  PLANEJADA = 'PLANEJADA',
+  EM_ANDAMENTO = 'EM_ANDAMENTO',
+  ENCERRADA = 'ENCERRADA',
+}
+
+/** Ciclo de vida de uma campanha (produção coletiva ou aquisição). */
+export enum StatusCampanha {
+  PLANEJADA = 'PLANEJADA',
+  ATIVA = 'ATIVA',
+  CONCLUIDA = 'CONCLUIDA',
+  LIQUIDADA = 'LIQUIDADA',
+  CANCELADA = 'CANCELADA',
+}
+
+/** Estado de execução de uma ordem de produção. */
+export enum StatusOrdemProducao {
+  PENDENTE = 'PENDENTE',
+  EM_EXECUCAO = 'EM_EXECUCAO',
+  CONCLUIDA = 'CONCLUIDA',
+}
+
+/** Categorias de despesa de uma campanha para fins de rastreabilidade financeira. */
+export enum CategoriaCusto {
+  EMBALAGEM = 'EMBALAGEM',
+  ROTULO = 'ROTULO',
+  TRANSPORTE = 'TRANSPORTE',
+  PROCESSAMENTO = 'PROCESSAMENTO',
+  CERTIFICACAO = 'CERTIFICACAO',
+  TAXA = 'TAXA',
+  PERDA = 'PERDA',
+  MAO_DE_OBRA_CONTRATADA = 'MAO_DE_OBRA_CONTRATADA',
+  OUTRO = 'OUTRO',
+}
+
+/** Tipo de contribuição de um associado a uma campanha. Tudo é convertido a valor monetário no rateio. */
+export enum TipoContribuicao {
+  COLHEITA = 'COLHEITA',
+  DINHEIRO = 'DINHEIRO',
+  MAO_DE_OBRA = 'MAO_DE_OBRA',
+  CONSUMIVEL = 'CONSUMIVEL',
+  EQUIPAMENTO = 'EQUIPAMENTO',
+  ACORDO = 'ACORDO',
+}
+
+/** Regra de cálculo para contribuições do tipo ACORDO (valor só conhecido na liquidação). */
+export enum RegraAcordo {
+  PERCENTUAL_LUCRO = 'PERCENTUAL_LUCRO',
+  FIXO_POR_UNIDADE = 'FIXO_POR_UNIDADE',
+}
+
+/** Destino do item adquirido numa campanha de AQUISIÇÃO. Define o que é criado após a compra. */
+export enum TipoDestinoAquisicao {
+  EQUIPAMENTO = 'EQUIPAMENTO',
+  CONSUMIVEL = 'CONSUMIVEL',
+  MATERIA_PRIMA = 'MATERIA_PRIMA',
 }

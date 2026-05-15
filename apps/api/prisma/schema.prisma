@@ -6,6 +6,8 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums existentes ────────────────────────────────────────────────────────
+
 enum RoleUsuario {
   ADMIN
   ASSOCIADO
@@ -24,6 +26,7 @@ enum TipoPatrimonio {
 enum CategoriaInsumo {
   FERRAMENTA
   INSUMO
+  CONSUMIVEL
 }
 
 enum UnidadeMedida {
@@ -51,6 +54,7 @@ enum TipoVenda {
 enum TipoMovimentoFinanceiro {
   ANTECIPACAO
   RATEIO_FINAL
+  CUSTO
 }
 
 enum StatusPedido {
@@ -81,11 +85,6 @@ enum StatusPatrimonio {
   DISPONIVEL
   EM_USO
   MANUTENCAO
-}
-
-enum StatusLote {
-  ABERTO
-  FECHADO
 }
 
 enum StatusProduto {
@@ -126,6 +125,62 @@ enum StatusSolicitacaoContato {
   RESOLVIDA
 }
 
+// ─── Novos enums ─────────────────────────────────────────────────────────────
+
+enum StatusSafra {
+  PLANEJADA
+  EM_ANDAMENTO
+  ENCERRADA
+}
+
+enum StatusCampanha {
+  PLANEJADA
+  ATIVA
+  CONCLUIDA
+  LIQUIDADA
+  CANCELADA
+}
+
+enum StatusOrdemProducao {
+  PENDENTE
+  EM_EXECUCAO
+  CONCLUIDA
+}
+
+enum CategoriaCusto {
+  EMBALAGEM
+  ROTULO
+  TRANSPORTE
+  PROCESSAMENTO
+  CERTIFICACAO
+  TAXA
+  PERDA
+  MAO_DE_OBRA_CONTRATADA
+  OUTRO
+}
+
+enum TipoContribuicao {
+  COLHEITA
+  DINHEIRO
+  MAO_DE_OBRA
+  CONSUMIVEL
+  EQUIPAMENTO
+  ACORDO
+}
+
+enum RegraAcordo {
+  PERCENTUAL_LUCRO
+  FIXO_POR_UNIDADE
+}
+
+enum TipoDestinoAquisicao {
+  EQUIPAMENTO
+  CONSUMIVEL
+  MATERIA_PRIMA
+}
+
+// ─── Modelos ─────────────────────────────────────────────────────────────────
+
 model Usuario {
   id        String      @id @default(uuid())
   nome      String
@@ -152,10 +207,13 @@ model Associado {
   atribuicoesPatrimonio    AtribuicaoPatrimonio[]
   solicitacoesPatrimonio   SolicitacaoPatrimonio[]
   colheitas                Colheita[]
-  participacoesLote        ParticipacaoLote[]
   participantesAta         ParticipanteAta[]
   movimentosFinanceiros    MovimentoFinanceiro[]
   vendas                   Venda[]
+  contribuicoes            Contribuicao[]
+  cotas                    Cota[]
+  custosAdiantados         CustoCampanha[]
+  rateios                  RateioCampanha[]
 
   @@map("associados")
 }
@@ -241,51 +299,238 @@ model SolicitacaoPatrimonio {
 }
 
 model TipoMateriaPrima {
-  id        String        @id @default(uuid())
-  nome      String        @unique
-  unidade   UnidadeMedida
-  descricao String?
+  id         String        @id @default(uuid())
+  nome       String        @unique
+  unidade    UnidadeMedida
+  descricao  String?
+  precoAtual Decimal?      @map("preco_atual") @db.Decimal(10, 2)
 
-  colheitas   Colheita[]
-  estoque     EstoqueMateriaPrima?
-  composicoes ComposicaoProduto[]
+  colheitas         Colheita[]
+  estoque           EstoqueMateriaPrima?
+  composicoes       ComposicaoProduto[]
+  precosSafra       PrecoSafra[]
+  materiaisOrdem    MaterialOrdemProducao[]
+  itensAquisicao    ItemAquisicao[]
 
   @@map("tipos_materia_prima")
 }
 
-model LoteProducao {
-  id         String     @id @default(uuid())
-  tipo       TipoLote
-  periodo    String
-  dataInicio DateTime   @map("data_inicio")
-  dataFim    DateTime?  @map("data_fim")
-  status     StatusLote @default(ABERTO)
-  custoTotal Decimal    @default(0) @map("custo_total") @db.Decimal(10, 2)
+model Florada {
+  id        String   @id @default(uuid())
+  nome      String   @unique
+  descricao String?
+  ativa     Boolean  @default(true)
+  criadoEm DateTime @default(now()) @map("criado_em")
 
-  colheitas             Colheita[]
-  participacoes         ParticipacaoLote[]
-  vendas                Venda[]
-  produtos              Produto[]
-  movimentosFinanceiros MovimentoFinanceiro[]
-  apuracao              ApuracaoLote?
+  safras Safra[]
 
-  @@map("lotes_producao")
+  @@map("floradas")
 }
 
-model ParticipacaoLote {
+model Safra {
+  id         String      @id @default(uuid())
+  nome       String
+  floradaId  String      @map("florada_id")
+  dataInicio DateTime    @map("data_inicio")
+  dataFim    DateTime?   @map("data_fim")
+  status     StatusSafra @default(PLANEJADA)
+
+  florada   Florada      @relation(fields: [floradaId], references: [id])
+  precos    PrecoSafra[]
+  campanhas Campanha[]
+  colheitas Colheita[]
+
+  @@map("safras")
+}
+
+model PrecoSafra {
+  id                 String  @id @default(uuid())
+  tipoMateriaPrimaId String  @map("tipo_materia_prima_id")
+  safraId            String  @map("safra_id")
+  preco              Decimal @db.Decimal(10, 2)
+
+  tipoMateriaPrima TipoMateriaPrima @relation(fields: [tipoMateriaPrimaId], references: [id])
+  safra            Safra            @relation(fields: [safraId], references: [id])
+
+  @@unique([tipoMateriaPrimaId, safraId])
+  @@map("precos_safra")
+}
+
+model Campanha {
+  id                String         @id @default(uuid())
+  codigo            String         @unique
+  nome              String
+  tipo              TipoLote
+  safraId           String?        @map("safra_id")
+  dataInicio        DateTime       @map("data_inicio")
+  dataFim           DateTime?      @map("data_fim")
+  status            StatusCampanha @default(PLANEJADA)
+
+  // apenas AQUISICAO
+  valorMeta         Decimal?  @map("valor_meta") @db.Decimal(10, 2)
+  prazoContribuicao DateTime? @map("prazo_contribuicao")
+  valorMinimo       Decimal?  @map("valor_minimo") @db.Decimal(10, 2)
+  valorMaximo       Decimal?  @map("valor_maximo") @db.Decimal(10, 2)
+
+  // financeiro (populado na liquidação)
+  receitaTotal Decimal @default(0) @map("receita_total") @db.Decimal(10, 2)
+  custoTotal   Decimal @default(0) @map("custo_total") @db.Decimal(10, 2)
+
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  safra                 Safra?                @relation(fields: [safraId], references: [id])
+  contribuicoes         Contribuicao[]
+  cotas                 Cota[]
+  itensAquisicao        ItemAquisicao[]
+  ordensProducao        OrdemProducao[]
+  custos                CustoCampanha[]
+  apuracao              ApuracaoCampanha?
+  produtos              Produto[]
+  movimentosFinanceiros MovimentoFinanceiro[]
+  colheitas             Colheita[]
+  vendas                Venda[]
+
+  @@map("campanhas")
+}
+
+model Contribuicao {
+  id             String           @id @default(uuid())
+  campanhaId     String           @map("campanha_id")
+  associadoId    String           @map("associado_id")
+  tipo           TipoContribuicao
+  valorMonetario Decimal          @map("valor_monetario") @db.Decimal(10, 2)
+
+  // COLHEITA
+  colheitaId         String?  @map("colheita_id")
+  volume             Decimal? @db.Decimal(10, 3)
+  tipoMateriaPrimaId String?  @map("tipo_materia_prima_id")
+
+  // MAO_DE_OBRA
+  horas Decimal? @db.Decimal(6, 2)
+
+  // ACORDO
+  regraCalculo   RegraAcordo? @map("regra_calculo")
+  regraParametro Decimal?     @map("regra_parametro") @db.Decimal(10, 4)
+
+  descricao String?
+  liquidado Boolean  @default(false)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  campanha  Campanha  @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+
+  @@map("contribuicoes")
+}
+
+model Cota {
+  id           String    @id @default(uuid())
+  campanhaId   String    @map("campanha_id")
+  associadoId  String    @map("associado_id")
+  valor        Decimal   @db.Decimal(10, 2)
+  data         DateTime  @default(now())
+  pago         Boolean   @default(false)
+  confirmadoEm DateTime? @map("confirmado_em")
+
+  campanha  Campanha  @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+
+  @@map("cotas")
+}
+
+model ItemAquisicao {
+  id                String               @id @default(uuid())
+  campanhaId        String               @map("campanha_id")
+  descricao         String
+  quantidade        Int                  @default(1)
+  valorEstimado     Decimal              @map("valor_estimado") @db.Decimal(10, 2)
+  tipoDestino       TipoDestinoAquisicao @map("tipo_destino")
+  equipamentoNome   String?              @map("equipamento_nome")
+  tipoMateriaPrimaId String?             @map("tipo_materia_prima_id")
+  criadoEm          DateTime             @default(now()) @map("criado_em")
+
+  campanha         Campanha          @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  tipoMateriaPrima TipoMateriaPrima? @relation(fields: [tipoMateriaPrimaId], references: [id])
+
+  @@map("itens_aquisicao")
+}
+
+model OrdemProducao {
+  id              String              @id @default(uuid())
+  campanhaId      String              @map("campanha_id")
+  produtoId       String              @map("produto_id")
+  quantidade      Int
+  status          StatusOrdemProducao @default(PENDENTE)
+  perdaPercentual Decimal             @default(0) @map("perda_percentual") @db.Decimal(5, 2)
+  produtosGerados Int?                @map("produtos_gerados")
+  criadoEm        DateTime            @default(now()) @map("criado_em")
+  executadoEm     DateTime?           @map("executado_em")
+
+  campanha            Campanha                @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  produto             Produto                 @relation(fields: [produtoId], references: [id])
+  materiaisConsumidos MaterialOrdemProducao[]
+
+  @@map("ordens_producao")
+}
+
+model MaterialOrdemProducao {
+  id                 String        @id @default(uuid())
+  ordemProducaoId    String        @map("ordem_producao_id")
+  tipoMateriaPrimaId String        @map("tipo_materia_prima_id")
+  quantidade         Decimal       @db.Decimal(10, 3)
+  unidade            UnidadeMedida
+
+  ordemProducao    OrdemProducao    @relation(fields: [ordemProducaoId], references: [id])
+  tipoMateriaPrima TipoMateriaPrima @relation(fields: [tipoMateriaPrimaId], references: [id])
+
+  @@map("materiais_ordem_producao")
+}
+
+model CustoCampanha {
+  id             String         @id @default(uuid())
+  campanhaId     String         @map("campanha_id")
+  descricao      String
+  valor          Decimal        @db.Decimal(10, 2)
+  categoria      CategoriaCusto
+  pagoPorId      String?        @map("pago_por_id")
+  comprovanteUrl String?        @map("comprovante_url")
+  criadoEm       DateTime       @default(now()) @map("criado_em")
+
+  campanha Campanha   @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  pagoPor  Associado? @relation(fields: [pagoPorId], references: [id], onDelete: SetNull)
+
+  @@map("custos_campanha")
+}
+
+model ApuracaoCampanha {
   id               String   @id @default(uuid())
-  loteProducaoId   String   @map("lote_producao_id")
-  associadoId      String   @map("associado_id")
-  percentual       Decimal  @db.Decimal(5, 2)
-  percentualManual Boolean  @default(false) @map("percentual_manual")
-  volume           Decimal? @db.Decimal(10, 3)
-  valorInvestido   Decimal? @map("valor_investido") @db.Decimal(10, 2)
+  campanhaId       String   @unique @map("campanha_id")
+  faturamentoTotal Decimal  @map("faturamento_total") @db.Decimal(10, 2)
+  custoTotal       Decimal  @map("custo_total") @db.Decimal(10, 2)
+  lucroLiquido     Decimal  @map("lucro_liquido") @db.Decimal(10, 2)
+  liquidadoEm      DateTime @default(now()) @map("liquidado_em")
 
-  lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
-  associado Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+  campanha Campanha         @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  rateios  RateioCampanha[]
 
-  @@unique([loteProducaoId, associadoId])
-  @@map("participacoes_lote")
+  @@map("apuracoes_campanha")
+}
+
+model RateioCampanha {
+  id                 String  @id @default(uuid())
+  apuracaoCampanhaId String  @map("apuracao_campanha_id")
+  associadoId        String  @map("associado_id")
+  contribuicaoTotal  Decimal @map("contribuicao_total") @db.Decimal(10, 2)
+  percentual         Decimal @db.Decimal(5, 4)
+  valorBruto         Decimal @map("valor_bruto") @db.Decimal(10, 2)
+  custosRateados     Decimal @map("custos_rateados") @db.Decimal(10, 2)
+  antecipacoes       Decimal @default(0) @db.Decimal(10, 2)
+  valorFinal         Decimal @map("valor_final") @db.Decimal(10, 2)
+
+  apuracao  ApuracaoCampanha @relation(fields: [apuracaoCampanhaId], references: [id], onDelete: Cascade)
+  associado Associado        @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+
+  @@unique([apuracaoCampanhaId, associadoId])
+  @@map("rateios_campanha")
 }
 
 model Colheita {
@@ -293,17 +538,19 @@ model Colheita {
   associadoId        String        @map("associado_id")
   tipoMateriaPrimaId String        @map("tipo_materia_prima_id")
   equipamentoId      String?       @map("equipamento_id")
-  loteProducaoId     String        @map("lote_producao_id")
+  campanhaId         String?       @map("campanha_id")
+  safraId            String?       @map("safra_id")
   volume             Decimal       @db.Decimal(10, 3)
   unidade            UnidadeMedida
   dataColheita       DateTime      @map("data_colheita")
   observacao         String?
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
-  associado        Associado        @relation(fields: [associadoId], references: [id], onDelete: Cascade)
-  tipoMateriaPrima TipoMateriaPrima @relation(fields: [tipoMateriaPrimaId], references: [id])
-  equipamento      Equipamento?     @relation(fields: [equipamentoId], references: [id])
-  lote             LoteProducao     @relation(fields: [loteProducaoId], references: [id])
+  associado        Associado         @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+  tipoMateriaPrima TipoMateriaPrima  @relation(fields: [tipoMateriaPrimaId], references: [id])
+  equipamento      Equipamento?      @relation(fields: [equipamentoId], references: [id])
+  campanha         Campanha?         @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  safra            Safra?            @relation(fields: [safraId], references: [id])
 
   @@map("colheitas")
 }
@@ -342,13 +589,14 @@ model Produto {
   preco        Decimal       @db.Decimal(10, 2)
   imagemUrl    String?       @map("imagem_url")
   status       StatusProduto @default(RASCUNHO)
-  loteOrigemId String?       @map("lote_origem_id")
+  campanhaId   String?       @map("campanha_id")
   criadoEm     DateTime      @default(now()) @map("criado_em")
 
-  loteOrigem  LoteProducao?      @relation(fields: [loteOrigemId], references: [id])
-  estoque     EstoqueProduto?
-  composicoes ComposicaoProduto[]
-  itensPedido ItemPedido[]
+  campanha       Campanha?          @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  estoque        EstoqueProduto?
+  composicoes    ComposicaoProduto[]
+  itensPedido    ItemPedido[]
+  ordensProducao OrdemProducao[]
 
   @@map("produtos")
 }
@@ -394,11 +642,13 @@ model Pedido {
 }
 
 model ItemPedido {
-  id            String  @id @default(uuid())
-  pedidoId      String  @map("pedido_id")
-  produtoId     String  @map("produto_id")
-  quantidade    Int
-  precoUnitario Decimal @map("preco_unitario") @db.Decimal(10, 2)
+  id              String  @id @default(uuid())
+  pedidoId        String  @map("pedido_id")
+  produtoId       String  @map("produto_id")
+  quantidade      Int
+  precoUnitario   Decimal @map("preco_unitario") @db.Decimal(10, 2)
+  campanhaCodigo  String? @map("campanha_codigo")
+  loteFabricacao  String? @map("lote_fabricacao")
 
   pedido  Pedido  @relation(fields: [pedidoId], references: [id])
   produto Produto @relation(fields: [produtoId], references: [id])
@@ -407,16 +657,16 @@ model ItemPedido {
 }
 
 model Venda {
-  id             String    @id @default(uuid())
-  loteProducaoId String    @map("lote_producao_id")
-  associadoId    String?   @map("associado_id")
-  tipo           TipoVenda
-  volume         Decimal   @db.Decimal(10, 3)
-  valor          Decimal   @db.Decimal(10, 2)
-  data           DateTime  @default(now())
+  id          String    @id @default(uuid())
+  campanhaId  String?   @map("campanha_id")
+  associadoId String?   @map("associado_id")
+  tipo        TipoVenda
+  volume      Decimal   @db.Decimal(10, 3)
+  valor       Decimal   @db.Decimal(10, 2)
+  data        DateTime  @default(now())
 
-  lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
-  associado Associado?   @relation(fields: [associadoId], references: [id], onDelete: SetNull)
+  campanha  Campanha?  @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  associado Associado? @relation(fields: [associadoId], references: [id], onDelete: SetNull)
 
   @@map("vendas")
 }
@@ -424,27 +674,18 @@ model Venda {
 model MovimentoFinanceiro {
   id             String                  @id @default(uuid())
   associadoId    String                  @map("associado_id")
-  loteProducaoId String                  @map("lote_producao_id")
+  campanhaId     String?                 @map("campanha_id")
   valor          Decimal                 @db.Decimal(10, 2)
   tipo           TipoMovimentoFinanceiro
+  descricao      String?
   data           DateTime                @default(now())
 
-  associado Associado    @relation(fields: [associadoId], references: [id], onDelete: Cascade)
-  lote      LoteProducao @relation(fields: [loteProducaoId], references: [id])
+  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+  campanha  Campanha? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
 
   @@map("movimentos_financeiros")
 }
 
-model ApuracaoLote {
-  id               String   @id @default(uuid())
-  loteProducaoId   String   @unique @map("lote_producao_id")
-  faturamentoTotal Decimal  @map("faturamento_total") @db.Decimal(10, 2)
-  fechadoEm        DateTime @default(now()) @map("fechado_em")
-
-  lote LoteProducao @relation(fields: [loteProducaoId], references: [id])
-
-  @@map("apuracoes_lote")
-}
 
 model Ata {
   id          String   @id @default(uuid())
@@ -501,6 +742,7 @@ model ConfiguracaoAssociacao {
   corPrimariaForeground String?  @map("cor_primaria_foreground")
   corSidebar            String?  @map("cor_sidebar")
   corAccent             String?  @map("cor_accent")
+  valorDiaria           Decimal? @map("valor_diaria") @db.Decimal(10, 2)
   atualizadoEm          DateTime @updatedAt @map("atualizado_em")
 
   @@map("configuracao_associacao")

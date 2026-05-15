@@ -53,10 +53,15 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = "item-aligned",
-  align = "center",
+  position = "popper",
+  align = "start",
+  emptyMessage = "Nenhuma opção disponível",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  emptyMessage?: string
+}) {
+  const isEmpty = React.Children.count(children) === 0
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -69,6 +74,7 @@ function SelectContent({
         )}
         position={position}
         align={align}
+        sideOffset={4}
         {...props}
       >
         <SelectScrollUpButton />
@@ -79,7 +85,13 @@ function SelectContent({
               "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
           )}
         >
-          {children}
+          {isEmpty ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground select-none">
+              {emptyMessage}
+            </div>
+          ) : (
+            children
+          )}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>

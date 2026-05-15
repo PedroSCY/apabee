@@ -3,7 +3,7 @@ import { apiFetch } from './client'
 export interface MovimentoFinanceiroResponse {
   id: string
   associadoId: string
-  loteProducaoId: string
+  campanhaId?: string
   valor: number
   tipo: 'ANTECIPACAO' | 'RATEIO_FINAL'
   data: string

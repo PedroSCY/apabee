@@ -26,7 +26,7 @@ export class AtualizarProdutoUseCase implements IAtualizarProdutoUseCase {
       preco: input.preco ?? produto.preco,
       imagemUrl: input.imagemUrl?.trim() ?? produto.imagemUrl,
       status: produto.status,
-      loteOrigemId: produto.loteOrigemId,
+      campanhaId: produto.campanhaId,
       criadoEm: produto.criadoEm,
     })
 

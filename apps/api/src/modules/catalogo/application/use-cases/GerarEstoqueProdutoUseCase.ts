@@ -83,9 +83,9 @@ export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
       )
     }
 
-    // Vincula o lote de origem ao produto quando informado
-    if (input.loteOrigemId) {
-      await this.produtoRepository.update(produto.comLoteOrigem(input.loteOrigemId))
+    // Vincula a campanha de origem ao produto quando informada
+    if (input.campanhaId) {
+      await this.produtoRepository.update(produto.comCampanha(input.campanhaId))
     }
 
     return estoque

@@ -1,16 +1,16 @@
 import { TipoMovimentoFinanceiro } from '@apa/shared'
 
-/** Propriedades da entidade MovimentoFinanceiro. */
 interface MovimentoFinanceiroProps {
   id: string
   associadoId: string
-  loteProducaoId: string
+  campanhaId?: string
   valor: number
   tipo: TipoMovimentoFinanceiro
+  descricao?: string
   data: Date
 }
 
-/** Movimento financeiro de um associado em um lote. */
+/** Movimento financeiro de um associado — antecipação, rateio final ou custo adiantado. */
 export class MovimentoFinanceiro {
   private readonly props: MovimentoFinanceiroProps
 
@@ -18,27 +18,14 @@ export class MovimentoFinanceiro {
     this.props = props
   }
 
-  get id(): string {
-    return this.props.id
-  }
-  get associadoId(): string {
-    return this.props.associadoId
-  }
-  get loteProducaoId(): string {
-    return this.props.loteProducaoId
-  }
-  get valor(): number {
-    return this.props.valor
-  }
-  get tipo(): TipoMovimentoFinanceiro {
-    return this.props.tipo
-  }
-  get data(): Date {
-    return this.props.data
-  }
+  get id(): string { return this.props.id }
+  get associadoId(): string { return this.props.associadoId }
+  get campanhaId(): string | undefined { return this.props.campanhaId }
+  get valor(): number { return this.props.valor }
+  get tipo(): TipoMovimentoFinanceiro { return this.props.tipo }
+  get descricao(): string | undefined { return this.props.descricao }
+  get data(): Date { return this.props.data }
 
-  /** Verifica se o movimento é do tipo antecipação. */
-  isAntecipacao(): boolean {
-    return this.props.tipo === TipoMovimentoFinanceiro.ANTECIPACAO
-  }
+  isAntecipacao(): boolean { return this.props.tipo === TipoMovimentoFinanceiro.ANTECIPACAO }
+  isRateioFinal(): boolean { return this.props.tipo === TipoMovimentoFinanceiro.RATEIO_FINAL }
 }

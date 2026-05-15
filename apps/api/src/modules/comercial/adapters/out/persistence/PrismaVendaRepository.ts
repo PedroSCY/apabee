@@ -13,9 +13,9 @@ export class PrismaVendaRepository implements IVendaRepository {
     return r ? this.toDomain(r) : null
   }
 
-  async findByLote(loteId: string): Promise<Venda[]> {
+  async findByCampanha(campanhaId: string): Promise<Venda[]> {
     const records = await this.prisma.venda.findMany({
-      where: { loteProducaoId: loteId },
+      where: { campanhaId },
       orderBy: { data: 'desc' },
     })
     return records.map((r) => this.toDomain(r))
@@ -33,8 +33,8 @@ export class PrismaVendaRepository implements IVendaRepository {
     const r = await this.prisma.venda.create({
       data: {
         id: venda.id,
-        loteProducaoId: venda.loteProducaoId,
-        associadoId: venda.associadoId,
+        campanhaId: venda.campanhaId ?? null,
+        associadoId: venda.associadoId ?? null,
         tipo: venda.tipo,
         volume: venda.volume,
         valor: venda.valor,
@@ -47,7 +47,7 @@ export class PrismaVendaRepository implements IVendaRepository {
   private toDomain(r: PrismaVenda): Venda {
     return new Venda({
       id: r.id,
-      loteProducaoId: r.loteProducaoId,
+      campanhaId: r.campanhaId ?? undefined,
       associadoId: r.associadoId ?? undefined,
       tipo: r.tipo as TipoVenda,
       volume: Number(r.volume),

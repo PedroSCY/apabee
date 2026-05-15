@@ -24,7 +24,7 @@ export const REPASSES_PENDENTES = [
 
 export const ASSOCIADO_STATS = {
   emprestimosAtivos: 2,
-  lotesAbertos: 1,
+  colheitasAno: 3,
   contribuicaoYTD: 340,
   receitaEstimada: 820,
 }

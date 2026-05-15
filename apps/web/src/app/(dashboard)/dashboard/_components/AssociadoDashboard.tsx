@@ -1,12 +1,12 @@
 'use client'
 
 import * as React from 'react'
-import { Package, Layers, Droplets, Users } from 'lucide-react'
+import { Package, BarChart2, Droplets } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMeuPerfil } from '@/hooks/useAssociados'
 import { useAtribuicoesPorAssociado } from '@/hooks/useAtribuicoes'
-import { useLotes, useColheitasPorAssociado, useParticipacoesPorAssociado } from '@/hooks/useProducao'
+import { useColheitasPorAssociado } from '@/hooks/useProducao'
 
 function StatCard({
   title,
@@ -43,12 +43,9 @@ export function AssociadoDashboard() {
   const meuId = meuPerfil?.id ?? ''
 
   const { data: atribuicoes = [], isLoading: loadingAtrib } = useAtribuicoesPorAssociado(meuId)
-  const { data: lotes = [], isLoading: loadingLotes } = useLotes()
   const { data: colheitas = [], isLoading: loadingColheitas } = useColheitasPorAssociado(meuId)
-  const { data: participacoes = [], isLoading: loadingPart } = useParticipacoesPorAssociado(meuId)
 
   const emprestimosAtivos = atribuicoes.filter((a) => a.status === 'ATIVO').length
-  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO').length
 
   const anoAtual = new Date().getFullYear()
   const colheitasAno = colheitas.filter(
@@ -62,7 +59,7 @@ export function AssociadoDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard
           title="Itens emprestados"
           value={emprestimosAtivos}
@@ -70,22 +67,16 @@ export function AssociadoDashboard() {
           loading={loading}
         />
         <StatCard
-          title="Lotes em aberto"
-          value={lotesAbertos}
-          icon={Layers}
-          loading={loadingLotes}
+          title="Colheitas este ano"
+          value={loadingColheitas ? '…' : colheitasAno.length}
+          icon={BarChart2}
+          loading={loadingColheitas && !meuId}
         />
         <StatCard
           title="Volume colhido (ano)"
           value={loadingColheitas ? '…' : volumeLabel}
           icon={Droplets}
           loading={loadingColheitas && !meuId}
-        />
-        <StatCard
-          title="Participações em lotes"
-          value={participacoes.length}
-          icon={Users}
-          loading={loadingPart && !meuId}
         />
       </div>
 

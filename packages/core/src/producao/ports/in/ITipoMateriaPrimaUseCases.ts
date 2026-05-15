@@ -1,5 +1,6 @@
 import { UnidadeMedida } from '@apa/shared'
 import { TipoMateriaPrima } from '../../entities/TipoMateriaPrima'
+import { EstoqueMateriaPrima } from '../../entities/EstoqueMateriaPrima'
 
 /** Dados para criação de um tipo de matéria-prima. */
 export interface CriarTipoMateriaPrimaInput {
@@ -21,4 +22,9 @@ export interface IListarTiposMateriaPrimaUseCase {
 /** Busca um tipo de matéria-prima pelo ID. */
 export interface IBuscarTipoMateriaPrimaUseCase {
   execute(id: string): Promise<TipoMateriaPrima>
+}
+
+/** Retorna todos os estoques de matéria-prima. */
+export interface IConsultarEstoqueUseCase {
+  execute(): Promise<EstoqueMateriaPrima[]>
 }

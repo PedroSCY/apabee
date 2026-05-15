@@ -5,7 +5,7 @@ interface MovimentacaoEstoqueProps {
   estoqueId: string;
   tipo: TipoMovimentacao;
   quantidade: number;
-  referenciaId: string;
+  referenciaId?: string;
   criadoEm: Date;
 }
 
@@ -21,7 +21,7 @@ export class MovimentacaoEstoque {
   get estoqueId(): string { return this.props.estoqueId; }
   get tipo(): TipoMovimentacao { return this.props.tipo; }
   get quantidade(): number { return this.props.quantidade; }
-  get referenciaId(): string { return this.props.referenciaId; }
+  get referenciaId(): string | undefined { return this.props.referenciaId; }
   get criadoEm(): Date { return this.props.criadoEm; }
 
   /** Retorna true se for movimentação de entrada. */
@@ -32,7 +32,7 @@ export class MovimentacaoEstoque {
   /** Retorna descrição legível da movimentação. */
   descrever(): string {
     const acao = this.isEntrada() ? 'Entrada' : 'Saída';
-    return `${acao} de ${this.props.quantidade} unidades — ref: ${this.props.referenciaId}`;
+    return `${acao} de ${this.props.quantidade} unidades — ref: ${this.props.referenciaId ?? 'N/A'}`;
   }
 
   toJSON() { return { ...this.props } }

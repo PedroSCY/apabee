@@ -13,6 +13,8 @@ interface ConfiguracaoAssociacaoProps {
   corPrimariaForeground?: string;
   corSidebar?: string;
   corAccent?: string;
+  // RN29: valor em R$ de 1 hora de mão-de-obra para conversão de contribuições MAO_DE_OBRA
+  valorDiaria?: number;
   atualizadoEm: Date;
 }
 
@@ -36,6 +38,7 @@ export class ConfiguracaoAssociacao {
   get corPrimariaForeground(): string | undefined { return this.props.corPrimariaForeground; }
   get corSidebar(): string | undefined { return this.props.corSidebar; }
   get corAccent(): string | undefined { return this.props.corAccent; }
+  get valorDiaria(): number | undefined { return this.props.valorDiaria; }
   get atualizadoEm(): Date { return this.props.atualizadoEm; }
 
   /** Atualiza campos da configuração e retorna nova instância. */

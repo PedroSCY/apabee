@@ -3,7 +3,7 @@ import { TipoVenda } from '@apa/shared';
 
 const make = (tipo: TipoVenda, associadoId?: string) =>
   new Venda({
-    id: 'uuid-1', loteProducaoId: 'lote-1',
+    id: 'uuid-1', campanhaId: 'campanha-1',
     tipo, volume: 10, valor: 500,
     data: new Date(), associadoId,
   });

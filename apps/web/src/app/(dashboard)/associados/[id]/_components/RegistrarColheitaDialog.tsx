@@ -30,12 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useLotes, useTiposMateriaPrima, useCriarColheita } from '@/hooks/useProducao'
+import { DecimalInput } from '@/components/shared'
+import { useTiposMateriaPrima, useCriarColheita } from '@/hooks/useProducao'
 
 const schema = z.object({
-  loteProducaoId: z.string().min(1, 'Selecione um lote.'),
   tipoMateriaPrimaId: z.string().min(1, 'Selecione o tipo.'),
-  volume: z.coerce.number().positive('Volume deve ser maior que zero.'),
+  volume: z.number().positive('Volume deve ser maior que zero.'),
   unidade: z.string().min(1, 'Informe a unidade.'),
   dataColheita: z.string().min(1, 'Informe a data.'),
   observacao: z.string().optional(),
@@ -50,15 +50,12 @@ interface Props {
 }
 
 export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Props) {
-  const { data: lotes = [] } = useLotes()
   const { data: tipos = [] } = useTiposMateriaPrima()
   const { mutateAsync: criarColheita, isPending } = useCriarColheita()
 
-  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO')
-
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { loteProducaoId: '', tipoMateriaPrimaId: '', volume: 0, unidade: 'kg', dataColheita: '', observacao: '' },
+    defaultValues: { tipoMateriaPrimaId: '', unidade: 'kg', dataColheita: '', observacao: '' },
   })
 
   async function onSubmit(data: FormData) {
@@ -87,21 +84,6 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="loteProducaoId" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lote</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione um lote aberto" /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {lotesAbertos.map((l) => (
-                      <SelectItem key={l.id} value={l.id}>{l.periodo}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-
             <FormField control={form.control} name="tipoMateriaPrimaId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo de matéria-prima</FormLabel>
@@ -118,12 +100,16 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
             )} />
 
             <div className="grid grid-cols-2 gap-3">
-              <FormField control={form.control} name="volume" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Volume</FormLabel>
-                  <FormControl><Input type="number" step="0.01" min="0" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormField control={form.control} name="volume" render={({ field, fieldState }) => (
+                <DecimalInput
+                  id="volume"
+                  label="Volume"
+                  decimals={3}
+                  min={0.001}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
               )} />
               <FormField control={form.control} name="unidade" render={({ field }) => (
                 <FormItem>
@@ -144,7 +130,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
 
             <FormField control={form.control} name="observacao" render={({ field }) => (
               <FormItem>
-                <FormLabel>Observação</FormLabel>
+                <FormLabel>Observação <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel>
                 <FormControl><Textarea rows={2} className="resize-none" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>

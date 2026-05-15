@@ -12,6 +12,11 @@ export class PrismaItemPedidoRepository implements IItemPedidoRepository {
     return records.map((r) => this.toDomain(r))
   }
 
+  async findByCampanhaCodigo(campanhaCodigo: string): Promise<ItemPedido[]> {
+    const records = await this.prisma.itemPedido.findMany({ where: { campanhaCodigo } })
+    return records.map((r) => this.toDomain(r))
+  }
+
   async saveMany(itens: ItemPedido[]): Promise<ItemPedido[]> {
     await this.prisma.itemPedido.createMany({
       data: itens.map((i) => ({
@@ -20,6 +25,7 @@ export class PrismaItemPedidoRepository implements IItemPedidoRepository {
         produtoId: i.produtoId,
         quantidade: i.quantidade,
         precoUnitario: i.precoUnitario,
+        campanhaCodigo: i.campanhaCodigo,
       })),
     })
     return itens
@@ -32,6 +38,7 @@ export class PrismaItemPedidoRepository implements IItemPedidoRepository {
       produtoId: r.produtoId,
       quantidade: r.quantidade,
       precoUnitario: Number(r.precoUnitario),
+      campanhaCodigo: r.campanhaCodigo ?? undefined,
     })
   }
 }

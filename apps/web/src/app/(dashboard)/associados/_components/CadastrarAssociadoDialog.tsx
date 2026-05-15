@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { PhoneInput } from '@/components/shared'
 import { useCriarUsuario, useCriarAssociado } from '@/hooks/useAssociados'
 
 interface Props {
@@ -121,17 +122,14 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="telefone">Telefone</Label>
-              <Input
-                id="telefone"
-                name="telefone"
-                placeholder="(34) 99999-0000"
-                value={form.telefone}
-                onChange={handleChange}
-                disabled={isPending}
-              />
-            </div>
+            <PhoneInput
+              id="telefone"
+              name="telefone"
+              label="Telefone"
+              value={form.telefone}
+              onChange={(v) => setForm((p) => ({ ...p, telefone: v }))}
+              disabled={isPending}
+            />
 
             <div className="space-y-1.5">
               <Label htmlFor="dataIngresso">Data de ingresso</Label>

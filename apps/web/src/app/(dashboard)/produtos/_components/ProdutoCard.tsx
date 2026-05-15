@@ -33,14 +33,14 @@ import {
 import {
   usePublicarProduto,
   useArquivarProduto,
+  useDeletarProduto,
   useGerarEstoque,
   useComposicoes,
   useAdicionarComposicao,
   useRemoverComposicao,
   useTiposMateriaPrima,
-  useCapacidadeLote,
+  useCapacidadeCampanha,
 } from '@/hooks/useCatalogo'
-import { useLotes } from '@/hooks/useProducao'
 import type { ProdutoResponse } from '@/lib/api/catalogo'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -206,27 +206,25 @@ function ComposicaoDialog({
 
 function AdminMenu({ produto }: { produto: ProdutoResponse }) {
   const [confirmArquivar, setConfirmArquivar] = React.useState(false)
+  const [confirmDeletar, setConfirmDeletar] = React.useState(false)
   const [gerarOpen, setGerarOpen] = React.useState(false)
   const [composicaoOpen, setComposicaoOpen] = React.useState(false)
   const [qtdGerar, setQtdGerar] = React.useState('')
-  const [loteId, setLoteId] = React.useState<string>('')
 
   const { mutateAsync: publicar, isPending: publicando } = usePublicarProduto()
   const { mutateAsync: arquivar, isPending: arquivando } = useArquivarProduto()
+  const { mutateAsync: deletar, isPending: deletando } = useDeletarProduto()
   const { mutateAsync: gerar, isPending: gerando } = useGerarEstoque()
-  const { data: lotes = [] } = useLotes()
-  const { data: capacidade } = useCapacidadeLote(produto.id, loteId || null)
+  const { data: capacidade } = useCapacidadeCampanha(produto.id, produto.campanhaId ?? null)
 
-  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO')
   const capacidadeMaxima = capacidade?.capacidadeMaxima ?? null
   const qtdNum = Number(qtdGerar)
   const acimaDaCapacidade = capacidadeMaxima !== null && qtdNum > capacidadeMaxima
 
-  const isPending = publicando || arquivando || gerando
+  const isPending = publicando || arquivando || gerando || deletando
 
   function resetGerar() {
     setQtdGerar('')
-    setLoteId('')
   }
 
   async function handlePublicar() {
@@ -247,10 +245,19 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
     }
   }
 
+  async function handleDeletar() {
+    try {
+      await deletar(produto.id)
+      toast.success('Produto excluído.')
+    } catch {
+      toast.error('Erro ao excluir produto.')
+    }
+  }
+
   async function handleGerarEstoque() {
     if (!qtdNum || qtdNum <= 0 || acimaDaCapacidade) return
     try {
-      await gerar({ id: produto.id, quantidade: qtdNum, loteOrigemId: loteId || undefined })
+      await gerar({ id: produto.id, quantidade: qtdNum, campanhaId: produto.campanhaId })
       toast.success(`${qtdNum} unidades adicionadas ao estoque.`)
       setGerarOpen(false)
       resetGerar()
@@ -290,6 +297,17 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
               </DropdownMenuItem>
             </>
           )}
+          {(produto.status === 'RASCUNHO' || produto.status === 'ARQUIVADO') && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setConfirmDeletar(true)}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Excluir permanentemente
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -304,6 +322,17 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
         isPending={arquivando}
       />
 
+      <ConfirmDialog
+        open={confirmDeletar}
+        onOpenChange={setConfirmDeletar}
+        title="Excluir produto"
+        description={`Deseja excluir permanentemente "${produto.nome}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={handleDeletar}
+        isPending={deletando}
+      />
+
       <Dialog open={gerarOpen} onOpenChange={(v) => { if (!gerando) { setGerarOpen(v); if (!v) resetGerar() } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -311,25 +340,11 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
             <DialogDescription>{produto.nome}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="lote-origem">Lote de origem <span className="text-muted-foreground">(opcional)</span></Label>
-              <Select value={loteId} onValueChange={setLoteId} disabled={gerando}>
-                <SelectTrigger id="lote-origem">
-                  <SelectValue placeholder="Selecione um lote..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Sem vínculo com lote</SelectItem>
-                  {lotesAbertos.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.periodo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {loteId && capacidadeMaxima !== null && (
-                <p className={`text-xs ${acimaDaCapacidade ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  Máximo: {capacidadeMaxima} unidades disponíveis neste lote
-                </p>
-              )}
-            </div>
+            {capacidadeMaxima !== null && (
+              <p className="text-xs text-muted-foreground">
+                Capacidade disponível na campanha: <span className="font-medium">{capacidadeMaxima} unidades</span>
+              </p>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="qtd-gerar">Quantidade *</Label>
               <Input
@@ -344,7 +359,7 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
                 className={acimaDaCapacidade ? 'border-destructive' : ''}
               />
               {acimaDaCapacidade && (
-                <p className="text-xs text-destructive">Quantidade excede a capacidade do lote.</p>
+                <p className="text-xs text-destructive">Quantidade excede a capacidade da campanha.</p>
               )}
             </div>
           </div>

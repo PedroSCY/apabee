@@ -1,0 +1,13 @@
+# Uso: docker compose up api
+# Testa a imagem de produção da API localmente antes de subir para o Railway.
+# O contexto de build é a raiz do monorepo (onde está este arquivo).
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - apps/api/.env

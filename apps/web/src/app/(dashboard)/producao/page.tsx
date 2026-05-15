@@ -21,8 +21,8 @@ export default async function ProducaoPage() {
         title="Produção"
         description={
           isAdmin
-            ? 'Gerencie colheitas, lotes e participações'
-            : 'Acompanhe seus lotes e contribuições'
+            ? 'Gerencie colheitas e o catálogo de tipos de matéria-prima'
+            : 'Acompanhe suas colheitas e contribuições em campanhas'
         }
       />
       {isAdmin ? <AdminProducao /> : <AssociadoProducao />}

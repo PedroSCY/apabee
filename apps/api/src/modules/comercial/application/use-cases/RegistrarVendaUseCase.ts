@@ -14,7 +14,7 @@ export class RegistrarVendaUseCase implements IRegistrarVendaUseCase {
   async execute(input: RegistrarVendaInput): Promise<Venda> {
     const venda = new Venda({
       id: randomUUID(),
-      loteProducaoId: input.loteProducaoId,
+      campanhaId: input.campanhaId,
       tipo: input.tipo,
       volume: input.volume,
       valor: input.valor,

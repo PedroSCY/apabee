@@ -30,6 +30,7 @@ import {
   IConsultarCapacidadeUseCase,
   ICriarComposicaoProdutoUseCase,
   ICriarProdutoUseCase,
+  IDeletarProdutoUseCase,
   IEstoqueProdutoRepository,
   IGerarEstoqueProdutoUseCase,
   IListarProdutosUseCase,
@@ -43,6 +44,7 @@ import {
   ADICIONAR_COMPOSICAO_USE_CASE,
   ARQUIVAR_PRODUTO_USE_CASE,
   ATUALIZAR_PRODUTO_USE_CASE,
+  DELETAR_PRODUTO_USE_CASE,
   BUSCAR_PRODUTO_USE_CASE,
   CONSULTAR_CAPACIDADE_USE_CASE,
   CRIAR_PRODUTO_USE_CASE,
@@ -65,6 +67,7 @@ export class ProdutosController {
     @Inject(ATUALIZAR_PRODUTO_USE_CASE) private readonly atualizar: IAtualizarProdutoUseCase,
     @Inject(PUBLICAR_PRODUTO_USE_CASE) private readonly publicar: IPublicarProdutoUseCase,
     @Inject(ARQUIVAR_PRODUTO_USE_CASE) private readonly arquivar: IArquivarProdutoUseCase,
+    @Inject(DELETAR_PRODUTO_USE_CASE) private readonly deletar: IDeletarProdutoUseCase,
     @Inject(GERAR_ESTOQUE_PRODUTO_USE_CASE) private readonly gerarEstoque: IGerarEstoqueProdutoUseCase,
     @Inject(ESTOQUE_PRODUTO_REPOSITORY) private readonly estoqueRepo: IEstoqueProdutoRepository,
     @Inject(ADICIONAR_COMPOSICAO_USE_CASE) private readonly adicionarComposicao: ICriarComposicaoProdutoUseCase,
@@ -137,13 +140,23 @@ export class ProdutosController {
     await this.arquivar.execute(id)
   }
 
-  @ApiOperation({ summary: 'Consultar capacidade máxima de extração a partir de um lote (ADMIN)' })
+  @ApiOperation({ summary: 'Excluir produto permanentemente — apenas RASCUNHO ou ARQUIVADO (ADMIN)' })
   @ApiParam({ name: 'id', description: 'UUID do produto' })
-  @ApiQuery({ name: 'loteId', required: true, description: 'UUID do lote de origem' })
+  @ApiNoContentResponse()
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleUsuario.ADMIN)
+  async deletarHandler(@Param('id') id: string) {
+    await this.deletar.execute(id)
+  }
+
+  @ApiOperation({ summary: 'Consultar capacidade máxima de extração a partir de uma campanha (ADMIN)' })
+  @ApiParam({ name: 'id', description: 'UUID do produto' })
+  @ApiQuery({ name: 'campanhaId', required: true, description: 'UUID da campanha de origem' })
   @Get(':id/capacidade')
   @Roles(RoleUsuario.ADMIN)
-  async capacidadeHandler(@Param('id') id: string, @Query('loteId') loteId: string) {
-    return this.consultarCapacidade.execute({ produtoId: id, loteId })
+  async capacidadeHandler(@Param('id') id: string, @Query('campanhaId') campanhaId: string) {
+    return this.consultarCapacidade.execute({ produtoId: id, campanhaId })
   }
 
   @ApiOperation({ summary: 'Gerar estoque de produto (ADMIN) — RN05' })
@@ -154,7 +167,7 @@ export class ProdutosController {
     const estoque = await this.gerarEstoque.execute({
       produtoId: id,
       quantidade: dto.quantidade,
-      loteOrigemId: dto.loteOrigemId,
+      campanhaId: dto.campanhaId,
     })
     return this.toEstoqueResponse(estoque)
   }
@@ -194,7 +207,7 @@ export class ProdutosController {
       preco: p.preco,
       imagemUrl: p.imagemUrl,
       status: p.status,
-      loteOrigemId: p.loteOrigemId,
+      campanhaId: p.campanhaId,
       criadoEm: p.criadoEm,
     }
   }

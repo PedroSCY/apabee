@@ -20,7 +20,7 @@ export interface CriarPedidoInput {
 
 /** Dados de entrada para registrar uma venda. */
 export interface RegistrarVendaInput {
-  loteProducaoId: string
+  campanhaId?: string
   tipo: TipoVenda
   volume: number
   valor: number
@@ -65,7 +65,7 @@ export interface IRegistrarVendaUseCase {
   execute(input: RegistrarVendaInput): Promise<Venda>
 }
 
-/** Use case: listar vendas com filtros por lote e/ou associado. */
+/** Use case: listar vendas com filtros por campanha e/ou associado. */
 export interface IListarVendasUseCase {
-  execute(options: { loteId?: string; associadoId?: string }): Promise<Venda[]>
+  execute(options: { campanhaId?: string; associadoId?: string }): Promise<Venda[]>
 }

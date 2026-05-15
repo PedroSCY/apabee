@@ -7,8 +7,8 @@ export class GerarEstoqueDto {
   @Min(1)
   quantidade!: number
 
-  @ApiPropertyOptional({ description: 'UUID do lote de origem da matéria-prima' })
+  @ApiPropertyOptional({ description: 'UUID da campanha de origem da matéria-prima' })
   @IsOptional()
   @IsUUID()
-  loteOrigemId?: string
+  campanhaId?: string
 }

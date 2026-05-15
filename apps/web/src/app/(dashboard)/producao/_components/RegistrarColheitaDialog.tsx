@@ -23,14 +23,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { useCriarColheita, useLotes, useTiposMateriaPrima } from '@/hooks/useProducao'
+import { DecimalInput } from '@/components/shared'
+import { useCriarColheita, useTiposMateriaPrima } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
 import type { ApiError } from '@/lib/api/client'
 
 const schema = z.object({
   associadoId: z.string().min(1, 'Selecione um associado'),
   tipoMateriaPrimaId: z.string().min(1, 'Selecione o tipo'),
-  loteProducaoId: z.string().min(1, 'Selecione um lote'),
   volume: z.number().positive('Volume deve ser positivo'),
   unidade: z.string().min(1),
   dataColheita: z.string().min(1, 'Informe a data'),
@@ -42,15 +42,14 @@ type FormData = z.infer<typeof schema>
 interface Props {
   open: boolean
   onOpenChange: (o: boolean) => void
+  /** Vincula a colheita a uma campanha específica (opcional — sem vínculo vai ao pool). */
+  campanhaId?: string
 }
 
-export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
+export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Props) {
   const { mutateAsync, isPending } = useCriarColheita()
   const { data: tipos = [] } = useTiposMateriaPrima()
-  const { data: lotes = [] } = useLotes()
   const { data: associados = [] } = useAssociados()
-
-  const lotesAbertos = lotes.filter((l) => l.status === 'ABERTO')
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -64,7 +63,11 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
 
   async function onSubmit(data: FormData) {
     try {
-      await mutateAsync({ ...data, unidade: tipoSelecionado?.unidade ?? data.unidade })
+      await mutateAsync({
+        ...data,
+        unidade: tipoSelecionado?.unidade ?? data.unidade,
+        campanhaId,
+      })
       toast.success('Colheita registrada e estoque atualizado!')
       onOpenChange(false)
     } catch (e) {
@@ -79,13 +82,20 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
           <DialogTitle>Registrar Colheita</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+          {!campanhaId && (
+            <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+              Colheita sem campanha — volume vai direto ao pool da associação (RN14).
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label>Associado</Label>
             <Controller
               control={control}
               name="associadoId"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>
@@ -101,33 +111,12 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label>Lote (aberto)</Label>
-            <Controller
-              control={control}
-              name="loteProducaoId"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {lotesAbertos.map((l) => (
-                      <SelectItem key={l.id} value={l.id}>{l.periodo} — {l.tipo}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.loteProducaoId && <p className="text-xs text-destructive">{errors.loteProducaoId.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
             <Label>Tipo de Matéria-Prima</Label>
             <Controller
               control={control}
               name="tipoMateriaPrimaId"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>
@@ -143,18 +132,22 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="volume">Volume</Label>
-              <Input
-                id="volume"
-                type="number"
-                step="0.001"
-                {...register('volume', { valueAsNumber: true })}
-                placeholder="0.000"
-                disabled={isPending}
-              />
-              {errors.volume && <p className="text-xs text-destructive">{errors.volume.message}</p>}
-            </div>
+            <Controller
+              control={control}
+              name="volume"
+              render={({ field, fieldState }) => (
+                <DecimalInput
+                  id="volume"
+                  label="Volume"
+                  decimals={3}
+                  min={0.001}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  disabled={isPending}
+                />
+              )}
+            />
             <div className="space-y-1.5">
               <Label>Unidade</Label>
               <Input readOnly value={tipoSelecionado?.unidade ?? '—'} className="bg-muted text-muted-foreground" />
@@ -168,7 +161,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="observacao">Observação (opcional)</Label>
+            <Label htmlFor="observacao">Observação <span className="text-muted-foreground">(opcional)</span></Label>
             <Textarea
               id="observacao"
               rows={2}

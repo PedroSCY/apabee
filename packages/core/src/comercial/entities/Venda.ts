@@ -1,8 +1,8 @@
-import {TipoVenda} from "@apa/shared"
+import { TipoVenda } from '@apa/shared'
 
 interface VendaProps {
   id: string;
-  loteProducaoId: string;
+  campanhaId?: string;
   associadoId?: string;
   tipo: TipoVenda;
   volume: number;
@@ -19,14 +19,13 @@ export class Venda {
   }
 
   get id(): string { return this.props.id; }
-  get loteProducaoId(): string { return this.props.loteProducaoId; }
+  get campanhaId(): string | undefined { return this.props.campanhaId; }
   get associadoId(): string | undefined { return this.props.associadoId; }
   get tipo(): TipoVenda { return this.props.tipo; }
   get volume(): number { return this.props.volume; }
   get valor(): number { return this.props.valor; }
   get data(): Date { return this.props.data; }
 
-  /** Verifica se a venda é do tipo individual. */
   isIndividual(): boolean {
     return this.props.tipo === TipoVenda.INDIVIDUAL;
   }

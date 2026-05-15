@@ -52,7 +52,7 @@ export class PrismaEstoqueMateriaPrimaRepository implements IEstoqueMateriaPrima
         estoqueId: mov.estoqueId,
         tipo: mov.tipo,
         quantidade: mov.quantidade,
-        referenciaId: mov.referenciaId,
+        referenciaId: mov.referenciaId ?? '',
         criadoEm: mov.criadoEm,
       },
     })

@@ -103,6 +103,7 @@ export interface AtualizarConfiguracaoInput {
   corPrimariaForeground?: string
   corSidebar?: string
   corAccent?: string
+  valorDiaria?: number
 }
 
 /** Caso de uso: obter configuração da associação. */

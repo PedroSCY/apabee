@@ -8,8 +8,8 @@ export class ListarVendasUseCase implements IListarVendasUseCase {
     @Inject(VENDA_REPOSITORY) private readonly vendaRepo: IVendaRepository,
   ) {}
 
-  async execute(options: { loteId?: string; associadoId?: string }): Promise<Venda[]> {
-    if (options.loteId) return this.vendaRepo.findByLote(options.loteId)
+  async execute(options: { campanhaId?: string; associadoId?: string }): Promise<Venda[]> {
+    if (options.campanhaId) return this.vendaRepo.findByCampanha(options.campanhaId)
     if (options.associadoId) return this.vendaRepo.findByAssociado(options.associadoId)
     return []
   }

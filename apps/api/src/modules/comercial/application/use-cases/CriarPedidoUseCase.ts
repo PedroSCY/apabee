@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { randomUUID } from 'crypto'
 import {
   CriarPedidoInput,
+  ICampanhaRepository,
   ICriarPedidoUseCase,
   IEstoqueProdutoRepository,
   IItemPedidoRepository,
@@ -14,6 +15,9 @@ import { StatusPedido } from '@apa/shared'
 import { ITEM_PEDIDO_REPOSITORY, PEDIDO_REPOSITORY } from '../../comercial.tokens'
 import { ESTOQUE_PRODUTO_REPOSITORY, PRODUTO_REPOSITORY } from '../../../catalogo/catalogo.tokens'
 
+// Token local para evitar importação circular com o módulo producao (RN24)
+const CAMPANHA_REPOSITORY = 'CAMPANHA_REPOSITORY'
+
 @Injectable()
 export class CriarPedidoUseCase implements ICriarPedidoUseCase {
   constructor(
@@ -21,6 +25,7 @@ export class CriarPedidoUseCase implements ICriarPedidoUseCase {
     @Inject(ITEM_PEDIDO_REPOSITORY) private readonly itemRepo: IItemPedidoRepository,
     @Inject(PRODUTO_REPOSITORY) private readonly produtoRepo: IProdutoRepository,
     @Inject(ESTOQUE_PRODUTO_REPOSITORY) private readonly estoqueRepo: IEstoqueProdutoRepository,
+    @Inject(CAMPANHA_REPOSITORY) private readonly campanhaRepo: ICampanhaRepository,
   ) {}
 
   async execute(input: CriarPedidoInput): Promise<Pedido> {
@@ -39,12 +44,20 @@ export class CriarPedidoUseCase implements ICriarPedidoUseCase {
         throw new BadRequestException(`Saldo insuficiente para "${produto.nome}".`)
       }
 
+      // RN24: registra campanhaCodigo no item para rastreabilidade ANVISA
+      let campanhaCodigo: string | undefined
+      if (produto.campanhaId) {
+        const campanha = await this.campanhaRepo.findById(produto.campanhaId)
+        campanhaCodigo = campanha?.codigo
+      }
+
       itens.push(new ItemPedido({
         id: randomUUID(),
         pedidoId,
         produtoId: itemIn.produtoId,
         quantidade: itemIn.quantidade,
         precoUnitario: produto.preco,
+        campanhaCodigo,
       }))
     }
 

@@ -33,23 +33,23 @@ export class VendasController {
     return this.toResponse(venda)
   }
 
-  @ApiOperation({ summary: 'Listar vendas por lote ou associado (ADMIN)' })
-  @ApiQuery({ name: 'loteId', required: false })
+  @ApiOperation({ summary: 'Listar vendas por campanha ou associado (ADMIN)' })
+  @ApiQuery({ name: 'campanhaId', required: false })
   @ApiQuery({ name: 'associadoId', required: false })
   @Get()
   @Roles(RoleUsuario.ADMIN)
   async listarHandler(
-    @Query('loteId') loteId?: string,
+    @Query('campanhaId') campanhaId?: string,
     @Query('associadoId') associadoId?: string,
   ) {
-    const lista = await this.listar.execute({ loteId, associadoId })
+    const lista = await this.listar.execute({ campanhaId, associadoId })
     return lista.map((v) => this.toResponse(v))
   }
 
   private toResponse(v: Venda) {
     return {
       id: v.id,
-      loteProducaoId: v.loteProducaoId,
+      campanhaId: v.campanhaId,
       associadoId: v.associadoId,
       tipo: v.tipo,
       volume: v.volume,

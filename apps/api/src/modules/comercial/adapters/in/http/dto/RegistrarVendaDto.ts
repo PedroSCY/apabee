@@ -3,9 +3,10 @@ import { IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsUUID } from '
 import { TipoVenda } from '@apa/shared'
 
 export class RegistrarVendaDto {
-  @ApiProperty({ example: 'uuid-do-lote' })
+  @ApiPropertyOptional({ example: 'uuid-da-campanha' })
+  @IsOptional()
   @IsUUID()
-  loteProducaoId!: string
+  campanhaId?: string
 
   @ApiProperty({ enum: TipoVenda })
   @IsEnum(TipoVenda)

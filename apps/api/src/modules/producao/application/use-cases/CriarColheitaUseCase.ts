@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import {
   Colheita,
   CriarColheitaInput,
@@ -6,7 +6,6 @@ import {
   ICriarColheitaUseCase,
   IColheitaRepository,
   IEstoqueMateriaPrimaRepository,
-  ILoteProducaoRepository,
   MovimentacaoEstoque,
 } from '@apa/core'
 import { TipoMovimentacao } from '@apa/shared'
@@ -14,33 +13,28 @@ import { randomUUID } from 'crypto'
 import {
   COLHEITA_REPOSITORY,
   ESTOQUE_MATERIA_PRIMA_REPOSITORY,
-  LOTE_PRODUCAO_REPOSITORY,
 } from '../../producao.tokens'
 
 @Injectable()
-/** Registra uma colheita e atualiza o estoque de matéria-prima (RN03). */
+/** Registra uma colheita e adiciona o volume ao pool (EstoqueMateriaPrima — RN03/RN14). */
 export class CriarColheitaUseCase implements ICriarColheitaUseCase {
   constructor(
     @Inject(COLHEITA_REPOSITORY)
     private readonly colheitaRepository: IColheitaRepository,
-    @Inject(LOTE_PRODUCAO_REPOSITORY)
-    private readonly loteRepository: ILoteProducaoRepository,
     @Inject(ESTOQUE_MATERIA_PRIMA_REPOSITORY)
     private readonly estoqueRepository: IEstoqueMateriaPrimaRepository,
   ) {}
 
-  /** Executa o registro da colheita com validação do lote e entrada automática no estoque. */
   async execute(input: CriarColheitaInput): Promise<Colheita> {
-    const lote = await this.loteRepository.findById(input.loteProducaoId)
-    if (!lote) throw new NotFoundException('Lote de produção não encontrado')
-    if (!lote.estaAberto()) throw new BadRequestException('Lote não está aberto para registros')
+    if (input.volume <= 0) throw new BadRequestException('Volume deve ser maior que zero')
 
     const colheita = new Colheita({
       id: randomUUID(),
       associadoId: input.associadoId,
       tipoMateriaPrimaId: input.tipoMateriaPrimaId,
       equipamentoId: input.equipamentoId,
-      loteProducaoId: input.loteProducaoId,
+      campanhaId: input.campanhaId,
+      safraId: input.safraId,
       volume: input.volume,
       unidade: input.unidade,
       dataColheita: input.dataColheita,
@@ -48,11 +42,9 @@ export class CriarColheitaUseCase implements ICriarColheitaUseCase {
       criadoEm: new Date(),
     })
 
-    if (!colheita.validar()) throw new BadRequestException('Volume deve ser maior que zero')
-
     const salva = await this.colheitaRepository.save(colheita)
 
-    // RN03 — entrada automática no estoque ao registrar colheita
+    // RN03 — toda colheita alimenta o pool (EstoqueMateriaPrima)
     const estoqueExistente = await this.estoqueRepository.findByTipo(input.tipoMateriaPrimaId)
     let estoque: EstoqueMateriaPrima
     if (estoqueExistente) {

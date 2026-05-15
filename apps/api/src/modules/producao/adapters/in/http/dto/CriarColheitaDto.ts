@@ -16,9 +16,15 @@ export class CriarColheitaDto {
   @IsUUID()
   equipamentoId?: string
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsUUID()
-  loteProducaoId!: string
+  campanhaId?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  safraId?: string
 
   @ApiProperty({ example: 12.5 })
   @IsNumber()

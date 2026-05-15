@@ -4,7 +4,7 @@ import { UnidadeMedida } from '@apa/shared';
 const make = (volume = 10) =>
   new Colheita({
     id: 'uuid-1', associadoId: 'assoc-1',
-    tipoMateriaPrimaId: 'tipo-1', loteProducaoId: 'lote-1',
+    tipoMateriaPrimaId: 'tipo-1',
     volume, unidade: UnidadeMedida.KG,
     dataColheita: new Date(), criadoEm: new Date(),
   });

@@ -15,13 +15,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CurrencyInput } from '@/components/shared'
 import { useProdutos, useCriarProduto } from '@/hooks/useCatalogo'
 import { ProdutoCard } from './ProdutoCard'
 
 // ─── Dialog de criação (admin) ────────────────────────────────────────────────
 
 function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [form, setForm] = React.useState({ nome: '', descricao: '', preco: '', imagemUrl: '' })
+  const [form, setForm] = React.useState<{ nome: string; descricao: string; preco: number | undefined; imagemUrl: string }>({ nome: '', descricao: '', preco: undefined, imagemUrl: '' })
   const { mutateAsync: criar, isPending } = useCriarProduto()
 
   function handleOpenChange(v: boolean) {
@@ -31,12 +32,11 @@ function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    const preco = Number(form.preco)
-    if (!preco || preco <= 0) { toast.error('Preço inválido.'); return }
+    if (!form.preco || form.preco <= 0) { toast.error('Preço inválido.'); return }
     try {
-      await criar({ nome: form.nome, descricao: form.descricao, preco, imagemUrl: form.imagemUrl || undefined })
+      await criar({ nome: form.nome, descricao: form.descricao, preco: form.preco, imagemUrl: form.imagemUrl || undefined })
       toast.success('Produto criado em rascunho.')
-      setForm({ nome: '', descricao: '', preco: '', imagemUrl: '' })
+      setForm({ nome: '', descricao: '', preco: undefined, imagemUrl: '' })
       onOpenChange(false)
     } catch {
       toast.error('Erro ao criar produto.')
@@ -78,20 +78,12 @@ function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="p-preco">Preço (R$) *</Label>
-            <Input
-              id="p-preco"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={form.preco}
-              onChange={(e) => setForm((p) => ({ ...p, preco: e.target.value }))}
-              required
-              placeholder="0,00"
-              disabled={isPending}
-            />
-          </div>
+          <CurrencyInput
+            label="Preço (R$) *"
+            value={form.preco}
+            onChange={(v) => setForm((p) => ({ ...p, preco: v }))}
+            disabled={isPending}
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="p-img">URL da Imagem</Label>

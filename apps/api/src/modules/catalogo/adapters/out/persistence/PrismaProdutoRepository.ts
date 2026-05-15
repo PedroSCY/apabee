@@ -41,7 +41,7 @@ export class PrismaProdutoRepository implements IProdutoRepository {
         preco: produto.preco,
         imagemUrl: produto.imagemUrl,
         status: produto.status,
-        loteOrigemId: produto.loteOrigemId,
+        campanhaId: produto.campanhaId,
         criadoEm: produto.criadoEm,
       },
     })
@@ -58,10 +58,14 @@ export class PrismaProdutoRepository implements IProdutoRepository {
         preco: produto.preco,
         imagemUrl: produto.imagemUrl,
         status: produto.status,
-        loteOrigemId: produto.loteOrigemId,
+        campanhaId: produto.campanhaId,
       },
     })
     return this.toDomain(r)
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.produto.delete({ where: { id } })
   }
 
   private toDomain(r: PrismaProduto): Produto {
@@ -73,7 +77,7 @@ export class PrismaProdutoRepository implements IProdutoRepository {
       preco: Number(r.preco),
       imagemUrl: r.imagemUrl ?? undefined,
       status: r.status as StatusProduto,
-      loteOrigemId: r.loteOrigemId ?? undefined,
+      campanhaId: r.campanhaId ?? undefined,
       criadoEm: r.criadoEm,
     })
   }
