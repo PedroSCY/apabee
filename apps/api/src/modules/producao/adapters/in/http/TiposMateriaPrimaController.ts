@@ -1,10 +1,12 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Post } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { RoleUsuario } from '@apa/shared'
 import {
   IBuscarTipoMateriaPrimaUseCase,
   IConsultarEstoqueUseCase,
   ICriarTipoMateriaPrimaUseCase,
+  IDeletarTipoMateriaPrimaUseCase,
+  IDeletarItemPoolUseCase,
   IListarConsumiveisUseCase,
   IListarTiposMateriaPrimaUseCase,
   IMigrarInsumosConsumiveisUseCase,
@@ -17,6 +19,8 @@ import {
   BUSCAR_TIPO_MATERIA_PRIMA_USE_CASE,
   CONSULTAR_ESTOQUE_USE_CASE,
   CRIAR_TIPO_MATERIA_PRIMA_USE_CASE,
+  DELETAR_TIPO_MATERIA_PRIMA_USE_CASE,
+  DELETAR_ITEM_POOL_USE_CASE,
   LISTAR_CONSUMIVEIS_USE_CASE,
   LISTAR_TIPOS_MATERIA_PRIMA_USE_CASE,
   MIGRAR_INSUMOS_USE_CASE,
@@ -34,6 +38,8 @@ export class TiposMateriaPrimaController {
     private readonly listar: IListarTiposMateriaPrimaUseCase,
     @Inject(BUSCAR_TIPO_MATERIA_PRIMA_USE_CASE)
     private readonly buscar: IBuscarTipoMateriaPrimaUseCase,
+    @Inject(DELETAR_TIPO_MATERIA_PRIMA_USE_CASE)
+    private readonly deletar: IDeletarTipoMateriaPrimaUseCase,
     @Inject(LISTAR_CONSUMIVEIS_USE_CASE)
     private readonly listarConsumiveis: IListarConsumiveisUseCase,
     @Inject(REGISTRAR_ENTRADA_CONSUMIVEL_USE_CASE)
@@ -42,6 +48,8 @@ export class TiposMateriaPrimaController {
     private readonly migrarInsumos: IMigrarInsumosConsumiveisUseCase,
     @Inject(CONSULTAR_ESTOQUE_USE_CASE)
     private readonly consultarEstoque: IConsultarEstoqueUseCase,
+    @Inject(DELETAR_ITEM_POOL_USE_CASE)
+    private readonly deletarItemPool: IDeletarItemPoolUseCase,
   ) {}
 
   @ApiOperation({ summary: 'Criar tipo de matéria-prima' })
@@ -67,6 +75,18 @@ export class TiposMateriaPrimaController {
   @Get(':id')
   async buscarTipo(@Param('id') id: string) {
     return this.toResponse(await this.buscar.execute(id))
+  }
+
+  @ApiOperation({ summary: 'Deletar tipo de matéria-prima' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 204, description: 'Deletado.' })
+  @ApiResponse({ status: 404, description: 'Não encontrado.' })
+  @ApiResponse({ status: 409, description: 'Possui dependências vinculadas.' })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id')
+  async deletarTipo(@Param('id') id: string) {
+    await this.deletar.execute(id)
   }
 
   // ─── Consumíveis (RN21 — tipos com unidade UNIDADE) ──────────────────────
@@ -97,6 +117,17 @@ export class TiposMateriaPrimaController {
   }
 
   // ─── Pool de Matéria-Prima (RN14/RN15) ───────────────────────────────────
+
+  @ApiOperation({ summary: 'Remover item do pool (somente com saldo zero)' })
+  @ApiParam({ name: 'tipoId', type: String })
+  @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 400, description: 'Saldo diferente de zero.' })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('pool/:tipoId')
+  async deletarPool(@Param('tipoId') tipoId: string) {
+    await this.deletarItemPool.execute(tipoId)
+  }
 
   @ApiOperation({ summary: 'Consultar saldo do pool de matéria-prima (estoque compartilhado)' })
   @ApiResponse({ status: 200, description: 'Saldo por tipo de matéria-prima.' })

@@ -35,3 +35,8 @@ export interface IListarColheitasPorAssociadoUseCase {
 export interface IListarColheitasPorCampanhaUseCase {
   execute(campanhaId: string): Promise<Colheita[]>
 }
+
+/** Exclui uma colheita se o estoque ainda não foi consumido. */
+export interface IDeletarColheitaUseCase {
+  execute(id: string): Promise<void>
+}

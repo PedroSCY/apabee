@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import {
   EstoqueMateriaPrima as PrismaEstoque,
   MovimentacaoEstoque as PrismaMovimentacao,
@@ -57,6 +57,16 @@ export class PrismaEstoqueMateriaPrimaRepository implements IEstoqueMateriaPrima
       },
     })
     return this.toMovDomain(record)
+  }
+
+  async deleteByTipo(tipoMateriaPrimaId: string): Promise<void> {
+    const estoque = await this.prisma.estoqueMateriaPrima.findUnique({ where: { tipoMateriaPrimaId } })
+    if (!estoque) throw new NotFoundException('Item de estoque não encontrado.')
+    if (Number(estoque.quantidadeDisponivel) !== 0) {
+      throw new BadRequestException('Só é possível remover itens com saldo zero.')
+    }
+    await this.prisma.movimentacaoEstoque.deleteMany({ where: { estoqueId: estoque.id } })
+    await this.prisma.estoqueMateriaPrima.delete({ where: { id: estoque.id } })
   }
 
   async findMovimentacoesByEstoque(estoqueId: string): Promise<MovimentacaoEstoque[]> {

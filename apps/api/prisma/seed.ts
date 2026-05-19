@@ -17,9 +17,9 @@ const FLORADAS = [
 ]
 
 const TIPOS_MATERIA_PRIMA = [
-  { id: 'tipo-mel-seed', nome: 'Mel', unidade: 'KG', descricao: 'Mel de abelha in natura' },
-  { id: 'tipo-cera-seed', nome: 'Cera de Abelha', unidade: 'KG', descricao: 'Cera de abelha bruta' },
-  { id: 'tipo-propolis-seed', nome: 'Própolis', unidade: 'KG', descricao: 'Extrato bruto de própolis' },
+  { nome: 'Mel', unidade: 'KG', descricao: 'Mel de abelha in natura' },
+  { nome: 'Cera de Abelha', unidade: 'KG', descricao: 'Cera de abelha bruta' },
+  { nome: 'Própolis', unidade: 'KG', descricao: 'Extrato bruto de própolis' },
 ]
 
 async function main() {
@@ -86,9 +86,9 @@ async function main() {
   console.log('→ Tipos de Matéria-Prima...')
   for (const t of TIPOS_MATERIA_PRIMA) {
     await prisma.tipoMateriaPrima.upsert({
-      where: { id: t.id },
+      where: { nome: t.nome },
       update: {},
-      create: { id: t.id, nome: t.nome, unidade: t.unidade as any, descricao: t.descricao },
+      create: { nome: t.nome, unidade: t.unidade as any, descricao: t.descricao },
     })
   }
   console.log(`  ${TIPOS_MATERIA_PRIMA.length} tipos OK`)

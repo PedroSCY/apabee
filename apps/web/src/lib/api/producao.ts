@@ -61,6 +61,10 @@ export const producaoApi = {
       body: JSON.stringify(input),
     }),
 
+  /** Deleta um tipo de matéria-prima (somente sem dependências). */
+  deletarTipo: (id: string) =>
+    apiFetch<void>(`/producao/tipos-materia-prima/${id}`, { method: 'DELETE' }),
+
   /** Lista todas as colheitas (visão admin). */
   listarColheitas: () =>
     apiFetch<ColheitaResponse[]>('/producao/colheitas'),
@@ -80,7 +84,15 @@ export const producaoApi = {
       body: JSON.stringify(input),
     }),
 
+  /** Exclui uma colheita (somente se o estoque não foi consumido). */
+  deletarColheita: (id: string) =>
+    apiFetch<void>(`/producao/colheitas/${id}`, { method: 'DELETE' }),
+
   /** Consulta saldo do pool de matéria-prima. */
   consultarPool: () =>
     apiFetch<EstoquePoolResponse[]>('/producao/tipos-materia-prima/pool'),
+
+  /** Remove item do pool quando saldo é zero. */
+  deletarItemPool: (tipoId: string) =>
+    apiFetch<void>(`/producao/tipos-materia-prima/pool/${tipoId}`, { method: 'DELETE' }),
 }

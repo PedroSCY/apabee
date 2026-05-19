@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -32,11 +33,11 @@ import {
 } from '@/components/ui/select'
 import { DecimalInput } from '@/components/shared'
 import { useTiposMateriaPrima, useCriarColheita } from '@/hooks/useProducao'
+import type { ApiError } from '@/lib/api/client'
 
 const schema = z.object({
-  tipoMateriaPrimaId: z.string().min(1, 'Selecione o tipo.'),
+  tipoMateriaPrimaId: z.uuid('Selecione o tipo.'),
   volume: z.number().positive('Volume deve ser maior que zero.'),
-  unidade: z.string().min(1, 'Informe a unidade.'),
   dataColheita: z.string().min(1, 'Informe a data.'),
   observacao: z.string().optional(),
 })
@@ -55,23 +56,30 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { tipoMateriaPrimaId: '', unidade: 'kg', dataColheita: '', observacao: '' },
+    defaultValues: {
+      tipoMateriaPrimaId: '',
+      dataColheita: new Date().toISOString().slice(0, 10),
+      observacao: '',
+    },
   })
+
+  const tipoSelecionadoId = form.watch('tipoMateriaPrimaId')
+  const tipoSelecionado = tipos.find((t) => t.id === tipoSelecionadoId)
+
+  React.useEffect(() => { if (!open) form.reset() }, [open, form])
 
   async function onSubmit(data: FormData) {
     try {
-      await criarColheita({ ...data, associadoId })
+      await criarColheita({
+        ...data,
+        associadoId,
+        unidade: tipoSelecionado?.unidade ?? 'KG',
+      })
       toast.success('Colheita registrada com sucesso.')
-      form.reset()
       onOpenChange(false)
-    } catch {
-      toast.error('Erro ao registrar colheita. Tente novamente.')
+    } catch (e) {
+      toast.error((e as ApiError).message ?? 'Erro ao registrar colheita.')
     }
-  }
-
-  function handleClose() {
-    form.reset()
-    onOpenChange(false)
   }
 
   return (
@@ -87,8 +95,10 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
             <FormField control={form.control} name="tipoMateriaPrimaId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo de matéria-prima</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger></FormControl>
+                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     {tipos.map((t) => (
                       <SelectItem key={t.id} value={t.id}>{t.nome} ({t.unidade})</SelectItem>
@@ -109,21 +119,19 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
                   value={field.value}
                   onChange={field.onChange}
                   error={fieldState.error?.message}
+                  disabled={isPending}
                 />
               )} />
-              <FormField control={form.control} name="unidade" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade</FormLabel>
-                  <FormControl><Input placeholder="kg, L…" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Unidade</label>
+                <Input readOnly value={tipoSelecionado?.unidade ?? '—'} className="bg-muted text-muted-foreground" />
+              </div>
             </div>
 
             <FormField control={form.control} name="dataColheita" render={({ field }) => (
               <FormItem>
                 <FormLabel>Data da colheita</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><Input type="date" {...field} disabled={isPending} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -131,13 +139,15 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
             <FormField control={form.control} name="observacao" render={({ field }) => (
               <FormItem>
                 <FormLabel>Observação <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel>
-                <FormControl><Textarea rows={2} className="resize-none" {...field} /></FormControl>
+                <FormControl><Textarea rows={2} className="resize-none" disabled={isPending} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+                Cancelar
+              </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? 'Registrando…' : 'Registrar'}
               </Button>

@@ -20,10 +20,9 @@ import type { ApiError } from '@/lib/api/client'
 
 const UNIDADES = [
   { value: 'KG', label: 'Quilograma (kg)' },
-  { value: 'G', label: 'Grama (g)' },
-  { value: 'L', label: 'Litro (L)' },
-  { value: 'ML', label: 'Mililitro (mL)' },
-  { value: 'UN', label: 'Unidade (un)' },
+  { value: 'GRAMA', label: 'Grama (g)' },
+  { value: 'LITRO', label: 'Litro (L)' },
+  { value: 'UNIDADE', label: 'Unidade (un)' },
 ]
 
 const schema = z.object({

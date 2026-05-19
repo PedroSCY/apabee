@@ -28,3 +28,13 @@ export interface IBuscarTipoMateriaPrimaUseCase {
 export interface IConsultarEstoqueUseCase {
   execute(): Promise<EstoqueMateriaPrima[]>
 }
+
+/** Deleta um tipo de matéria-prima (somente se não houver dependências). */
+export interface IDeletarTipoMateriaPrimaUseCase {
+  execute(id: string): Promise<void>
+}
+
+/** Remove um item do pool de estoque quando o saldo é zero. */
+export interface IDeletarItemPoolUseCase {
+  execute(tipoMateriaPrimaId: string): Promise<void>
+}

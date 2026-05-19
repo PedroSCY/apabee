@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Search, Package } from 'lucide-react'
+import { Plus, Search, Package, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,26 +17,124 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CurrencyInput } from '@/components/shared'
 import { useProdutos, useCriarProduto } from '@/hooks/useCatalogo'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { ProdutoCard } from './ProdutoCard'
+
+// ─── Validação e compressão de imagem ────────────────────────────────────────
+
+const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+function validateImagem(file: File): string | null {
+  if (!ALLOWED_TYPES.has(file.type)) return 'Formato não suportado. Use JPG, PNG ou WebP.'
+  if (file.size > MAX_SIZE_BYTES) return 'Arquivo muito grande. Máximo 5 MB.'
+  return null
+}
+
+// Redimensiona para no máximo maxPx no lado maior e converte para JPEG.
+function compressImage(file: File, maxPx = 1200, quality = 0.85): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error('Falha na compressão')); return }
+          resolve(new File([blob], 'imagem.jpg', { type: 'image/jpeg' }))
+        },
+        'image/jpeg',
+        quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Imagem inválida')) }
+    img.src = objectUrl
+  })
+}
 
 // ─── Dialog de criação (admin) ────────────────────────────────────────────────
 
 function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [form, setForm] = React.useState<{ nome: string; descricao: string; preco: number | undefined; imagemUrl: string }>({ nome: '', descricao: '', preco: undefined, imagemUrl: '' })
-  const { mutateAsync: criar, isPending } = useCriarProduto()
+  const [form, setForm] = React.useState<{ nome: string; descricao: string; preco: number | undefined }>({ nome: '', descricao: '', preco: undefined })
+  const [imagem, setImagem] = React.useState<File | null>(null)
+  const [preview, setPreview] = React.useState<string | null>(null)
+  const [uploading, setUploading] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const { mutateAsync: criar, isPending: criando } = useCriarProduto()
+
+  const isPending = criando || uploading
+
+  // Gera/revoga a URL de preview sempre que a imagem selecionada muda.
+  React.useEffect(() => {
+    if (!imagem) { setPreview(null); return }
+    const url = URL.createObjectURL(imagem)
+    setPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [imagem])
+
+  // Limpa o formulário ao fechar.
+  React.useEffect(() => {
+    if (!open) {
+      setForm({ nome: '', descricao: '', preco: undefined })
+      setImagem(null)
+    }
+  }, [open])
 
   function handleOpenChange(v: boolean) {
     if (isPending) return
     onOpenChange(v)
   }
 
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    if (!file) return
+    const erro = validateImagem(file)
+    if (erro) {
+      toast.error(erro)
+      e.target.value = ''
+      return
+    }
+    setImagem(file)
+  }
+
+  function removerImagem() {
+    setImagem(null)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!form.preco || form.preco <= 0) { toast.error('Preço inválido.'); return }
+
+    let imagemUrl: string | undefined
+    if (imagem) {
+      try {
+        setUploading(true)
+        const supabase = createSupabaseBrowserClient()
+        const compressed = await compressImage(imagem)
+        const caminho = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`
+        const { error: uploadErr } = await supabase.storage
+          .from('imagens-produto')
+          .upload(caminho, compressed, { contentType: 'image/jpeg', upsert: false })
+        if (uploadErr) throw new Error(uploadErr.message)
+        const { data: urlData } = supabase.storage.from('imagens-produto').getPublicUrl(caminho)
+        imagemUrl = urlData.publicUrl
+      } catch {
+        toast.error('Erro ao fazer upload da imagem.')
+        return
+      } finally {
+        setUploading(false)
+      }
+    }
+
     try {
-      await criar({ nome: form.nome, descricao: form.descricao, preco: form.preco, imagemUrl: form.imagemUrl || undefined })
+      await criar({ nome: form.nome, descricao: form.descricao, preco: form.preco, imagemUrl })
       toast.success('Produto criado em rascunho.')
-      setForm({ nome: '', descricao: '', preco: undefined, imagemUrl: '' })
       onOpenChange(false)
     } catch {
       toast.error('Erro ao criar produto.')
@@ -86,15 +184,42 @@ function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           />
 
           <div className="space-y-1.5">
-            <Label htmlFor="p-img">URL da Imagem</Label>
-            <Input
-              id="p-img"
-              type="url"
-              value={form.imagemUrl}
-              onChange={(e) => setForm((p) => ({ ...p, imagemUrl: e.target.value }))}
-              placeholder="https://..."
-              disabled={isPending}
-            />
+            <Label>Imagem do produto</Label>
+            {preview ? (
+              <div className="flex items-center gap-3">
+                <div className="relative h-20 w-20 shrink-0 rounded-lg overflow-hidden border border-border bg-muted/30">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium truncate">{imagem?.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {((imagem?.size ?? 0) / 1024).toFixed(0)} KB · será comprimida para JPEG
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    onClick={removerImagem}
+                    disabled={isPending}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Remover
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                disabled={isPending}
+                className="w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground cursor-pointer"
+              />
+            )}
+            <p className="text-xs text-muted-foreground">JPG, PNG ou WebP · máx. 5 MB · redimensionada automaticamente para 1200 px</p>
           </div>
 
           <DialogFooter>
@@ -102,7 +227,7 @@ function NovoProdutoDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               Cancelar
             </Button>
             <Button type="submit" size="sm" disabled={isPending}>
-              {isPending ? 'Criando...' : 'Criar Produto'}
+              {uploading ? 'Enviando imagem...' : criando ? 'Criando...' : 'Criar Produto'}
             </Button>
           </DialogFooter>
         </form>

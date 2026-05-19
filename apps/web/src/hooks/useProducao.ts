@@ -26,6 +26,15 @@ export function useCriarTipoMateriaPrima() {
   })
 }
 
+/** Deleta um tipo de matéria-prima. */
+export function useDeletarTipoMateriaPrima() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => producaoApi.deletarTipo(id),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: TIPOS_KEY }),
+  })
+}
+
 // Colheitas
 /** Busca todas as colheitas (visão admin). */
 export function useColheitas() {
@@ -60,6 +69,24 @@ export function useCriarColheita() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CriarColheitaInput) => producaoApi.criarColheita(input),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: COLHEITAS_KEY }),
+  })
+}
+
+/** Remove item do pool quando saldo é zero. */
+export function useDeletarItemPool() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (tipoId: string) => producaoApi.deletarItemPool(tipoId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: POOL_KEY }),
+  })
+}
+
+/** Exclui uma colheita (somente se o estoque não foi consumido). */
+export function useDeletarColheita() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => producaoApi.deletarColheita(id),
     onSuccess: () => void qc.invalidateQueries({ queryKey: COLHEITAS_KEY }),
   })
 }

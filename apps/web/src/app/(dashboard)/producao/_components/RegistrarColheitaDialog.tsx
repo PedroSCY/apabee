@@ -29,8 +29,8 @@ import { useAssociados } from '@/hooks/useAssociados'
 import type { ApiError } from '@/lib/api/client'
 
 const schema = z.object({
-  associadoId: z.string().min(1, 'Selecione um associado'),
-  tipoMateriaPrimaId: z.string().min(1, 'Selecione o tipo'),
+  associadoId: z.uuid('Selecione um associado.'),
+  tipoMateriaPrimaId: z.uuid('Selecione o tipo.'),
   volume: z.number().positive('Volume deve ser positivo'),
   unidade: z.string().min(1),
   dataColheita: z.string().min(1, 'Informe a data'),
@@ -53,7 +53,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
+    defaultValues: { associadoId: '', tipoMateriaPrimaId: '', unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
   })
 
   const tipoSelecionadoId = watch('tipoMateriaPrimaId')
@@ -95,7 +95,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
               control={control}
               name="associadoId"
               render={({ field }) => (
-                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>
@@ -116,7 +116,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
               control={control}
               name="tipoMateriaPrimaId"
               render={({ field }) => (
-                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>

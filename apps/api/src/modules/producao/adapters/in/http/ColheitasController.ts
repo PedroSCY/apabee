@@ -1,15 +1,19 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Post } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   Colheita,
   ICriarColheitaUseCase,
+  IDeletarColheitaUseCase,
   IListarColheitasUseCase,
   IListarColheitasPorAssociadoUseCase,
   IListarColheitasPorCampanhaUseCase,
 } from '@apa/core'
+import { RoleUsuario } from '@apa/shared'
+import { Roles } from '../../../../../shared/guards/roles.decorator'
 import { CriarColheitaDto } from './dto'
 import {
   CRIAR_COLHEITA_USE_CASE,
+  DELETAR_COLHEITA_USE_CASE,
   LISTAR_COLHEITAS_USE_CASE,
   LISTAR_COLHEITAS_ASSOCIADO_USE_CASE,
   LISTAR_COLHEITAS_CAMPANHA_USE_CASE,
@@ -28,6 +32,8 @@ export class ColheitasController {
     private readonly listarPorAssociado: IListarColheitasPorAssociadoUseCase,
     @Inject(LISTAR_COLHEITAS_CAMPANHA_USE_CASE)
     private readonly listarPorCampanha: IListarColheitasPorCampanhaUseCase,
+    @Inject(DELETAR_COLHEITA_USE_CASE)
+    private readonly deletarColheita: IDeletarColheitaUseCase,
   ) {}
 
   @ApiOperation({ summary: 'Listar todas as colheitas (admin)' })
@@ -63,6 +69,17 @@ export class ColheitasController {
   async listarCampanha(@Param('campanhaId') campanhaId: string) {
     const lista = await this.listarPorCampanha.execute(campanhaId)
     return lista.map((c) => this.toResponse(c))
+  }
+
+  @ApiOperation({ summary: 'Excluir colheita (somente se estoque não foi consumido)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 409, description: 'Matéria-prima já consumida em produção.' })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id')
+  async deletar(@Param('id') id: string) {
+    await this.deletarColheita.execute(id)
   }
 
   private toResponse(c: Colheita) {

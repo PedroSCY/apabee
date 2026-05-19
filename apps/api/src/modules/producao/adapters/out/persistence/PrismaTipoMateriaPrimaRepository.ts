@@ -30,6 +30,22 @@ export class PrismaTipoMateriaPrimaRepository implements ITipoMateriaPrimaReposi
     return this.toDomain(record)
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const estoque = await tx.estoqueMateriaPrima.findUnique({ where: { tipoMateriaPrimaId: id } })
+      if (estoque) {
+        await tx.movimentacaoEstoque.deleteMany({ where: { estoqueId: estoque.id } })
+        await tx.estoqueMateriaPrima.delete({ where: { id: estoque.id } })
+      }
+      await tx.colheita.deleteMany({ where: { tipoMateriaPrimaId: id } })
+      await tx.materialOrdemProducao.deleteMany({ where: { tipoMateriaPrimaId: id } })
+      await tx.composicaoProduto.deleteMany({ where: { tipoMateriaPrimaId: id } })
+      await tx.precoSafra.deleteMany({ where: { tipoMateriaPrimaId: id } })
+      await tx.itemAquisicao.updateMany({ where: { tipoMateriaPrimaId: id }, data: { tipoMateriaPrimaId: null } })
+      await tx.tipoMateriaPrima.delete({ where: { id } })
+    })
+  }
+
   private toDomain(record: PrismaTipo): TipoMateriaPrima {
     return new TipoMateriaPrima({
       id: record.id,

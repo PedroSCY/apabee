@@ -9,4 +9,5 @@ export interface IEstoqueMateriaPrimaRepository {
   update(estoque: EstoqueMateriaPrima): Promise<EstoqueMateriaPrima>;
   salvarMovimentacao(mov: MovimentacaoEstoque): Promise<MovimentacaoEstoque>;
   findMovimentacoesByEstoque(estoqueId: string): Promise<MovimentacaoEstoque[]>;
+  deleteByTipo(tipoMateriaPrimaId: string): Promise<void>;
 }

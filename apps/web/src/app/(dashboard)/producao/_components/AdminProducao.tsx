@@ -3,8 +3,20 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { AlertCircle, Package, Plus, X } from 'lucide-react'
-import { useColheitas, useEstoquePool, useTiposMateriaPrima } from '@/hooks/useProducao'
+import { toast } from 'sonner'
+import { AlertCircle, Package, Plus, Trash2, X } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { useColheitas, useEstoquePool, useTiposMateriaPrima, useDeletarTipoMateriaPrima, useDeletarColheita, useDeletarItemPool } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
 import { useCampanhas } from '@/hooks/useCampanhas'
 import { DataTable, EmptyState, type Column } from '@/components/shared'
@@ -32,10 +44,18 @@ function ColheitasTab() {
   const { data: tipos = [] } = useTiposMateriaPrima()
   const { data: associados = [] } = useAssociados()
   const { data: campanhas = [] } = useCampanhas()
+  const { mutate: deletar, isPending: deletando } = useDeletarColheita()
 
   const [filtroAssociado, setFiltroAssociado] = React.useState(TODOS)
   const [filtroTipo, setFiltroTipo] = React.useState(TODOS)
   const [colheitaOpen, setColheitaOpen] = React.useState(false)
+
+  function handleDeletar(id: string) {
+    deletar(id, {
+      onSuccess: () => toast.success('Colheita removida.'),
+      onError: (e) => toast.error((e as { message?: string }).message ?? 'Erro ao remover colheita.'),
+    })
+  }
 
   const temFiltro = filtroAssociado !== TODOS || filtroTipo !== TODOS
 
@@ -84,6 +104,38 @@ function ColheitasTab() {
       key: 'observacao',
       label: 'Obs',
       render: (r) => r.observacao ?? '—',
+    },
+    {
+      key: 'id',
+      label: '',
+      render: (r) => (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" disabled={deletando}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir colheita?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta colheita de <strong>{r.volume} {r.unidade}</strong> de <strong>{tipoNome(r.tipoMateriaPrimaId)}</strong> será removida permanentemente junto com seu movimento de estoque.
+                <br /><br />
+                A exclusão só é permitida se a matéria-prima ainda não foi consumida em nenhuma ordem de produção.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => handleDeletar(r.id)}
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ),
     },
   ]
 
@@ -157,7 +209,15 @@ function ColheitasTab() {
 
 function TiposTab() {
   const { data: tipos = [], isLoading } = useTiposMateriaPrima()
+  const { mutate: deletar, isPending: deletando } = useDeletarTipoMateriaPrima()
   const [criarOpen, setCriarOpen] = React.useState(false)
+
+  function handleDelete(id: string) {
+    deletar(id, {
+      onSuccess: () => toast.success('Tipo removido.'),
+      onError: (e) => toast.error((e as { message?: string }).message ?? 'Erro ao remover tipo.'),
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -188,6 +248,7 @@ function TiposTab() {
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Nome</TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Unidade</TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Descrição</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,6 +257,37 @@ function TiposTab() {
                   <TableCell className="font-medium px-4 py-3">{t.nome}</TableCell>
                   <TableCell className="text-sm text-muted-foreground px-4 py-3">{t.unidade}</TableCell>
                   <TableCell className="text-sm text-muted-foreground px-4 py-3">{t.descricao ?? '—'}</TableCell>
+                  <TableCell className="px-2 py-2 text-right">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          disabled={deletando}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover tipo de matéria-prima?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            O tipo <strong>{t.nome}</strong> e todos os dados vinculados (colheitas, estoque e movimentações) serão removidos permanentemente. Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => handleDelete(t.id)}
+                          >
+                            Remover
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -213,8 +305,16 @@ function TiposTab() {
 function PoolTab() {
   const { data: pool = [], isLoading } = useEstoquePool()
   const { data: tipos = [] } = useTiposMateriaPrima()
+  const { mutate: deletarPool, isPending: deletando } = useDeletarItemPool()
 
   const tipoNome = (id: string) => tipos.find(t => t.id === id)?.nome ?? id.slice(0, 8)
+
+  function handleDeletarPool(tipoId: string) {
+    deletarPool(tipoId, {
+      onSuccess: () => toast.success('Item removido do pool.'),
+      onError: (e) => toast.error((e as { message?: string }).message ?? 'Erro ao remover item.'),
+    })
+  }
 
   const saldoBadge = (qtd: number) => {
     if (qtd <= 0) return <Badge variant="destructive">Sem saldo</Badge>
@@ -248,6 +348,7 @@ function PoolTab() {
               <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Saldo</TableHead>
               <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Unidade</TableHead>
               <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Status</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -264,6 +365,34 @@ function PoolTab() {
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground px-4 py-3">{item.unidade}</TableCell>
                 <TableCell className="px-4 py-3">{saldoBadge(item.quantidadeDisponivel)}</TableCell>
+                <TableCell className="px-2 py-2 text-right">
+                  {item.quantidadeDisponivel === 0 && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" disabled={deletando}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover item do pool?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            O registro de <strong>{tipoNome(item.tipoMateriaPrimaId)}</strong> com saldo zero será removido do pool. Novas colheitas desse tipo criarão um novo registro automaticamente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => handleDeletarPool(item.tipoMateriaPrimaId)}
+                          >
+                            Remover
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

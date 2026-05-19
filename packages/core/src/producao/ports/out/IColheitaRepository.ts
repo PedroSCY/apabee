@@ -7,4 +7,5 @@ export interface IColheitaRepository {
   findByAssociado(associadoId: string): Promise<Colheita[]>;
   findByCampanha(campanhaId: string): Promise<Colheita[]>;
   save(colheita: Colheita): Promise<Colheita>;
+  delete(id: string): Promise<void>;
 }
