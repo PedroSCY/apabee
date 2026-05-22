@@ -1,33 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator'
-import { TipoDestinoAquisicao } from '@apa/shared'
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
 export class AdicionarItemAquisicaoDto {
-  @ApiProperty({ example: 'Centrífuga Elétrica 20 quadros' })
+  @ApiProperty({ example: 'Caixa de colmeia Langstroth' })
   @IsString()
-  descricao!: string
+  nome!: string
 
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  @Min(1)
-  quantidade!: number
-
-  @ApiProperty({ example: 5000.0 })
+  @ApiProperty({ example: 350.0 })
   @IsNumber()
   @Min(0)
-  valorEstimado!: number
+  precoUnitario!: number
 
-  @ApiProperty({ enum: TipoDestinoAquisicao })
-  @IsEnum(TipoDestinoAquisicao)
-  tipoDestino!: TipoDestinoAquisicao
+  @ApiProperty({ example: 50 })
+  @IsNumber()
+  @Min(1)
+  quantidadeMeta!: number
 
-  @ApiPropertyOptional({ example: 'Centrífuga Inox' })
+  @ApiProperty({ example: 'unid' })
+  @IsString()
+  unidade!: string
+
+  @ApiPropertyOptional({ example: 'uuid-do-tipo-destino' })
   @IsOptional()
   @IsString()
-  equipamentoNome?: string
-
-  @ApiPropertyOptional({ example: 'uuid-do-tipo-materia-prima' })
-  @IsOptional()
-  @IsString()
-  tipoMateriaPrimaId?: string
+  tipoDestinoId?: string
 }

@@ -1,4 +1,4 @@
-import { StatusCampanha, TipoLote } from '@apa/shared'
+import { DestinatarioCampanha, StatusCampanha, TipoLote } from '@apa/shared'
 
 interface CampanhaProps {
   id: string
@@ -10,6 +10,7 @@ interface CampanhaProps {
   dataFim?: Date
   status: StatusCampanha
   // apenas AQUISICAO
+  destinatario?: DestinatarioCampanha
   valorMeta?: number
   prazoContribuicao?: Date
   valorMinimo?: number
@@ -39,10 +40,15 @@ export class Campanha {
   get valorMeta(): number | undefined { return this.props.valorMeta }
   get prazoContribuicao(): Date | undefined { return this.props.prazoContribuicao }
   get valorMinimo(): number | undefined { return this.props.valorMinimo }
+  get destinatario(): DestinatarioCampanha | undefined { return this.props.destinatario }
   get valorMaximo(): number | undefined { return this.props.valorMaximo }
   get receitaTotal(): number { return this.props.receitaTotal }
   get custoTotal(): number { return this.props.custoTotal }
   get criadoEm(): Date { return this.props.criadoEm }
+
+  get isAquisicaoIndividual(): boolean {
+    return this.props.tipo === TipoLote.AQUISICAO && this.props.destinatario === DestinatarioCampanha.INDIVIDUAL
+  }
 
   estaAtiva(): boolean { return this.props.status === StatusCampanha.ATIVA }
   estaConcluida(): boolean { return this.props.status === StatusCampanha.CONCLUIDA }
@@ -59,6 +65,12 @@ export class Campanha {
     if (this.props.status !== StatusCampanha.ATIVA)
       throw new Error('Apenas campanhas ATIVAS podem ser concluídas')
     return new Campanha({ ...this.props, status: StatusCampanha.CONCLUIDA, dataFim: new Date() })
+  }
+
+  comReceita(receitaTotal: number): Campanha {
+    if (this.props.status !== StatusCampanha.CONCLUIDA)
+      throw new Error('Receita total só pode ser informada em campanhas CONCLUIDAS')
+    return new Campanha({ ...this.props, receitaTotal })
   }
 
   liquidar(receitaTotal: number, custoTotal: number): Campanha {

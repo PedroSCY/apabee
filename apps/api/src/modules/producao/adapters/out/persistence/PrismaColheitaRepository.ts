@@ -40,28 +40,59 @@ export class PrismaColheitaRepository implements IColheitaRepository {
     const colheita = await this.prisma.colheita.findUnique({ where: { id } })
     if (!colheita) throw new NotFoundException('Colheita não encontrada.')
 
-    const estoque = await this.prisma.estoqueMateriaPrima.findUnique({
-      where: { tipoMateriaPrimaId: colheita.tipoMateriaPrimaId },
-    })
-
-    if (estoque) {
-      const saidas = await this.prisma.movimentacaoEstoque.count({
-        where: { estoqueId: estoque.id, tipo: 'SAIDA' },
+    if (colheita.campanhaId) {
+      // Colheita estava no EstoqueCampanha — verifica se já houve saídas (consumo em ordem)
+      const ec = await this.prisma.estoqueCampanha.findUnique({
+        where: {
+          campanhaId_tipoMateriaPrimaId: {
+            campanhaId: colheita.campanhaId,
+            tipoMateriaPrimaId: colheita.tipoMateriaPrimaId,
+          },
+        },
       })
-      if (saidas > 0) {
-        throw new ConflictException(
-          'Esta colheita não pode ser excluída pois a matéria-prima já foi consumida em uma ordem de produção.',
-        )
+
+      if (ec) {
+        const saidas = await this.prisma.movimentacaoEstoqueCampanha.count({
+          where: { estoqueCampanhaId: ec.id, tipo: 'SAIDA' },
+        })
+        if (saidas > 0) {
+          throw new ConflictException(
+            'Esta colheita não pode ser excluída pois a matéria-prima já foi consumida em uma ordem de produção.',
+          )
+        }
+
+        await this.prisma.movimentacaoEstoqueCampanha.deleteMany({
+          where: { estoqueCampanhaId: ec.id, referenciaId: id },
+        })
+        await this.prisma.estoqueCampanha.update({
+          where: { id: ec.id },
+          data: { quantidadeDisponivel: { decrement: colheita.volume } },
+        })
       }
+    } else {
+      // Colheita estava no pool global (EstoqueMateriaPrima)
+      const estoque = await this.prisma.estoqueMateriaPrima.findUnique({
+        where: { tipoMateriaPrimaId: colheita.tipoMateriaPrimaId },
+      })
 
-      // Remove o movimento de entrada desta colheita e subtrai do saldo
-      await this.prisma.movimentacaoEstoque.deleteMany({
-        where: { estoqueId: estoque.id, referenciaId: id },
-      })
-      await this.prisma.estoqueMateriaPrima.update({
-        where: { id: estoque.id },
-        data: { quantidadeDisponivel: { decrement: colheita.volume } },
-      })
+      if (estoque) {
+        const saidas = await this.prisma.movimentacaoEstoque.count({
+          where: { estoqueId: estoque.id, tipo: 'SAIDA' },
+        })
+        if (saidas > 0) {
+          throw new ConflictException(
+            'Esta colheita não pode ser excluída pois a matéria-prima já foi consumida em uma ordem de produção.',
+          )
+        }
+
+        await this.prisma.movimentacaoEstoque.deleteMany({
+          where: { estoqueId: estoque.id, referenciaId: id },
+        })
+        await this.prisma.estoqueMateriaPrima.update({
+          where: { id: estoque.id },
+          data: { quantidadeDisponivel: { decrement: colheita.volume } },
+        })
+      }
     }
 
     await this.prisma.colheita.delete({ where: { id } })

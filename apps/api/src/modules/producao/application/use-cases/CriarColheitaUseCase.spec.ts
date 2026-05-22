@@ -3,7 +3,10 @@ import { CriarColheitaUseCase } from './CriarColheitaUseCase'
 import {
   EstoqueMateriaPrima,
   IColheitaRepository,
+  IContribuicaoRepository,
+  IEstoqueCampanhaRepository,
   IEstoqueMateriaPrimaRepository,
+  ISafraRepository,
 } from '@apa/core'
 import { UnidadeMedida } from '@apa/shared'
 
@@ -16,6 +19,7 @@ const colheitaRepo: jest.Mocked<IColheitaRepository> = {
   findByAssociado: jest.fn(),
   findByCampanha: jest.fn(),
   save: jest.fn(),
+  delete: jest.fn(),
 }
 
 const estoqueRepo: jest.Mocked<IEstoqueMateriaPrimaRepository> = {
@@ -25,6 +29,37 @@ const estoqueRepo: jest.Mocked<IEstoqueMateriaPrimaRepository> = {
   update: jest.fn(),
   salvarMovimentacao: jest.fn(),
   findMovimentacoesByEstoque: jest.fn(),
+  deleteByTipo: jest.fn(),
+}
+
+const estoqueCampanhaRepo: jest.Mocked<IEstoqueCampanhaRepository> = {
+  findByCampanha: jest.fn(),
+  findByCampanhaETipo: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  salvarMovimentacao: jest.fn(),
+  countSaidas: jest.fn(),
+  findMovimentacoes: jest.fn(),
+}
+
+const contribuicaoRepo: jest.Mocked<IContribuicaoRepository> = {
+  findById: jest.fn(),
+  findByCampanha: jest.fn(),
+  findByAssociado: jest.fn(),
+  findByCampanhaEAssociado: jest.fn(),
+  sumByCampanha: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+}
+
+const safraRepo: jest.Mocked<ISafraRepository> = {
+  findById: jest.fn(),
+  findAll: jest.fn(),
+  findByStatus: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
 }
 
 describe('CriarColheitaUseCase', () => {
@@ -40,12 +75,14 @@ describe('CriarColheitaUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    useCase = new CriarColheitaUseCase(colheitaRepo, estoqueRepo)
+    useCase = new CriarColheitaUseCase(colheitaRepo, estoqueRepo, estoqueCampanhaRepo, contribuicaoRepo, safraRepo)
     estoqueRepo.update.mockImplementation(async (e) => e)
     estoqueRepo.salvarMovimentacao.mockImplementation(async (m) => m)
+    estoqueCampanhaRepo.update.mockImplementation(async (e) => e)
+    estoqueCampanhaRepo.salvarMovimentacao.mockImplementation(async (m) => m)
   })
 
-  it('cria colheita e atualiza estoque existente (RN03)', async () => {
+  it('colheita sem campanhaId vai ao pool (RN14)', async () => {
     colheitaRepo.save.mockImplementation(async (c) => c)
     estoqueRepo.findByTipo.mockResolvedValue(makeEstoque())
 
@@ -53,9 +90,10 @@ describe('CriarColheitaUseCase', () => {
     expect(result.volume).toBe(10)
     expect(estoqueRepo.update).toHaveBeenCalledTimes(1)
     expect(estoqueRepo.salvarMovimentacao).toHaveBeenCalledTimes(1)
+    expect(estoqueCampanhaRepo.update).not.toHaveBeenCalled()
   })
 
-  it('cria estoque novo quando não existe (RN03)', async () => {
+  it('cria estoque pool novo quando não existe (RN14)', async () => {
     colheitaRepo.save.mockImplementation(async (c) => c)
     estoqueRepo.findByTipo.mockResolvedValue(null)
     estoqueRepo.save.mockImplementation(async (e) => e)
@@ -65,13 +103,17 @@ describe('CriarColheitaUseCase', () => {
     expect(estoqueRepo.update).not.toHaveBeenCalled()
   })
 
-  it('cria colheita sem campanha — vai ao pool diretamente (RN14)', async () => {
+  it('colheita com campanhaId vai ao EstoqueCampanha (RN14)', async () => {
     colheitaRepo.save.mockImplementation(async (c) => c)
-    estoqueRepo.findByTipo.mockResolvedValue(makeEstoque())
+    estoqueCampanhaRepo.findByCampanhaETipo.mockResolvedValue(null)
+    estoqueCampanhaRepo.save.mockImplementation(async (e) => e)
+    contribuicaoRepo.save.mockImplementation(async (c) => c)
 
-    const result = await useCase.execute({ ...input, campanhaId: undefined })
-    expect(result.campanhaId).toBeUndefined()
-    expect(estoqueRepo.update).toHaveBeenCalledTimes(1)
+    await useCase.execute({ ...input, campanhaId: 'camp-1' })
+    expect(estoqueCampanhaRepo.save).toHaveBeenCalledTimes(1)
+    expect(estoqueCampanhaRepo.salvarMovimentacao).toHaveBeenCalledTimes(1)
+    expect(estoqueRepo.update).not.toHaveBeenCalled()
+    expect(contribuicaoRepo.save).toHaveBeenCalledTimes(1)
   })
 
   it('lança BadRequestException se volume <= 0', async () => {

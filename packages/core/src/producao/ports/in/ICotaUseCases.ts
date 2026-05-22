@@ -2,7 +2,7 @@ import { Cota } from '../../entities/Cota'
 
 export interface RegistrarCotaInput {
   campanhaId: string
-  associadoId: string
+  associadoId?: string
   valor: number
 }
 

@@ -29,12 +29,12 @@ export class AdicionarItemAquisicaoUseCase implements IAdicionarItemAquisicaoUse
       new ItemAquisicao({
         id: randomUUID(),
         campanhaId: input.campanhaId,
-        descricao: input.descricao.trim(),
-        quantidade: input.quantidade,
-        valorEstimado: input.valorEstimado,
-        tipoDestino: input.tipoDestino,
-        equipamentoNome: input.equipamentoNome,
-        tipoMateriaPrimaId: input.tipoMateriaPrimaId,
+        nome: input.nome.trim(),
+        precoUnitario: input.precoUnitario,
+        quantidadeMeta: input.quantidadeMeta,
+        quantidadeTotalPedida: 0,
+        unidade: input.unidade,
+        tipoDestinoId: input.tipoDestinoId,
         criadoEm: new Date(),
       }),
     )

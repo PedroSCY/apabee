@@ -17,6 +17,14 @@ export class PrismaItemPedidoRepository implements IItemPedidoRepository {
     return records.map((r) => this.toDomain(r))
   }
 
+  async sumQuantidadeEntregue(campanhaCodigo: string): Promise<number> {
+    const result = await this.prisma.itemPedido.aggregate({
+      where: { campanhaCodigo, pedido: { status: 'ENTREGUE' } },
+      _sum: { quantidade: true },
+    })
+    return result._sum.quantidade ?? 0
+  }
+
   async saveMany(itens: ItemPedido[]): Promise<ItemPedido[]> {
     await this.prisma.itemPedido.createMany({
       data: itens.map((i) => ({

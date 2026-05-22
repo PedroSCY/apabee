@@ -2,7 +2,9 @@ import { apiFetch } from './client'
 
 export type StatusCampanha = 'PLANEJADA' | 'ATIVA' | 'CONCLUIDA' | 'LIQUIDADA' | 'CANCELADA'
 export type TipoCampanha = 'PRODUCAO' | 'AQUISICAO'
-export type TipoContribuicao = 'COLHEITA' | 'DINHEIRO' | 'MAO_DE_OBRA' | 'CONSUMIVEL' | 'EQUIPAMENTO' | 'ACORDO'
+export type DestinatarioCampanha = 'INDIVIDUAL' | 'APA'
+export type OrigemContribuicao = 'ASSOCIADO' | 'RECURSO_PROPRIO'
+export type TipoContribuicao = 'COLHEITA' | 'DINHEIRO'
 export type CategoriaCusto = 'EMBALAGEM' | 'ROTULO' | 'TRANSPORTE' | 'PROCESSAMENTO' | 'CERTIFICACAO' | 'TAXA' | 'PERDA' | 'MAO_DE_OBRA_CONTRATADA' | 'OUTRO'
 
 export interface CampanhaResponse {
@@ -14,6 +16,7 @@ export interface CampanhaResponse {
   dataInicio: string
   dataFim?: string
   status: StatusCampanha
+  destinatario?: DestinatarioCampanha
   valorMeta?: number
   prazoContribuicao?: string
   valorMinimo?: number
@@ -29,6 +32,7 @@ export interface CriarCampanhaInput {
   safraId?: string
   dataInicio: string
   dataFim?: string
+  destinatario?: DestinatarioCampanha
   valorMeta?: number
   prazoContribuicao?: string
   valorMinimo?: number
@@ -44,7 +48,6 @@ export interface ContribuicaoResponse {
   colheitaId?: string
   volume?: number
   tipoMateriaPrimaId?: string
-  horas?: number
   descricao?: string
   liquidado: boolean
   criadoEm: string
@@ -57,7 +60,6 @@ export interface RegistrarContribuicaoInput {
   colheitaId?: string
   volume?: number
   tipoMateriaPrimaId?: string
-  horas?: number
   descricao?: string
 }
 
@@ -106,7 +108,8 @@ export interface ConsumoMaterial {
 export interface CotaResponse {
   id: string
   campanhaId: string
-  associadoId: string
+  associadoId?: string
+  origem: OrigemContribuicao
   valor: number
   pago: boolean
   dataRegistro: string
@@ -114,7 +117,7 @@ export interface CotaResponse {
 }
 
 export interface RegistrarCotaInput {
-  associadoId: string
+  associadoId?: string
   valor: number
 }
 
@@ -122,21 +125,46 @@ export interface RegistrarCotaInput {
 export interface ItemAquisicaoResponse {
   id: string
   campanhaId: string
-  descricao: string
-  quantidade: number
-  valorEstimado: number
-  tipoDestino: 'EQUIPAMENTO' | 'CONSUMIVEL' | 'MATERIA_PRIMA'
-  equipamentoNome?: string
-  tipoMateriaPrimaId?: string
+  nome: string
+  precoUnitario: number
+  quantidadeMeta: number
+  quantidadeTotalPedida: number
+  unidade: string
+  tipoDestinoId?: string
+  metaAtingida: boolean
+  valorTotalPedido: number
+  criadoEm: string
 }
 
 export interface CriarItemAquisicaoInput {
-  descricao: string
+  nome: string
+  precoUnitario: number
+  quantidadeMeta: number
+  unidade: string
+  tipoDestinoId?: string
+}
+
+// --- Pedidos de Aquisição ---
+export interface PedidoAquisicaoResponse {
+  id: string
+  campanhaId: string
+  itemAquisicaoId: string
+  associadoId?: string
+  origem: OrigemContribuicao
   quantidade: number
-  valorEstimado: number
-  tipoDestino: string
-  equipamentoNome?: string
-  tipoMateriaPrimaId?: string
+  valorTotal: number
+  pago: boolean
+  pagoEm?: string
+  entregue: boolean
+  entregueEm?: string
+  criadoEm: string
+}
+
+export interface RegistrarPedidoInput {
+  itemAquisicaoId: string
+  associadoId?: string
+  origem: OrigemContribuicao
+  quantidade: number
 }
 
 // --- Apuração ---
@@ -160,6 +188,13 @@ export interface ApuracaoResponse {
   participantes: ApuracaoParticipante[]
 }
 
+export interface EstoqueCampanhaResponse {
+  id: string
+  tipoMateriaPrimaId: string
+  quantidadeDisponivel: number
+  unidade: string
+}
+
 export const campanhasApi = {
   listar: () => apiFetch<CampanhaResponse[]>('/producao/campanhas'),
   criar: (input: CriarCampanhaInput) =>
@@ -171,6 +206,11 @@ export const campanhasApi = {
     apiFetch<CampanhaResponse>(`/producao/campanhas/${id}/concluir`, { method: 'PATCH' }),
   cancelar: (id: string) =>
     apiFetch<CampanhaResponse>(`/producao/campanhas/${id}/cancelar`, { method: 'PATCH' }),
+  atualizarReceita: (id: string, receitaTotal: number) =>
+    apiFetch<CampanhaResponse>(`/producao/campanhas/${id}/receita`, {
+      method: 'PATCH',
+      body: JSON.stringify({ receitaTotal }),
+    }),
   liquidar: (id: string) =>
     apiFetch<CampanhaResponse>(`/producao/campanhas/${id}/liquidar`, { method: 'PATCH' }),
   deletar: (id: string) =>
@@ -203,13 +243,13 @@ export const campanhasApi = {
     }),
   executarOrdem: (campanhaId: string, ordemId: string) =>
     apiFetch<OrdemProducaoResponse>(
-      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/executar`, { method: 'POST' }
+      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/executar`, { method: 'PATCH' }
     ),
   removerOrdem: (campanhaId: string, ordemId: string) =>
     apiFetch<void>(`/producao/campanhas/${campanhaId}/ordens/${ordemId}`, { method: 'DELETE' }),
   calcularConsumo: (campanhaId: string, ordemId: string) =>
     apiFetch<{ materiais: ConsumoMaterial[] }>(
-      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/calcular-consumo`
+      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/consumo`
     ),
 
   // Cotas
@@ -236,9 +276,25 @@ export const campanhasApi = {
   removerItem: (campanhaId: string, itemId: string) =>
     apiFetch<void>(`/producao/campanhas/${campanhaId}/itens/${itemId}`, { method: 'DELETE' }),
   distribuirItens: (campanhaId: string) =>
-    apiFetch<{ itensDistribuidos: number; equipamentosCriados: number }>(
-      `/producao/campanhas/${campanhaId}/distribuir`, { method: 'POST' }
+    apiFetch<ApuracaoResponse>(`/producao/campanhas/${campanhaId}/distribuir`, { method: 'POST' }),
+
+  // Estoque da campanha
+  listarEstoque: (campanhaId: string) =>
+    apiFetch<EstoqueCampanhaResponse[]>(`/producao/campanhas/${campanhaId}/estoque-campanha`),
+
+  // Pedidos de Aquisição
+  listarPedidos: (campanhaId: string, associadoId?: string) =>
+    apiFetch<PedidoAquisicaoResponse[]>(
+      `/producao/campanhas/${campanhaId}/pedidos-aquisicao${associadoId ? `?associadoId=${associadoId}` : ''}`
     ),
+  registrarPedido: (campanhaId: string, input: RegistrarPedidoInput) =>
+    apiFetch<PedidoAquisicaoResponse>(`/producao/campanhas/${campanhaId}/pedidos-aquisicao`, {
+      method: 'POST', body: JSON.stringify(input),
+    }),
+  confirmarPagamentoPedido: (pedidoId: string) =>
+    apiFetch<PedidoAquisicaoResponse>(`/producao/campanhas/pedidos-aquisicao/${pedidoId}/pagar`, { method: 'PATCH' }),
+  marcarPedidoEntregue: (pedidoId: string) =>
+    apiFetch<PedidoAquisicaoResponse>(`/producao/campanhas/pedidos-aquisicao/${pedidoId}/entregar`, { method: 'PATCH' }),
 
   // Apuração
   obterApuracao: (campanhaId: string) =>

@@ -1,23 +1,20 @@
-import { TipoDestinoAquisicao } from '@apa/shared'
 import { ItemAquisicao } from '../../entities/ItemAquisicao'
 
 export interface AdicionarItemAquisicaoInput {
   campanhaId: string
-  descricao: string
-  quantidade: number
-  valorEstimado: number
-  tipoDestino: TipoDestinoAquisicao
-  equipamentoNome?: string
-  tipoMateriaPrimaId?: string
+  nome: string
+  precoUnitario: number
+  quantidadeMeta: number
+  unidade: string
+  tipoDestinoId?: string
 }
 
 export interface AtualizarItemAquisicaoInput {
-  descricao?: string
-  quantidade?: number
-  valorEstimado?: number
-  tipoDestino?: TipoDestinoAquisicao
-  equipamentoNome?: string
-  tipoMateriaPrimaId?: string
+  nome?: string
+  precoUnitario?: number
+  quantidadeMeta?: number
+  unidade?: string
+  tipoDestinoId?: string
 }
 
 export interface IAdicionarItemAquisicaoUseCase {

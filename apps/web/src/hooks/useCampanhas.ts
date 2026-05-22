@@ -9,6 +9,7 @@ import {
   type CriarOrdemInput,
   type RegistrarCotaInput,
   type CriarItemAquisicaoInput,
+  type RegistrarPedidoInput,
 } from '@/lib/api/campanhas'
 
 export const CAMPANHAS_KEY = ['campanhas'] as const
@@ -62,6 +63,14 @@ export function useDeletarCampanha() {
   return useMutation({
     mutationFn: (id: string) => campanhasApi.deletar(id),
     onSuccess: () => void qc.invalidateQueries({ queryKey: CAMPANHAS_KEY }),
+  })
+}
+
+export function useAtualizarReceita(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (receitaTotal: number) => campanhasApi.atualizarReceita(campanhaId, receitaTotal),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId] }),
   })
 }
 
@@ -245,8 +254,10 @@ export function useDistribuirItens(campanhaId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => campanhasApi.distribuirItens(campanhaId),
-    onSuccess: () =>
-      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'apuracao'] })
+    },
   })
 }
 
@@ -262,5 +273,46 @@ export function useApuracao(campanhaId: string, options?: { enabled?: boolean })
 export function useCalcularPreviewRateio(campanhaId: string) {
   return useMutation({
     mutationFn: () => campanhasApi.calcularPreviewRateio(campanhaId),
+  })
+}
+
+export function useEstoqueCampanha(campanhaId: string) {
+  return useQuery({
+    queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'],
+    queryFn: () => campanhasApi.listarEstoque(campanhaId),
+    enabled: Boolean(campanhaId),
+  })
+}
+
+// --- Pedidos de Aquisição ---
+export function usePedidosAquisicao(campanhaId: string, associadoId?: string) {
+  return useQuery({
+    queryKey: [...CAMPANHAS_KEY, campanhaId, 'pedidos', associadoId],
+    queryFn: () => campanhasApi.listarPedidos(campanhaId, associadoId),
+    enabled: Boolean(campanhaId),
+  })
+}
+
+export function useRegistrarPedido(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: RegistrarPedidoInput) => campanhasApi.registrarPedido(campanhaId, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'pedidos'] }),
+  })
+}
+
+export function useConfirmarPagamentoPedido(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (pedidoId: string) => campanhasApi.confirmarPagamentoPedido(pedidoId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'pedidos'] }),
+  })
+}
+
+export function useMarcarPedidoEntregue(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (pedidoId: string) => campanhasApi.marcarPedidoEntregue(pedidoId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'pedidos'] }),
   })
 }

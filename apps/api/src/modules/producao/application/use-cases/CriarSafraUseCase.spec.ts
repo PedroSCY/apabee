@@ -8,6 +8,7 @@ const repo: jest.Mocked<ISafraRepository> = {
   findByStatus: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 }
 
 describe('CriarSafraUseCase', () => {

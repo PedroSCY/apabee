@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, DollarSign, PowerOff, Leaf } from 'lucide-react'
+import { Plus, PowerOff, Leaf, Play, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,13 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EmptyState, ConfirmDialog } from '@/components/shared'
-import { useSafras, useEncerrarSafra } from '@/hooks/useSafras'
+import { useSafras, useEncerrarSafra, useIniciarSafra, useDeletarSafra } from '@/hooks/useSafras'
 import { useFloradas } from '@/hooks/useFloradas'
 import type { SafraResponse, StatusSafra } from '@/lib/api/safras'
 import type { FloradaResponse } from '@/lib/api/floradas'
 import { CriarSafraDialog } from './CriarSafraDialog'
 import { CriarFloradaDialog } from './CriarFloradaDialog'
-import { PrecosSafraDialog } from './PrecosSafraDialog'
 
 const STATUS_CONFIG: Record<StatusSafra, { label: string; className: string }> = {
   PLANEJADA: { label: 'Planejada', className: 'bg-slate-100 text-slate-700 border-transparent dark:bg-slate-800 dark:text-slate-300' },
@@ -32,12 +31,24 @@ function fmtDate(iso: string) {
 }
 
 function SafraCard({ safra }: { safra: SafraResponse }) {
-  const { mutateAsync: encerrar, isPending } = useEncerrarSafra()
-  const [confirmOpen, setConfirmOpen] = React.useState(false)
-  const [precosOpen, setPrecosOpen] = React.useState(false)
+  const { mutateAsync: iniciar, isPending: iniciando } = useIniciarSafra()
+  const { mutateAsync: encerrar, isPending: encerrando } = useEncerrarSafra()
+  const { mutateAsync: deletar, isPending: deletando } = useDeletarSafra()
+  const [confirmEncerrarOpen, setConfirmEncerrarOpen] = React.useState(false)
+  const [confirmIniciarOpen, setConfirmIniciarOpen] = React.useState(false)
+  const [confirmDeletarOpen, setConfirmDeletarOpen] = React.useState(false)
 
+  const isPending = iniciando || encerrando || deletando
   const sCfg = STATUS_CONFIG[safra.status]
-  const podeEncerrar = safra.status === 'EM_ANDAMENTO' || safra.status === 'PLANEJADA'
+
+  async function handleIniciar() {
+    try {
+      await iniciar(safra.id)
+      toast.success('Safra iniciada.')
+    } catch {
+      toast.error('Erro ao iniciar safra.')
+    }
+  }
 
   async function handleEncerrar() {
     try {
@@ -45,6 +56,15 @@ function SafraCard({ safra }: { safra: SafraResponse }) {
       toast.success('Safra encerrada.')
     } catch {
       toast.error('Erro ao encerrar safra.')
+    }
+  }
+
+  async function handleDeletar() {
+    try {
+      await deletar(safra.id)
+      toast.success('Safra excluída.')
+    } catch {
+      toast.error('Erro ao excluir safra.')
     }
   }
 
@@ -63,21 +83,35 @@ function SafraCard({ safra }: { safra: SafraResponse }) {
             {fmtDate(safra.dataInicio)}
             {safra.dataFim ? ` → ${fmtDate(safra.dataFim)}` : ' → em aberto'}
           </p>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1"
-              onClick={() => setPrecosOpen(true)}
-            >
-              <DollarSign className="size-3" /> Preços
-            </Button>
-            {podeEncerrar && (
+          <div className="flex gap-2 flex-wrap">
+            {safra.status === 'PLANEJADA' && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 text-emerald-600 hover:text-emerald-700"
+                  onClick={() => setConfirmIniciarOpen(true)}
+                  disabled={isPending}
+                >
+                  <Play className="size-3" /> Iniciar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+                  onClick={() => setConfirmDeletarOpen(true)}
+                  disabled={isPending}
+                >
+                  <Trash2 className="size-3" /> Excluir
+                </Button>
+              </>
+            )}
+            {safra.status === 'EM_ANDAMENTO' && (
               <Button
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
-                onClick={() => setConfirmOpen(true)}
+                onClick={() => setConfirmEncerrarOpen(true)}
                 disabled={isPending}
               >
                 <PowerOff className="size-3" /> Encerrar
@@ -88,8 +122,18 @@ function SafraCard({ safra }: { safra: SafraResponse }) {
       </Card>
 
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        open={confirmIniciarOpen}
+        onOpenChange={setConfirmIniciarOpen}
+        title="Iniciar safra?"
+        description={`A safra "${safra.nome}" passará para Em Andamento.`}
+        confirmLabel="Iniciar"
+        onConfirm={handleIniciar}
+        isPending={isPending}
+      />
+
+      <ConfirmDialog
+        open={confirmEncerrarOpen}
+        onOpenChange={setConfirmEncerrarOpen}
         title="Encerrar safra?"
         description={`A safra "${safra.nome}" será marcada como encerrada. Esta ação não pode ser desfeita.`}
         confirmLabel="Encerrar"
@@ -98,7 +142,17 @@ function SafraCard({ safra }: { safra: SafraResponse }) {
         isPending={isPending}
       />
 
-      <PrecosSafraDialog safra={safra} open={precosOpen} onOpenChange={setPrecosOpen} />
+      <ConfirmDialog
+        open={confirmDeletarOpen}
+        onOpenChange={setConfirmDeletarOpen}
+        title="Excluir safra?"
+        description={`A safra "${safra.nome}" será excluída permanentemente. Só é possível excluir safras sem campanhas ou colheitas vinculadas.`}
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={handleDeletar}
+        isPending={isPending}
+      />
+
     </>
   )
 }

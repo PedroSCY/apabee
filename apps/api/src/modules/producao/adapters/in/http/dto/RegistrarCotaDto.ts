@@ -1,10 +1,11 @@
-import { IsNumber, IsPositive, IsUUID } from 'class-validator'
-import { ApiProperty } from '@nestjs/swagger'
+import { IsNumber, IsOptional, IsPositive, IsUUID } from 'class-validator'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class RegistrarCotaDto {
-  @ApiProperty({ example: 'uuid-do-associado' })
+  @ApiPropertyOptional({ example: 'uuid-do-associado', description: 'Obrigatório para cotas de associado; omitir para cota da APA (RECURSO_PROPRIO)' })
+  @IsOptional()
   @IsUUID()
-  associadoId!: string
+  associadoId?: string
 
   @ApiProperty({ example: 500 })
   @IsNumber()

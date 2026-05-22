@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Cota, ICotaRepository } from '@apa/core'
+import { OrigemContribuicao } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -28,7 +29,12 @@ export class PrismaCotaRepository implements ICotaRepository {
 
   async save(cota: Cota): Promise<Cota> {
     const r = await this.prisma.cota.create({
-      data: { id: cota.id, campanhaId: cota.campanhaId, associadoId: cota.associadoId, valor: cota.valor, data: cota.data, pago: cota.pago, confirmadoEm: cota.confirmadoEm ?? null },
+      data: {
+        id: cota.id, campanhaId: cota.campanhaId,
+        associadoId: cota.associadoId ?? null,
+        origem: cota.origem,
+        valor: cota.valor, data: cota.data, pago: cota.pago, confirmadoEm: cota.confirmadoEm ?? null,
+      },
     })
     return this.toDomain(r)
   }
@@ -43,6 +49,11 @@ export class PrismaCotaRepository implements ICotaRepository {
   }
 
   private toDomain(r: any): Cota {
-    return new Cota({ id: r.id, campanhaId: r.campanhaId, associadoId: r.associadoId, valor: Number(r.valor), data: r.data, pago: r.pago, confirmadoEm: r.confirmadoEm ?? undefined })
+    return new Cota({
+      id: r.id, campanhaId: r.campanhaId,
+      associadoId: r.associadoId ?? undefined,
+      origem: (r.origem as OrigemContribuicao) ?? OrigemContribuicao.ASSOCIADO,
+      valor: Number(r.valor), data: r.data, pago: r.pago, confirmadoEm: r.confirmadoEm ?? undefined,
+    })
   }
 }

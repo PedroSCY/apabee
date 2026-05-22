@@ -8,12 +8,6 @@ export class AtualizarContribuicaoDto {
   @Min(0)
   valorMonetario?: number
 
-  @ApiPropertyOptional({ example: 4 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  horas?: number
-
   @ApiPropertyOptional({ example: 'Ajudei na rotulagem de 300 potes' })
   @IsOptional()
   @IsString()

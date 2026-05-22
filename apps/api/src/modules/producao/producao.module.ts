@@ -5,7 +5,7 @@ import { ColheitasController } from './adapters/in/http/ColheitasController'
 import { FloradasController } from './adapters/in/http/FloradasController'
 import { SafrasController } from './adapters/in/http/SafrasController'
 import { CampanhasController } from './adapters/in/http/CampanhasController'
-import { PrismaComposicaoProdutoRepository, PrismaEstoqueProdutoRepository } from '../catalogo/adapters/out/persistence'
+import { PrismaComposicaoProdutoRepository, PrismaEstoqueProdutoRepository, PrismaProdutoRepository } from '../catalogo/adapters/out/persistence'
 import { PrismaEquipamentoRepository } from '../patrimonio/adapters/out/persistence'
 import { PrismaItemPedidoRepository } from '../comercial/adapters/out/persistence'
 import {
@@ -15,24 +15,25 @@ import {
   PrismaContribuicaoRepository,
   PrismaCotaRepository,
   PrismaCustoCampanhaRepository,
+  PrismaEstoqueCampanhaRepository,
   PrismaEstoqueMateriaPrimaRepository,
   PrismaFloradaRepository,
   PrismaItemAquisicaoRepository,
   PrismaMovimentoFinanceiroRepository,
   PrismaOrdemProducaoRepository,
-  PrismaPrecoSafraRepository,
   PrismaSafraRepository,
   PrismaTipoMateriaPrimaRepository,
 } from './adapters/out/persistence'
+import { PrismaPedidoAquisicaoRepository } from './adapters/out/persistence/PrismaPedidoAquisicaoRepository'
 import {
   AdicionarItemAquisicaoUseCase,
   AtualizarContribuicaoUseCase,
   AtualizarItemAquisicaoUseCase,
   AtualizarSafraUseCase,
+  DeletarSafraUseCase,
   CriarFloradaUseCase,
   ListarFlораdasUseCase,
   BuscarCampanhaUseCase,
-  BuscarPrecoVigenteUseCase,
   BuscarSafraUseCase,
   BuscarTipoMateriaPrimaUseCase,
   DeletarTipoMateriaPrimaUseCase,
@@ -42,16 +43,18 @@ import {
   DeletarCampanhaUseCase,
   CancelarCotaUseCase,
   ConcluirCampanhaUseCase,
-  ConcluirOrdemProducaoUseCase,
+  DeletarOrdemProducaoUseCase,
+  AtualizarReceitaCampanhaUseCase,
+  PreviewRateioCampanhaUseCase,
   ConfirmarCotaUseCase,
   ConsultarApuracaoUseCase,
+  ListarEstoqueCampanhaUseCase,
   ConsultarEstoqueUseCase,
   CriarCampanhaUseCase,
   CriarColheitaUseCase,
   CriarOrdemProducaoUseCase,
   CriarSafraUseCase,
   CriarTipoMateriaPrimaUseCase,
-  DefinirPrecoSafraUseCase,
   DistribuirItensUseCase,
   EncerrarSafraUseCase,
   ExecutarOrdemProducaoUseCase,
@@ -70,7 +73,6 @@ import {
   ListarCustosPorCampanhaUseCase,
   ListarItensAquisicaoUseCase,
   ListarOrdensPorCampanhaUseCase,
-  ListarPrecosSafraUseCase,
   ListarSafrasUseCase,
   ListarTiposMateriaPrimaUseCase,
   LiquidarCampanhaUseCase,
@@ -85,6 +87,10 @@ import {
   RemoverCustoUseCase,
   RemoverItemAquisicaoUseCase,
   ResumoCaptacaoUseCase,
+  RegistrarPedidoAquisicaoUseCase,
+  ListarPedidosAquisicaoUseCase,
+  ConfirmarPagamentoPedidoUseCase,
+  MarcarPedidoEntregueUseCase,
 } from './application/use-cases'
 import {
   ADICIONAR_ITEM_AQUISICAO_USE_CASE,
@@ -95,8 +101,8 @@ import {
   ATUALIZAR_CONTRIBUICAO_USE_CASE,
   ATUALIZAR_ITEM_AQUISICAO_USE_CASE,
   ATUALIZAR_SAFRA_USE_CASE,
+  DELETAR_SAFRA_USE_CASE,
   BUSCAR_CAMPANHA_USE_CASE,
-  BUSCAR_PRECO_VIGENTE_USE_CASE,
   BUSCAR_SAFRA_USE_CASE,
   BUSCAR_TIPO_MATERIA_PRIMA_USE_CASE,
   DELETAR_TIPO_MATERIA_PRIMA_USE_CASE,
@@ -105,10 +111,12 @@ import {
   CAMPANHA_REPOSITORY,
   CANCELAR_CAMPANHA_USE_CASE,
   DELETAR_CAMPANHA_USE_CASE,
+  ATUALIZAR_RECEITA_CAMPANHA_USE_CASE,
+  PREVIEW_RATEIO_CAMPANHA_USE_CASE,
   CANCELAR_COTA_USE_CASE,
   COLHEITA_REPOSITORY,
   CONCLUIR_CAMPANHA_USE_CASE,
-  CONCLUIR_ORDEM_PRODUCAO_USE_CASE,
+  DELETAR_ORDEM_PRODUCAO_USE_CASE,
   CONFIRMAR_COTA_USE_CASE,
   CONSULTAR_APURACAO_USE_CASE,
   CONSULTAR_ESTOQUE_USE_CASE,
@@ -120,14 +128,16 @@ import {
   CRIAR_SAFRA_USE_CASE,
   CRIAR_TIPO_MATERIA_PRIMA_USE_CASE,
   CUSTO_CAMPANHA_REPOSITORY,
-  DEFINIR_PRECO_SAFRA_USE_CASE,
   DISTRIBUIR_ITENS_USE_CASE,
   ENCERRAR_SAFRA_USE_CASE,
   ESTOQUE_MATERIA_PRIMA_REPOSITORY,
+  ESTOQUE_CAMPANHA_REPOSITORY,
+  LISTAR_ESTOQUE_CAMPANHA_USE_CASE,
   EXECUTAR_ORDEM_PRODUCAO_USE_CASE,
   INICIAR_CAMPANHA_USE_CASE,
   INICIAR_SAFRA_USE_CASE,
   ITEM_AQUISICAO_REPOSITORY,
+  ITEM_PEDIDO_REPOSITORY,
   LISTAR_CAMPANHAS_USE_CASE,
   LISTAR_COLHEITAS_USE_CASE,
   LISTAR_COLHEITAS_ASSOCIADO_USE_CASE,
@@ -141,7 +151,6 @@ import {
   LISTAR_CUSTOS_CAMPANHA_USE_CASE,
   LISTAR_ITENS_AQUISICAO_USE_CASE,
   LISTAR_ORDENS_CAMPANHA_USE_CASE,
-  LISTAR_PRECOS_SAFRA_USE_CASE,
   LISTAR_SAFRAS_USE_CASE,
   LISTAR_TIPOS_MATERIA_PRIMA_USE_CASE,
   LIQUIDAR_CAMPANHA_USE_CASE,
@@ -149,7 +158,6 @@ import {
   MINHAS_COTAS_USE_CASE,
   MOVIMENTO_FINANCEIRO_REPOSITORY,
   ORDEM_PRODUCAO_REPOSITORY,
-  PRECO_SAFRA_REPOSITORY,
   RASTREAR_CAMPANHA_USE_CASE,
   REGISTRAR_CONTRIBUICAO_USE_CASE,
   REGISTRAR_COTA_USE_CASE,
@@ -161,16 +169,19 @@ import {
   RESUMO_CAPTACAO_USE_CASE,
   SAFRA_REPOSITORY,
   TIPO_MATERIA_PRIMA_REPOSITORY,
+  PEDIDO_AQUISICAO_REPOSITORY,
+  REGISTRAR_PEDIDO_AQUISICAO_USE_CASE,
+  LISTAR_PEDIDOS_AQUISICAO_USE_CASE,
+  CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE,
+  MARCAR_PEDIDO_ENTREGUE_USE_CASE,
 } from './producao.tokens'
 
 /** Catalogo string tokens — same values as catalogo.tokens.ts, avoids circular import. */
 const COMPOSICAO_PRODUTO_REPOSITORY = 'COMPOSICAO_PRODUTO_REPOSITORY'
 const ESTOQUE_PRODUTO_REPOSITORY = 'ESTOQUE_PRODUTO_REPOSITORY'
+const PRODUTO_REPOSITORY = 'PRODUTO_REPOSITORY'
 /** Patrimonio string token — same value as patrimonio.tokens.ts, avoids circular import. */
 const EQUIPAMENTO_REPOSITORY = 'EQUIPAMENTO_REPOSITORY'
-/** Comercial string token — same value as comercial.tokens.ts, avoids circular import. */
-const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
-
 @Module({
   imports: [PrismaModule],
   controllers: [TiposMateriaPrimaController, ColheitasController, FloradasController, SafrasController, CampanhasController],
@@ -182,7 +193,6 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     { provide: ESTOQUE_MATERIA_PRIMA_REPOSITORY, useClass: PrismaEstoqueMateriaPrimaRepository },
     // Repositórios — novo modelo
     { provide: SAFRA_REPOSITORY, useClass: PrismaSafraRepository },
-    { provide: PRECO_SAFRA_REPOSITORY, useClass: PrismaPrecoSafraRepository },
     { provide: CAMPANHA_REPOSITORY, useClass: PrismaCampanhaRepository },
     { provide: CONTRIBUICAO_REPOSITORY, useClass: PrismaContribuicaoRepository },
     { provide: COTA_REPOSITORY, useClass: PrismaCotaRepository },
@@ -191,9 +201,12 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     { provide: APURACAO_CAMPANHA_REPOSITORY, useClass: PrismaApuracaoCampanhaRepository },
     { provide: MOVIMENTO_FINANCEIRO_REPOSITORY, useClass: PrismaMovimentoFinanceiroRepository },
     { provide: ITEM_AQUISICAO_REPOSITORY, useClass: PrismaItemAquisicaoRepository },
+    { provide: ESTOQUE_CAMPANHA_REPOSITORY, useClass: PrismaEstoqueCampanhaRepository },
+    { provide: PEDIDO_AQUISICAO_REPOSITORY, useClass: PrismaPedidoAquisicaoRepository },
     // Repositórios — cross-module (tokens locais, sem import circular)
     { provide: COMPOSICAO_PRODUTO_REPOSITORY, useClass: PrismaComposicaoProdutoRepository },
     { provide: ESTOQUE_PRODUTO_REPOSITORY, useClass: PrismaEstoqueProdutoRepository },
+    { provide: PRODUTO_REPOSITORY, useClass: PrismaProdutoRepository },
     { provide: EQUIPAMENTO_REPOSITORY, useClass: PrismaEquipamentoRepository },
     { provide: ITEM_PEDIDO_REPOSITORY, useClass: PrismaItemPedidoRepository },
     // Use cases — florada
@@ -218,9 +231,7 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     { provide: ATUALIZAR_SAFRA_USE_CASE, useClass: AtualizarSafraUseCase },
     { provide: INICIAR_SAFRA_USE_CASE, useClass: IniciarSafraUseCase },
     { provide: ENCERRAR_SAFRA_USE_CASE, useClass: EncerrarSafraUseCase },
-    { provide: DEFINIR_PRECO_SAFRA_USE_CASE, useClass: DefinirPrecoSafraUseCase },
-    { provide: LISTAR_PRECOS_SAFRA_USE_CASE, useClass: ListarPrecosSafraUseCase },
-    { provide: BUSCAR_PRECO_VIGENTE_USE_CASE, useClass: BuscarPrecoVigenteUseCase },
+    { provide: DELETAR_SAFRA_USE_CASE, useClass: DeletarSafraUseCase },
     // Use cases — campanha
     { provide: CRIAR_CAMPANHA_USE_CASE, useClass: CriarCampanhaUseCase },
     { provide: LISTAR_CAMPANHAS_USE_CASE, useClass: ListarCampanhasUseCase },
@@ -229,6 +240,8 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     { provide: CONCLUIR_CAMPANHA_USE_CASE, useClass: ConcluirCampanhaUseCase },
     { provide: CANCELAR_CAMPANHA_USE_CASE, useClass: CancelarCampanhaUseCase },
     { provide: DELETAR_CAMPANHA_USE_CASE, useClass: DeletarCampanhaUseCase },
+    { provide: ATUALIZAR_RECEITA_CAMPANHA_USE_CASE, useClass: AtualizarReceitaCampanhaUseCase },
+    { provide: PREVIEW_RATEIO_CAMPANHA_USE_CASE, useClass: PreviewRateioCampanhaUseCase },
     { provide: LIQUIDAR_CAMPANHA_USE_CASE, useClass: LiquidarCampanhaUseCase },
     { provide: CONSULTAR_APURACAO_USE_CASE, useClass: ConsultarApuracaoUseCase },
     // Use cases — contribuição
@@ -254,7 +267,7 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     // Use cases — ordem de produção
     { provide: CRIAR_ORDEM_PRODUCAO_USE_CASE, useClass: CriarOrdemProducaoUseCase },
     { provide: EXECUTAR_ORDEM_PRODUCAO_USE_CASE, useClass: ExecutarOrdemProducaoUseCase },
-    { provide: CONCLUIR_ORDEM_PRODUCAO_USE_CASE, useClass: ConcluirOrdemProducaoUseCase },
+    { provide: DELETAR_ORDEM_PRODUCAO_USE_CASE, useClass: DeletarOrdemProducaoUseCase },
     { provide: LISTAR_ORDENS_CAMPANHA_USE_CASE, useClass: ListarOrdensPorCampanhaUseCase },
     { provide: CALCULAR_CONSUMO_USE_CASE, useClass: CalcularConsumoUseCase },
     // Use cases — custo de campanha
@@ -265,8 +278,14 @@ const ITEM_PEDIDO_REPOSITORY = 'ITEM_PEDIDO_REPOSITORY'
     { provide: REGISTRAR_ENTRADA_CONSUMIVEL_USE_CASE, useClass: RegistrarEntradaConsumivelUseCase },
     { provide: LISTAR_CONSUMIVEIS_USE_CASE, useClass: ListarConsumiveisUseCase },
     { provide: MIGRAR_INSUMOS_USE_CASE, useClass: MigrarInsumosConsumiveisUseCase },
+    { provide: LISTAR_ESTOQUE_CAMPANHA_USE_CASE, useClass: ListarEstoqueCampanhaUseCase },
     // Use cases — rastreabilidade
     { provide: RASTREAR_CAMPANHA_USE_CASE, useClass: RastrearCampanhaUseCase },
+    // Use cases — pedido aquisição
+    { provide: REGISTRAR_PEDIDO_AQUISICAO_USE_CASE, useClass: RegistrarPedidoAquisicaoUseCase },
+    { provide: LISTAR_PEDIDOS_AQUISICAO_USE_CASE, useClass: ListarPedidosAquisicaoUseCase },
+    { provide: CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE, useClass: ConfirmarPagamentoPedidoUseCase },
+    { provide: MARCAR_PEDIDO_ENTREGUE_USE_CASE, useClass: MarcarPedidoEntregueUseCase },
   ],
   exports: [
     COLHEITA_REPOSITORY,

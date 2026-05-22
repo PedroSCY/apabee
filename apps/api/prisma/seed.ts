@@ -7,20 +7,21 @@ const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@apabee.org.br'
 const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Admin@2025!'
 const NOME = process.env.SEED_ADMIN_NOME ?? 'Administrador'
 
-// IDs estáveis — seed é idempotente (pode rodar várias vezes)
+// IDs estáveis em formato UUID v4 válido — seed é idempotente (pode rodar várias vezes)
 const FLORADAS = [
-  { id: 'florada-laranjeira-seed', nome: 'Laranjeira', descricao: 'Florada de laranjeira' },
-  { id: 'florada-eucalipto-seed', nome: 'Eucalipto', descricao: 'Florada de eucalipto' },
-  { id: 'florada-silvestre-seed', nome: 'Silvestre', descricao: 'Vegetação nativa variada' },
-  { id: 'florada-aroeira-seed', nome: 'Aroeira', descricao: 'Florada de aroeira' },
-  { id: 'florada-outro-seed', nome: 'Outro', descricao: 'Outros tipos de florada' },
+  { id: '00000000-0000-4000-8000-000000000001', nome: 'Laranjeira', descricao: 'Florada de laranjeira' },
+  { id: '00000000-0000-4000-8000-000000000002', nome: 'Eucalipto', descricao: 'Florada de eucalipto' },
+  { id: '00000000-0000-4000-8000-000000000003', nome: 'Silvestre', descricao: 'Vegetação nativa variada' },
+  { id: '00000000-0000-4000-8000-000000000004', nome: 'Aroeira', descricao: 'Florada de aroeira' },
+  { id: '00000000-0000-4000-8000-000000000005', nome: 'Outro', descricao: 'Outros tipos de florada' },
 ]
 
 const TIPOS_MATERIA_PRIMA = [
-  { nome: 'Mel', unidade: 'KG', descricao: 'Mel de abelha in natura' },
-  { nome: 'Cera de Abelha', unidade: 'KG', descricao: 'Cera de abelha bruta' },
-  { nome: 'Própolis', unidade: 'KG', descricao: 'Extrato bruto de própolis' },
+  { id: '00000000-0000-4000-8000-000000000011', nome: 'Mel', unidade: 'KG', descricao: 'Mel de abelha in natura' },
+  { id: '00000000-0000-4000-8000-000000000012', nome: 'Cera de Abelha', unidade: 'KG', descricao: 'Cera de abelha bruta' },
+  { id: '00000000-0000-4000-8000-000000000013', nome: 'Própolis', unidade: 'KG', descricao: 'Extrato bruto de própolis' },
 ]
+
 
 async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -36,6 +37,20 @@ async function main() {
 
   console.log('\n=== Apabee seed ===\n')
 
+  // ── Limpeza do Supabase Auth (apenas quando o banco foi resetado) ──────────
+  // prisma db push --force-reset limpa o schema público mas não o auth.users.
+  // Se a tabela usuarios está vazia, o banco foi resetado — limpa Auth também.
+  const userCount = await prisma.usuario.count()
+  if (userCount === 0) {
+    console.log('→ Banco vazio detectado — limpando Supabase Auth...')
+    const { data: authList } = await supabase.auth.admin.listUsers()
+    const authUsers = authList?.users ?? []
+    for (const u of authUsers) {
+      await supabase.auth.admin.deleteUser(u.id)
+    }
+    console.log(`  ${authUsers.length} usuário(s) Auth removido(s)`)
+  }
+
   // ── Admin ─────────────────────────────────────────────────────────────────
   console.log('→ Admin...')
 
@@ -44,28 +59,16 @@ async function main() {
   if (existingAdmin) {
     console.log(`  já existe: ${existingAdmin.email}`)
   } else {
-    // Tenta encontrar o usuário no Supabase Auth pelo email (caso o banco foi resetado mas Auth não)
-    const { data: listData } = await supabase.auth.admin.listUsers()
-    const authUser = listData?.users.find(u => u.email === EMAIL)
-
-    let userId: string
-
-    if (authUser) {
-      console.log('  usuário Auth já existe, reutilizando ID')
-      userId = authUser.id
-    } else {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: EMAIL,
-        password: PASSWORD,
-        email_confirm: true,
-        app_metadata: { role: 'ADMIN' },
-      })
-      if (authError) throw new Error(`Supabase Auth: ${authError.message}`)
-      userId = authData.user.id
-    }
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: EMAIL,
+      password: PASSWORD,
+      email_confirm: true,
+      app_metadata: { role: 'ADMIN' },
+    })
+    if (authError) throw new Error(`Supabase Auth: ${authError.message}`)
 
     await prisma.usuario.create({
-      data: { id: userId, nome: NOME, email: EMAIL, role: 'ADMIN' },
+      data: { id: authData.user.id, nome: NOME, email: EMAIL, role: 'ADMIN' },
     })
 
     console.log(`  criado: ${EMAIL} / ${PASSWORD}`)
@@ -86,9 +89,9 @@ async function main() {
   console.log('→ Tipos de Matéria-Prima...')
   for (const t of TIPOS_MATERIA_PRIMA) {
     await prisma.tipoMateriaPrima.upsert({
-      where: { nome: t.nome },
+      where: { id: t.id },
       update: {},
-      create: { nome: t.nome, unidade: t.unidade as any, descricao: t.descricao },
+      create: { id: t.id, nome: t.nome, unidade: t.unidade as any, descricao: t.descricao },
     })
   }
   console.log(`  ${TIPOS_MATERIA_PRIMA.length} tipos OK`)

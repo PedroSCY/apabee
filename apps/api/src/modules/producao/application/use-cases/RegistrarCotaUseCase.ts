@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { Cota, ICampanhaRepository, ICotaRepository, IRegistrarCotaUseCase, RegistrarCotaInput } from '@apa/core'
-import { StatusCampanha, TipoLote } from '@apa/shared'
+import { OrigemContribuicao, StatusCampanha, TipoLote } from '@apa/shared'
 import { randomUUID } from 'crypto'
 import { CAMPANHA_REPOSITORY, COTA_REPOSITORY } from '../../producao.tokens'
 
@@ -27,10 +27,12 @@ export class RegistrarCotaUseCase implements IRegistrarCotaUseCase {
     if (campanha.valorMaximo && input.valor > campanha.valorMaximo)
       throw new BadRequestException(`Valor máximo da cota é R$ ${campanha.valorMaximo}`)
 
+    const origem = input.associadoId ? OrigemContribuicao.ASSOCIADO : OrigemContribuicao.RECURSO_PROPRIO
     const cota = new Cota({
       id: randomUUID(),
       campanhaId: input.campanhaId,
       associadoId: input.associadoId,
+      origem,
       valor: input.valor,
       data: new Date(),
       pago: false,

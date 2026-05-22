@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Campanha, ICampanhaRepository } from '@apa/core'
-import { StatusCampanha, TipoLote } from '@apa/shared'
+import { DestinatarioCampanha, StatusCampanha, TipoLote } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -45,6 +45,7 @@ export class PrismaCampanhaRepository implements ICampanhaRepository {
     return {
       id: c.id, codigo: c.codigo, nome: c.nome, tipo: c.tipo, safraId: c.safraId ?? null,
       dataInicio: c.dataInicio, dataFim: c.dataFim ?? null, status: c.status,
+      destinatario: c.destinatario ?? null,
       valorMeta: c.valorMeta ?? null, prazoContribuicao: c.prazoContribuicao ?? null,
       valorMinimo: c.valorMinimo ?? null, valorMaximo: c.valorMaximo ?? null,
       receitaTotal: c.receitaTotal, custoTotal: c.custoTotal, criadoEm: c.criadoEm,
@@ -55,7 +56,9 @@ export class PrismaCampanhaRepository implements ICampanhaRepository {
     return new Campanha({
       id: r.id, codigo: r.codigo, nome: r.nome, tipo: r.tipo as TipoLote,
       safraId: r.safraId ?? undefined, dataInicio: r.dataInicio, dataFim: r.dataFim ?? undefined,
-      status: r.status as StatusCampanha, valorMeta: r.valorMeta ? Number(r.valorMeta) : undefined,
+      status: r.status as StatusCampanha,
+      destinatario: r.destinatario as DestinatarioCampanha ?? undefined,
+      valorMeta: r.valorMeta ? Number(r.valorMeta) : undefined,
       prazoContribuicao: r.prazoContribuicao ?? undefined, valorMinimo: r.valorMinimo ? Number(r.valorMinimo) : undefined,
       valorMaximo: r.valorMaximo ? Number(r.valorMaximo) : undefined,
       receitaTotal: Number(r.receitaTotal), custoTotal: Number(r.custoTotal), criadoEm: r.criadoEm,

@@ -33,10 +33,12 @@ import {
 } from '@/components/ui/select'
 import { DecimalInput } from '@/components/shared'
 import { useTiposMateriaPrima, useCriarColheita } from '@/hooks/useProducao'
+import { useSafras } from '@/hooks/useSafras'
 import type { ApiError } from '@/lib/api/client'
 
 const schema = z.object({
-  tipoMateriaPrimaId: z.uuid('Selecione o tipo.'),
+  tipoMateriaPrimaId: z.string().min(1, 'Selecione o tipo.'),
+  safraId: z.string().uuid().optional(),
   volume: z.number().positive('Volume deve ser maior que zero.'),
   dataColheita: z.string().min(1, 'Informe a data.'),
   observacao: z.string().optional(),
@@ -52,12 +54,14 @@ interface Props {
 
 export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Props) {
   const { data: tipos = [] } = useTiposMateriaPrima()
+  const { data: safras = [] } = useSafras()
   const { mutateAsync: criarColheita, isPending } = useCriarColheita()
+
+  const safrasAtivas = safras.filter((s) => s.status === 'EM_ANDAMENTO')
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tipoMateriaPrimaId: '',
       dataColheita: new Date().toISOString().slice(0, 10),
       observacao: '',
     },
@@ -74,6 +78,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
         ...data,
         associadoId,
         unidade: tipoSelecionado?.unidade ?? 'KG',
+        safraId: data.safraId || undefined,
       })
       toast.success('Colheita registrada com sucesso.')
       onOpenChange(false)
@@ -95,7 +100,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
             <FormField control={form.control} name="tipoMateriaPrimaId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo de matéria-prima</FormLabel>
-                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
                   </FormControl>
@@ -108,6 +113,25 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
                 <FormMessage />
               </FormItem>
             )} />
+
+            {safrasAtivas.length > 0 && (
+              <FormField control={form.control} name="safraId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Safra <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel>
+                  <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Sem vínculo de safra" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {safrasAtivas.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="volume" render={({ field, fieldState }) => (

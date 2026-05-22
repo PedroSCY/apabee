@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/table'
 import { DecimalInput, EmptyState, ConfirmDialog } from '@/components/shared'
 import {
+  useEstoqueCampanha,
   useOrdensProducao,
   useCriarOrdemProducao,
   useExecutarOrdemProducao,
@@ -31,6 +32,7 @@ import {
   useCalcularConsumo,
 } from '@/hooks/useCampanhas'
 import { useProdutos } from '@/hooks/useCatalogo'
+import { useTiposMateriaPrima } from '@/hooks/useProducao'
 import type { OrdemProducaoResponse, StatusCampanha } from '@/lib/api/campanhas'
 import type { ApiError } from '@/lib/api/client'
 
@@ -210,7 +212,9 @@ interface Props {
 
 export function OrdensProducaoTab({ campanhaId, statusCampanha }: Props) {
   const { data: ordens = [], isLoading } = useOrdensProducao(campanhaId)
+  const { data: estoque = [] } = useEstoqueCampanha(campanhaId)
   const { data: produtos = [] } = useProdutos()
+  const { data: tipos = [] } = useTiposMateriaPrima()
   const { mutateAsync: executar, isPending: executando } = useExecutarOrdemProducao(campanhaId)
   const { mutateAsync: remover } = useRemoverOrdemProducao(campanhaId)
 
@@ -220,6 +224,7 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha }: Props) {
 
   const podeEditar = statusCampanha === 'PLANEJADA' || statusCampanha === 'ATIVA'
   const produtoNome = (id: string) => produtos.find(p => p.id === id)?.nome ?? id.slice(0, 8)
+  const tipoNome = (id: string) => tipos.find(t => t.id === id)?.nome ?? id.slice(0, 8)
 
   async function handleExecutar(ordemId: string) {
     try {
@@ -242,7 +247,34 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha }: Props) {
   if (isLoading) return <Skeleton className="h-32 w-full" />
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {estoque.length > 0 && (
+        <div className="rounded-md border p-4 space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Matéria-Prima Disponível</p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tipo</TableHead>
+                <TableHead className="text-right">Disponível</TableHead>
+                <TableHead>Unidade</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {estoque.map(e => (
+                <TableRow key={e.id}>
+                  <TableCell className="text-sm">{tipoNome(e.tipoMateriaPrimaId)}</TableCell>
+                  <TableCell className="text-right tabular-nums text-sm">
+                    {e.quantidadeDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{e.unidade}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <div className="space-y-4">
       {ordens.length === 0 ? (
         <EmptyState title="Nenhuma ordem de produção" description="Crie uma ordem para processar matéria-prima em produtos." className="py-8" />
       ) : (
@@ -339,6 +371,7 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha }: Props) {
         variant="destructive"
         onConfirm={() => removerOrdemId ? handleRemover(removerOrdemId) : Promise.resolve()}
       />
+      </div>
     </div>
   )
 }

@@ -179,20 +179,10 @@ export enum CategoriaCusto {
   OUTRO = 'OUTRO',
 }
 
-/** Tipo de contribuição de um associado a uma campanha. Tudo é convertido a valor monetário no rateio. */
+/** Tipo de contribuição de um associado a uma campanha. COLHEITA para campanhas de produção; DINHEIRO para campanhas de aquisição. */
 export enum TipoContribuicao {
   COLHEITA = 'COLHEITA',
   DINHEIRO = 'DINHEIRO',
-  MAO_DE_OBRA = 'MAO_DE_OBRA',
-  CONSUMIVEL = 'CONSUMIVEL',
-  EQUIPAMENTO = 'EQUIPAMENTO',
-  ACORDO = 'ACORDO',
-}
-
-/** Regra de cálculo para contribuições do tipo ACORDO (valor só conhecido na liquidação). */
-export enum RegraAcordo {
-  PERCENTUAL_LUCRO = 'PERCENTUAL_LUCRO',
-  FIXO_POR_UNIDADE = 'FIXO_POR_UNIDADE',
 }
 
 /** Destino do item adquirido numa campanha de AQUISIÇÃO. Define o que é criado após a compra. */
@@ -200,4 +190,16 @@ export enum TipoDestinoAquisicao {
   EQUIPAMENTO = 'EQUIPAMENTO',
   CONSUMIVEL = 'CONSUMIVEL',
   MATERIA_PRIMA = 'MATERIA_PRIMA',
+}
+
+/** Discrimina se a campanha de aquisição é para benefício individual dos associados ou patrimônio da APA. */
+export enum DestinatarioCampanha {
+  INDIVIDUAL = 'INDIVIDUAL',
+  APA        = 'APA',
+}
+
+/** Origem de uma contribuição, cota ou pedido: associado físico ou caixa da própria APA. */
+export enum OrigemContribuicao {
+  ASSOCIADO       = 'ASSOCIADO',
+  RECURSO_PROPRIO = 'RECURSO_PROPRIO',
 }

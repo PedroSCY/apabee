@@ -44,6 +44,7 @@ const itemRepo: jest.Mocked<IItemPedidoRepository> = {
   findByPedido: jest.fn(),
   findByCampanhaCodigo: jest.fn(),
   saveMany: jest.fn(),
+  sumQuantidadeEntregue: jest.fn(),
 }
 const produtoRepo: jest.Mocked<IProdutoRepository> = {
   findById: jest.fn(),

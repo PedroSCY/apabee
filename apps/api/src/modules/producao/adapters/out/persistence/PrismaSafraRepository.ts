@@ -39,6 +39,11 @@ export class PrismaSafraRepository implements ISafraRepository {
     return this.toDomain(r)
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.precoSafra.deleteMany({ where: { safraId: id } })
+    await this.prisma.safra.delete({ where: { id } })
+  }
+
   private toDomain(r: any): Safra {
     return new Safra({
       id: r.id,

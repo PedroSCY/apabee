@@ -12,8 +12,12 @@ export class PrismaOrdemProducaoRepository implements IOrdemProducaoRepository {
     return r ? this.toDomain(r) : null
   }
 
-  async findByCampanha(campanhaId: string): Promise<OrdemProducao[]> {
-    const rs = await this.prisma.ordemProducao.findMany({ where: { campanhaId }, include: { materiaisConsumidos: true }, orderBy: { criadoEm: 'desc' } })
+  async findByCampanha(campanhaId: string, statuses?: string[]): Promise<OrdemProducao[]> {
+    const rs = await this.prisma.ordemProducao.findMany({
+      where: { campanhaId, ...(statuses ? { status: { in: statuses as any } } : {}) },
+      include: { materiaisConsumidos: true },
+      orderBy: { criadoEm: 'desc' },
+    })
     return rs.map(r => this.toDomain(r))
   }
 
@@ -48,6 +52,11 @@ export class PrismaOrdemProducaoRepository implements IOrdemProducaoRepository {
       include: { materiaisConsumidos: true },
     })
     return this.toDomain(r)
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.materialOrdemProducao.deleteMany({ where: { ordemProducaoId: id } })
+    await this.prisma.ordemProducao.delete({ where: { id } })
   }
 
   private toDomain(r: any): OrdemProducao {

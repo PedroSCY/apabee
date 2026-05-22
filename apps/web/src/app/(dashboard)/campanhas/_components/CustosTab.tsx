@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CurrencyInput, EmptyState } from '@/components/shared'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useCustos, useRegistrarCusto, useRemoverCusto } from '@/hooks/useCampanhas'
+import { useAssociados } from '@/hooks/useAssociados'
 import type { CategoriaCusto, StatusCampanha } from '@/lib/api/campanhas'
 
 const CATEGORIAS: Array<{ value: CategoriaCusto; label: string }> = [
@@ -37,6 +38,7 @@ const schema = z.object({
     'EMBALAGEM', 'ROTULO', 'TRANSPORTE', 'PROCESSAMENTO',
     'CERTIFICACAO', 'TAXA', 'PERDA', 'MAO_DE_OBRA_CONTRATADA', 'OUTRO',
   ]),
+  pagoPorId: z.string().optional(),
 })
 type FormData = z.infer<typeof schema>
 
@@ -50,6 +52,7 @@ interface Props {
 export function CustosTab({ campanhaId, statusCampanha }: Props) {
   const [formAberto, setFormAberto] = React.useState(false)
   const { data: custos = [], isLoading } = useCustos(campanhaId)
+  const { data: associados = [] } = useAssociados()
   const { mutateAsync: registrar, isPending: registrando } = useRegistrarCusto(campanhaId)
   const { mutateAsync: remover } = useRemoverCusto(campanhaId)
 
@@ -60,9 +63,16 @@ export function CustosTab({ campanhaId, statusCampanha }: Props) {
     defaultValues: { descricao: '', categoria: 'OUTRO' },
   })
 
+  const nomeAssociado = (id: string) => associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)
+
   async function onSubmit(data: FormData) {
     try {
-      await registrar(data)
+      await registrar({
+        descricao: data.descricao,
+        valor: data.valor,
+        categoria: data.categoria,
+        pagoPorId: data.pagoPorId || undefined,
+      })
       toast.success('Custo registrado.')
       form.reset()
       setFormAberto(false)
@@ -91,6 +101,7 @@ export function CustosTab({ campanhaId, statusCampanha }: Props) {
                 <TableRow>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Categoria</TableHead>
+                  <TableHead>Adiantado por</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   {podeEditar && <TableHead />}
@@ -102,6 +113,11 @@ export function CustosTab({ campanhaId, statusCampanha }: Props) {
                     <TableCell className="font-medium">{c.descricao}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {CATEGORIAS.find(cat => cat.value === c.categoria)?.label ?? c.categoria}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {c.pagoPorId
+                        ? <span className="text-amber-600 font-medium">{nomeAssociado(c.pagoPorId)}</span>
+                        : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {format(parseISO(c.criadoEm), 'dd/MM/yyyy', { locale: ptBR })}
@@ -120,7 +136,7 @@ export function CustosTab({ campanhaId, statusCampanha }: Props) {
                   </TableRow>
                 ))}
                 <TableRow>
-                  <TableCell colSpan={podeEditar ? 3 : 3} className="font-semibold">Total</TableCell>
+                  <TableCell colSpan={4} className="font-semibold">Total</TableCell>
                   <TableCell className="text-right font-bold tabular-nums">{fmt(totalCustos)}</TableCell>
                   {podeEditar && <TableCell />}
                 </TableRow>
@@ -171,6 +187,20 @@ export function CustosTab({ campanhaId, statusCampanha }: Props) {
                   </SelectContent>
                 </Select>
               )} />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label>Quem adiantou <span className="text-muted-foreground text-xs">(RN27 — opcional)</span></Label>
+              <Controller control={form.control} name="pagoPorId" render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={registrando}>
+                  <SelectTrigger><SelectValue placeholder="Custo da associação" /></SelectTrigger>
+                  <SelectContent>
+                    {associados.map(a => (
+                      <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+              <p className="text-xs text-muted-foreground">Se um associado adiantou este custo, ele será reembolsado no rateio final.</p>
             </div>
           </div>
           <div className="flex gap-2">

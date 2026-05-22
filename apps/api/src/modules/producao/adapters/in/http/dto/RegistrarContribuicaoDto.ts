@@ -1,6 +1,6 @@
-import { IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { RegraAcordo, TipoContribuicao } from '@apa/shared'
+import { TipoContribuicao } from '@apa/shared'
 
 export class RegistrarContribuicaoDto {
   @ApiProperty({ example: 'uuid-do-associado' })
@@ -13,7 +13,7 @@ export class RegistrarContribuicaoDto {
 
   @ApiProperty({ example: 200 })
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   valorMonetario!: number
 
   @ApiPropertyOptional()
@@ -30,21 +30,6 @@ export class RegistrarContribuicaoDto {
   @IsOptional()
   @IsUUID()
   tipoMateriaPrimaId?: string
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  horas?: number
-
-  @ApiPropertyOptional({ enum: RegraAcordo })
-  @IsOptional()
-  @IsEnum(RegraAcordo)
-  regraCalculo?: RegraAcordo
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  regraParametro?: number
 
   @ApiPropertyOptional()
   @IsOptional()

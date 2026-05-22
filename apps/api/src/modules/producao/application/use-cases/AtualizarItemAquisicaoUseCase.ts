@@ -26,6 +26,18 @@ export class AtualizarItemAquisicaoUseCase implements IAtualizarItemAquisicaoUse
     if (campanha && campanha.status !== StatusCampanha.PLANEJADA && campanha.status !== StatusCampanha.ATIVA)
       throw new BadRequestException('Itens só podem ser alterados em campanhas PLANEJADAS ou ATIVAS')
 
-    return this.itemRepo.update(item.atualizar(input))
+    return this.itemRepo.update(
+      new ItemAquisicao({
+        id: item.id,
+        campanhaId: item.campanhaId,
+        nome: input.nome?.trim() ?? item.nome,
+        precoUnitario: input.precoUnitario ?? item.precoUnitario,
+        quantidadeMeta: input.quantidadeMeta ?? item.quantidadeMeta,
+        quantidadeTotalPedida: item.quantidadeTotalPedida,
+        unidade: input.unidade ?? item.unidade,
+        tipoDestinoId: input.tipoDestinoId ?? item.tipoDestinoId,
+        criadoEm: item.criadoEm,
+      }),
+    )
   }
 }

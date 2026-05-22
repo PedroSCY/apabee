@@ -25,13 +25,20 @@ const schema = z
     tipo: z.enum(['PRODUCAO', 'AQUISICAO'], { message: 'Selecione o tipo' }),
     dataInicio: z.string().min(1, 'Informe a data de início'),
     dataFim: z.string().optional(),
+    destinatario: z.enum(['INDIVIDUAL', 'APA']).optional(),
     valorMeta: z.number().positive('Valor deve ser positivo').optional(),
     prazoContribuicao: z.string().optional(),
     safraId: z.string().optional(),
+    valorMinimo: z.number().positive('Deve ser positivo').optional(),
+    valorMaximo: z.number().positive('Deve ser positivo').optional(),
   })
   .refine(
     (d) => d.tipo !== 'AQUISICAO' || (d.valorMeta != null && d.valorMeta > 0),
     { message: 'Valor meta é obrigatório para campanhas de aquisição', path: ['valorMeta'] },
+  )
+  .refine(
+    (d) => !d.valorMinimo || !d.valorMaximo || d.valorMinimo <= d.valorMaximo,
+    { message: 'Valor mínimo deve ser ≤ valor máximo', path: ['valorMinimo'] },
   )
 
 type FormData = z.infer<typeof schema>
@@ -44,7 +51,7 @@ interface Props {
 export function CriarCampanhaDialog({ open, onOpenChange }: Props) {
   const { mutateAsync: criar, isPending } = useCriarCampanha()
   const { data: safras = [] } = useSafras()
-  const safrasAtivas = safras.filter(s => s.status === 'EM_ANDAMENTO' || s.status === 'PLANEJADA')
+  const safrasAtivas = safras.filter(s => s.status === 'EM_ANDAMENTO')
 
   const { register, handleSubmit, reset, control, watch, clearErrors, formState: { errors } } =
     useForm<FormData>({
@@ -54,9 +61,12 @@ export function CriarCampanhaDialog({ open, onOpenChange }: Props) {
         tipo: 'PRODUCAO',
         dataInicio: new Date().toISOString().slice(0, 10),
         dataFim: undefined,
+        destinatario: undefined,
         valorMeta: undefined,
         prazoContribuicao: undefined,
         safraId: undefined,
+        valorMinimo: undefined,
+        valorMaximo: undefined,
       },
     })
 
@@ -75,9 +85,12 @@ export function CriarCampanhaDialog({ open, onOpenChange }: Props) {
         tipo: data.tipo,
         dataInicio: data.dataInicio,
         dataFim: data.dataFim || undefined,
+        destinatario: data.destinatario,
         valorMeta: data.valorMeta,
         prazoContribuicao: data.prazoContribuicao || undefined,
         safraId: data.safraId || undefined,
+        valorMinimo: data.valorMinimo,
+        valorMaximo: data.valorMaximo,
       })
       toast.success('Campanha criada com sucesso.')
       onOpenChange(false)
@@ -165,25 +178,73 @@ export function CriarCampanhaDialog({ open, onOpenChange }: Props) {
           </div>
 
           {tipo === 'AQUISICAO' && (
-            <div className="grid grid-cols-2 gap-3">
-              <Controller
-                control={control}
-                name="valorMeta"
-                render={({ field, fieldState }) => (
-                  <CurrencyInput
-                    label="Meta (R$) *"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={fieldState.error?.message}
-                    disabled={isPending}
-                  />
-                )}
-              />
+            <>
               <div className="space-y-1.5">
-                <Label htmlFor="prazoContribuicao">Prazo <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                <Input id="prazoContribuicao" type="date" {...register('prazoContribuicao')} disabled={isPending} />
+                <Label>Destinatário <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                <Controller
+                  control={control}
+                  name="destinatario"
+                  render={({ field }) => (
+                    <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o destinatário…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INDIVIDUAL">Individual — cada associado faz seu pedido</SelectItem>
+                        <SelectItem value="APA">APA — aquisição para a associação</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller
+                  control={control}
+                  name="valorMeta"
+                  render={({ field, fieldState }) => (
+                    <CurrencyInput
+                      label="Meta (R$) *"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.error?.message}
+                      disabled={isPending}
+                    />
+                  )}
+                />
+                <div className="space-y-1.5">
+                  <Label htmlFor="prazoContribuicao">Prazo <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input id="prazoContribuicao" type="date" {...register('prazoContribuicao')} disabled={isPending} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller
+                  control={control}
+                  name="valorMinimo"
+                  render={({ field, fieldState }) => (
+                    <CurrencyInput
+                      label="Cota mínima (R$)"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.error?.message}
+                      disabled={isPending}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="valorMaximo"
+                  render={({ field, fieldState }) => (
+                    <CurrencyInput
+                      label="Cota máxima (R$)"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.error?.message}
+                      disabled={isPending}
+                    />
+                  )}
+                />
+              </div>
+            </>
           )}
 
           <DialogFooter>

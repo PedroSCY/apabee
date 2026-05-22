@@ -1,6 +1,6 @@
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID, MinLength } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { TipoLote } from '@apa/shared'
+import { DestinatarioCampanha, TipoLote } from '@apa/shared'
 
 export class CriarCampanhaDto {
   @ApiProperty({ example: 'Campanha Mel Laranjeira 2025' })
@@ -11,6 +11,11 @@ export class CriarCampanhaDto {
   @ApiProperty({ enum: TipoLote })
   @IsEnum(TipoLote)
   tipo!: TipoLote
+
+  @ApiPropertyOptional({ enum: DestinatarioCampanha, description: 'Apenas para campanhas de AQUISICAO' })
+  @IsOptional()
+  @IsEnum(DestinatarioCampanha)
+  destinatario?: DestinatarioCampanha
 
   @ApiPropertyOptional({ example: 'uuid-da-safra' })
   @IsOptional()

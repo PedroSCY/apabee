@@ -20,6 +20,7 @@ const ordemRepo: jest.Mocked<IOrdemProducaoRepository> = {
   findByCampanha: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 }
 
 describe('CriarOrdemProducaoUseCase', () => {

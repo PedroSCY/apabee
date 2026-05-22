@@ -6,6 +6,7 @@ const mockRepo: jest.Mocked<ITipoMateriaPrimaRepository> = {
   findById: jest.fn(),
   findAll: jest.fn(),
   save: jest.fn(),
+  delete: jest.fn(),
 }
 
 describe('CriarTipoMateriaPrimaUseCase', () => {

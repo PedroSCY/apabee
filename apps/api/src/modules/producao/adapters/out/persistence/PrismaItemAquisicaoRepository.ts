@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { ItemAquisicao, IItemAquisicaoRepository } from '@apa/core'
-import { TipoDestinoAquisicao } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -22,12 +21,12 @@ export class PrismaItemAquisicaoRepository implements IItemAquisicaoRepository {
       data: {
         id: item.id,
         campanhaId: item.campanhaId,
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        valorEstimado: item.valorEstimado,
-        tipoDestino: item.tipoDestino,
-        equipamentoNome: item.equipamentoNome ?? null,
-        tipoMateriaPrimaId: item.tipoMateriaPrimaId ?? null,
+        nome: item.nome,
+        precoUnitario: item.precoUnitario,
+        quantidadeMeta: item.quantidadeMeta,
+        quantidadeTotalPedida: item.quantidadeTotalPedida,
+        unidade: item.unidade,
+        tipoDestinoId: item.tipoDestinoId ?? null,
         criadoEm: item.criadoEm,
       },
     })
@@ -38,12 +37,12 @@ export class PrismaItemAquisicaoRepository implements IItemAquisicaoRepository {
     const r = await this.prisma.itemAquisicao.update({
       where: { id: item.id },
       data: {
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        valorEstimado: item.valorEstimado,
-        tipoDestino: item.tipoDestino,
-        equipamentoNome: item.equipamentoNome ?? null,
-        tipoMateriaPrimaId: item.tipoMateriaPrimaId ?? null,
+        nome: item.nome,
+        precoUnitario: item.precoUnitario,
+        quantidadeMeta: item.quantidadeMeta,
+        quantidadeTotalPedida: item.quantidadeTotalPedida,
+        unidade: item.unidade,
+        tipoDestinoId: item.tipoDestinoId ?? null,
       },
     })
     return this.toDomain(r)
@@ -57,12 +56,12 @@ export class PrismaItemAquisicaoRepository implements IItemAquisicaoRepository {
     return new ItemAquisicao({
       id: r.id,
       campanhaId: r.campanhaId,
-      descricao: r.descricao,
-      quantidade: r.quantidade,
-      valorEstimado: Number(r.valorEstimado),
-      tipoDestino: r.tipoDestino as TipoDestinoAquisicao,
-      equipamentoNome: r.equipamentoNome ?? undefined,
-      tipoMateriaPrimaId: r.tipoMateriaPrimaId ?? undefined,
+      nome: r.nome,
+      precoUnitario: Number(r.precoUnitario),
+      quantidadeMeta: r.quantidadeMeta,
+      quantidadeTotalPedida: r.quantidadeTotalPedida,
+      unidade: r.unidade,
+      tipoDestinoId: r.tipoDestinoId ?? undefined,
       criadoEm: r.criadoEm,
     })
   }

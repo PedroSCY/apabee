@@ -36,7 +36,7 @@ const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 const fmtDate = (iso: string) => format(parseISO(iso), 'dd/MM/yyyy', { locale: ptBR })
 
 const schema = z.object({
-  associadoId: z.string().min(1, 'Selecione o associado'),
+  associadoId: z.string().optional(),
   valor: z.number().positive('Valor deve ser positivo'),
 })
 type FormData = z.infer<typeof schema>
@@ -59,7 +59,7 @@ function RegistrarCotaDialog({ campanhaId, valorMinimo, valorMaximo, open, onOpe
 
   async function onSubmit(data: FormData) {
     try {
-      await registrar(data)
+      await registrar({ associadoId: data.associadoId || undefined, valor: data.valor })
       toast.success('Cota registrada.')
       onOpenChange(false)
     } catch (e) {
@@ -78,26 +78,21 @@ function RegistrarCotaDialog({ campanhaId, valorMinimo, valorMaximo, open, onOpe
         <DialogHeader><DialogTitle>Registrar Cota</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Associado *</Label>
+            <Label>Associado <span className="text-muted-foreground text-xs">(deixe vazio para cota da APA)</span></Label>
             <Controller
               control={control}
               name="associadoId"
-              render={({ field, fieldState }) => (
-                <>
-                  <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
-                    <SelectTrigger className={fieldState.error ? 'border-destructive' : ''}>
-                      <SelectValue placeholder="Selecione o associado…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {associados.map(a => (
-                        <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.error && (
-                    <p className="text-[0.8rem] font-medium text-destructive">{fieldState.error.message}</p>
-                  )}
-                </>
+              render={({ field }) => (
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="APA — Recurso Próprio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {associados.map(a => (
+                      <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             />
           </div>
@@ -155,7 +150,8 @@ export function CotasTab({ campanhaId, statusCampanha, isAdmin, valorMeta, valor
   const arrecadado = cotas.reduce((s, c) => s + c.valor, 0)
   const progressoPct = valorMeta ? Math.min((arrecadado / valorMeta) * 100, 100) : 0
 
-  const associadoNome = (id: string) => associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)
+  const associadoNome = (id?: string) =>
+    id ? (associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)) : 'APA — Recurso Próprio'
 
   async function handleConfirmar(cotaId: string) {
     try {
@@ -208,7 +204,7 @@ export function CotasTab({ campanhaId, statusCampanha, isAdmin, valorMeta, valor
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Associado</TableHead>
+              <TableHead>Associado / Origem</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Registro</TableHead>
@@ -219,7 +215,14 @@ export function CotasTab({ campanhaId, statusCampanha, isAdmin, valorMeta, valor
           <TableBody>
             {cotas.map(c => (
               <TableRow key={c.id}>
-                <TableCell className="font-medium">{associadoNome(c.associadoId)}</TableCell>
+                <TableCell className="font-medium">
+                  <div>
+                    {associadoNome(c.associadoId)}
+                    {c.origem === 'RECURSO_PROPRIO' && (
+                      <Badge variant="outline" className="ml-2 text-xs bg-slate-100 text-slate-600 border-transparent">APA</Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right tabular-nums">{fmt(c.valor)}</TableCell>
                 <TableCell>
                   {c.pago ? (
@@ -247,15 +250,17 @@ export function CotasTab({ campanhaId, statusCampanha, isAdmin, valorMeta, valor
                           <Check className="h-3.5 w-3.5" />
                         </Button>
                       )}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        title="Cancelar cota"
-                        onClick={() => setCancelarCotaId(c.id)}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      {c.origem !== 'RECURSO_PROPRIO' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          title="Cancelar cota"
+                          onClick={() => setCancelarCotaId(c.id)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 )}

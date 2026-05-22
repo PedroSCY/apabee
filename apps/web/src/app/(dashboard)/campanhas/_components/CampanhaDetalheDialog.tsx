@@ -16,6 +16,7 @@ import {
 import type { CampanhaResponse, StatusCampanha, TipoCampanha } from '@/lib/api/campanhas'
 import { ContribuicoesTab } from './ContribuicoesTab'
 import { CustosTab } from './CustosTab'
+import { PedidosTab } from '../[id]/_components/PedidosTab'
 
 const STATUS_CONFIG: Record<StatusCampanha, { label: string; className: string }> = {
   PLANEJADA: { label: 'Planejada', className: 'bg-slate-100 text-slate-700 border-transparent dark:bg-slate-800 dark:text-slate-300' },
@@ -134,14 +135,29 @@ export function CampanhaDetalheDialog({ campanha, open, onOpenChange }: Props) {
             )}
           </div>
 
-          <Tabs defaultValue="contribuicoes">
+          <Tabs defaultValue={campanha.tipo === 'AQUISICAO' && campanha.destinatario === 'INDIVIDUAL' ? 'pedidos' : 'contribuicoes'}>
             <TabsList>
-              <TabsTrigger value="contribuicoes">Contribuições</TabsTrigger>
+              {campanha.tipo === 'AQUISICAO' && campanha.destinatario === 'INDIVIDUAL' ? (
+                <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
+              ) : (
+                <TabsTrigger value="contribuicoes">Contribuições</TabsTrigger>
+              )}
               <TabsTrigger value="custos">Custos</TabsTrigger>
             </TabsList>
-            <TabsContent value="contribuicoes" className="mt-4">
-              <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} />
-            </TabsContent>
+            {campanha.tipo === 'AQUISICAO' && campanha.destinatario === 'INDIVIDUAL' ? (
+              <TabsContent value="pedidos" className="mt-4">
+                <PedidosTab
+                  campanhaId={campanha.id}
+                  statusCampanha={campanha.status}
+                  isAdmin={true}
+                  destinatario={campanha.destinatario}
+                />
+              </TabsContent>
+            ) : (
+              <TabsContent value="contribuicoes" className="mt-4">
+                <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} tipoCampanha={campanha.tipo} />
+              </TabsContent>
+            )}
             <TabsContent value="custos" className="mt-4">
               <CustosTab campanhaId={campanha.id} statusCampanha={campanha.status} />
             </TabsContent>

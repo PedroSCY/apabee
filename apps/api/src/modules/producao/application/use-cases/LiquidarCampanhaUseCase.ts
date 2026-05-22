@@ -2,23 +2,28 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import {
   ApuracaoCampanha,
   Campanha,
-  Contribuicao,
+  EstoqueMateriaPrima,
   IApuracaoCampanhaRepository,
   ICampanhaRepository,
   IContribuicaoRepository,
   ICustoCampanhaRepository,
+  IEstoqueCampanhaRepository,
+  IEstoqueMateriaPrimaRepository,
   ILiquidarCampanhaUseCase,
+  MovimentacaoEstoque,
   MovimentoFinanceiro,
   RateioCampanha,
 } from '@apa/core'
 import { IMovimentoFinanceiroRepository } from '@apa/core'
-import { RegraAcordo, StatusCampanha, TipoContribuicao, TipoMovimentoFinanceiro } from '@apa/shared'
+import { StatusCampanha, TipoLote, TipoMovimentacao, TipoMovimentoFinanceiro } from '@apa/shared'
 import { randomUUID } from 'crypto'
 import {
   APURACAO_CAMPANHA_REPOSITORY,
   CAMPANHA_REPOSITORY,
   CONTRIBUICAO_REPOSITORY,
   CUSTO_CAMPANHA_REPOSITORY,
+  ESTOQUE_CAMPANHA_REPOSITORY,
+  ESTOQUE_MATERIA_PRIMA_REPOSITORY,
   MOVIMENTO_FINANCEIRO_REPOSITORY,
 } from '../../producao.tokens'
 
@@ -36,6 +41,10 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     private readonly apuracaoRepo: IApuracaoCampanhaRepository,
     @Inject(MOVIMENTO_FINANCEIRO_REPOSITORY)
     private readonly movimentoRepo: IMovimentoFinanceiroRepository,
+    @Inject(ESTOQUE_CAMPANHA_REPOSITORY)
+    private readonly estoqueCampanhaRepo: IEstoqueCampanhaRepository,
+    @Inject(ESTOQUE_MATERIA_PRIMA_REPOSITORY)
+    private readonly estoquePoolRepo: IEstoqueMateriaPrimaRepository,
   ) {}
 
   async execute(id: string): Promise<Campanha> {
@@ -43,11 +52,13 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     if (!campanha) throw new NotFoundException('Campanha não encontrada')
     if (campanha.status !== StatusCampanha.CONCLUIDA)
       throw new BadRequestException('Apenas campanhas CONCLUIDAS podem ser liquidadas')
+    if (campanha.receitaTotal <= 0)
+      throw new BadRequestException('Informe a receita total antes de liquidar (use PATCH /campanhas/:id/receita)')
 
     // 1. Soma de custos
     const custoTotal = await this.custoRepo.sumByCampanha(id)
 
-    // 2. Busca todos os custos para verificar pagoPorId (RN27)
+    // 2. Custos adiantados por associado (RN27)
     const custos = await this.custoRepo.findByCampanha(id)
     const custosAdiantadosPorAssociado = new Map<string, number>()
     for (const custo of custos) {
@@ -57,29 +68,28 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
       }
     }
 
-    // 3. Busca contribuições e calcula valorMonetario dos ACORDOs
+    // 3. Busca contribuições
     const contribuicoes = await this.contribuicaoRepo.findByCampanha(id)
-    const contribuicoesResolvidas = this.resolverAcordos(
-      contribuicoes,
-      campanha.receitaTotal - custoTotal,
-      0, // total de unidades vendidas — simplificado no MVP
-    )
-
-    // 4. Agrupa contribuições por associado
-    const totalPorAssociado = new Map<string, number>()
-    for (const c of contribuicoesResolvidas) {
-      const anterior = totalPorAssociado.get(c.associadoId) ?? 0
-      totalPorAssociado.set(c.associadoId, anterior + c.valorMonetario)
-    }
-
-    if (totalPorAssociado.size === 0)
+    if (contribuicoes.length === 0)
       throw new BadRequestException('Campanha não possui contribuições registradas')
 
-    const somaTotalContribuicoes = Array.from(totalPorAssociado.values()).reduce((a, b) => a + b, 0)
-    const lucroLiquido = campanha.receitaTotal - custoTotal
-    const faturamentoTotal = campanha.receitaTotal
+    // 4. Calcula proporção por associado
+    // PRODUCAO → rateio por volume (kg/litro coletados — RN18)
+    // AQUISICAO → rateio por valor monetário investido
+    const proporcaoPorAssociado = new Map<string, number>()
+    for (const c of contribuicoes) {
+      const base = campanha.tipo === TipoLote.PRODUCAO
+        ? (c.volume ?? 0)
+        : c.valorMonetario
+      const anterior = proporcaoPorAssociado.get(c.associadoId) ?? 0
+      proporcaoPorAssociado.set(c.associadoId, anterior + base)
+    }
 
-    // 5. Busca antecipações por associado
+    const somaTotal = Array.from(proporcaoPorAssociado.values()).reduce((a, b) => a + b, 0)
+    if (somaTotal === 0)
+      throw new BadRequestException('Soma das contribuições é zero — impossível calcular rateio')
+
+    // 5. Antecipações por associado
     const movimentos = await this.movimentoRepo.findByCampanha(id)
     const antecipacoesPorAssociado = new Map<string, number>()
     for (const m of movimentos) {
@@ -90,13 +100,13 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     }
 
     // 6. Calcula rateio (RN13/RN18)
+    const faturamentoTotal = campanha.receitaTotal
+    const lucroLiquido = faturamentoTotal - custoTotal
     const rateios: RateioCampanha[] = []
     const movimentosParaSalvar: MovimentoFinanceiro[] = []
 
-    for (const [associadoId, contribuicaoTotal] of totalPorAssociado) {
-      const percentual = somaTotalContribuicoes > 0
-        ? contribuicaoTotal / somaTotalContribuicoes
-        : 0
+    for (const [associadoId, proporcao] of proporcaoPorAssociado) {
+      const percentual = proporcao / somaTotal
       const valorBruto = percentual * faturamentoTotal
       const custosRateados = percentual * custoTotal
       const custoAdiantado = custosAdiantadosPorAssociado.get(associadoId) ?? 0
@@ -104,7 +114,7 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
       // RN27: associado que adiantou custo não paga novamente — abate do rateio
       const valorFinal = valorBruto - custosRateados + custoAdiantado - antecipacoes
 
-      rateios.push({ associadoId, contribuicaoTotal, percentual, valorBruto, custosRateados, antecipacoes, valorFinal })
+      rateios.push({ associadoId, contribuicaoTotal: proporcao, percentual, valorBruto, custosRateados, antecipacoes, valorFinal })
 
       if (valorFinal !== 0) {
         movimentosParaSalvar.push(
@@ -137,25 +147,46 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     if (movimentosParaSalvar.length > 0)
       await this.movimentoRepo.saveMany(movimentosParaSalvar)
 
+    // 8. Transfere saldo residual de EstoqueCampanha para o pool (RN26)
+    await this.transferirResidualParaPool(id)
+
     const campanhaLiquidada = campanha.liquidar(faturamentoTotal, custoTotal)
     return this.campanhaRepo.update(campanhaLiquidada)
   }
 
-  /** Calcula valorMonetario dos ACORDOs baseado nas regras configuradas. */
-  private resolverAcordos(
-    contribuicoes: Contribuicao[],
-    lucroLiquido: number,
-    totalUnidadesVendidas: number,
-  ): Contribuicao[] {
-    return contribuicoes.map(c => {
-      if (c.tipo !== TipoContribuicao.ACORDO || c.regraCalculo === undefined || c.regraParametro === undefined)
-        return c
-      let valor = 0
-      if (c.regraCalculo === RegraAcordo.PERCENTUAL_LUCRO)
-        valor = lucroLiquido * (c.regraParametro / 100)
-      else if (c.regraCalculo === RegraAcordo.FIXO_POR_UNIDADE)
-        valor = totalUnidadesVendidas * c.regraParametro
-      return c.resolverAcordo(valor)
-    })
+  /** Move saldo restante do EstoqueCampanha para o pool global após liquidação. */
+  private async transferirResidualParaPool(campanhaId: string): Promise<void> {
+    const estoques = await this.estoqueCampanhaRepo.findByCampanha(campanhaId)
+    for (const ec of estoques) {
+      if (ec.quantidadeDisponivel <= 0) continue
+
+      const poolExistente = await this.estoquePoolRepo.findByTipo(ec.tipoMateriaPrimaId)
+      let poolAtualizado: EstoqueMateriaPrima
+      if (poolExistente) {
+        poolAtualizado = await this.estoquePoolRepo.update(poolExistente.entrada(ec.quantidadeDisponivel))
+      } else {
+        const novo = new EstoqueMateriaPrima({
+          id: randomUUID(),
+          tipoMateriaPrimaId: ec.tipoMateriaPrimaId,
+          quantidadeDisponivel: 0,
+          unidade: ec.unidade,
+          atualizadoEm: new Date(),
+        })
+        poolAtualizado = await this.estoquePoolRepo.save(novo.entrada(ec.quantidadeDisponivel))
+      }
+
+      await this.estoquePoolRepo.salvarMovimentacao(
+        new MovimentacaoEstoque({
+          id: randomUUID(),
+          estoqueId: poolAtualizado.id,
+          tipo: TipoMovimentacao.ENTRADA,
+          quantidade: ec.quantidadeDisponivel,
+          referenciaId: campanhaId,
+          criadoEm: new Date(),
+        }),
+      )
+
+      await this.estoqueCampanhaRepo.update(ec.saida(ec.quantidadeDisponivel))
+    }
   }
 }

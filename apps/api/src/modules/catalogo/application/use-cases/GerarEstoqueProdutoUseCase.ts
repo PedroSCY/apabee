@@ -34,6 +34,11 @@ export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
 
   /** Executa a validação de saldo, consumo de insumos e atualização do estoque final. */
   async execute(input: GerarEstoqueInput): Promise<EstoqueProduto> {
+    if (input.campanhaId)
+      throw new BadRequestException(
+        'Produção vinculada a campanha deve ser realizada via OrdemProducao, não via GerarEstoque.',
+      )
+
     const produto = await this.produtoRepository.findById(input.produtoId)
     if (!produto) throw new NotFoundException(`Produto ${input.produtoId} não encontrado.`)
 
@@ -81,11 +86,6 @@ export class GerarEstoqueProdutoUseCase implements IGerarEstoqueProdutoUseCase {
           atualizadoEm: new Date(),
         }),
       )
-    }
-
-    // Vincula a campanha de origem ao produto quando informada
-    if (input.campanhaId) {
-      await this.produtoRepository.update(produto.comCampanha(input.campanhaId))
     }
 
     return estoque

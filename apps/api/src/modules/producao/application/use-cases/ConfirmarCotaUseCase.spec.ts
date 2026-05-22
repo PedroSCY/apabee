@@ -3,7 +3,7 @@ import { ConfirmarCotaUseCase } from './ConfirmarCotaUseCase'
 import { Cota, ICotaRepository } from '@apa/core'
 
 const makeCota = (pago: boolean) =>
-  new Cota({ id: 'cota-1', campanhaId: 'c-1', associadoId: 'assoc-1', valor: 300, data: new Date(), pago })
+  new Cota({ id: 'cota-1', campanhaId: 'c-1', associadoId: 'assoc-1', origem: 'ASSOCIADO' as any, valor: 300, data: new Date(), pago })
 
 const repo: jest.Mocked<ICotaRepository> = {
   findById: jest.fn(),

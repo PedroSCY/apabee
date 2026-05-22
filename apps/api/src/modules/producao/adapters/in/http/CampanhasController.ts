@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { RoleUsuario } from '@apa/shared'
 import {
@@ -12,7 +12,8 @@ import {
   ICancelarCampanhaUseCase,
   ICancelarCotaUseCase,
   IConcluirCampanhaUseCase,
-  IConcluirOrdemProducaoUseCase,
+  IAtualizarReceitaCampanhaUseCase,
+  IDeletarOrdemProducaoUseCase,
   IConfirmarCotaUseCase,
   IConsultarApuracaoUseCase,
   ICriarCampanhaUseCase,
@@ -33,12 +34,14 @@ import {
   IRemoverCustoUseCase,
   ItemAquisicao,
   OrdemProducao,
+  PedidoAquisicao,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import {
   AdicionarItemAquisicaoDto,
   AtualizarContribuicaoDto,
   AtualizarItemAquisicaoDto,
+  AtualizarReceitaDto,
   CriarCampanhaDto,
   CriarOrdemProducaoDto,
   RegistrarContribuicaoDto,
@@ -55,8 +58,9 @@ import {
   CANCELAR_CAMPANHA_USE_CASE,
   CANCELAR_COTA_USE_CASE,
   DELETAR_CAMPANHA_USE_CASE,
+  ATUALIZAR_RECEITA_CAMPANHA_USE_CASE,
   CONCLUIR_CAMPANHA_USE_CASE,
-  CONCLUIR_ORDEM_PRODUCAO_USE_CASE,
+  DELETAR_ORDEM_PRODUCAO_USE_CASE,
   CONFIRMAR_COTA_USE_CASE,
   CONSULTAR_APURACAO_USE_CASE,
   CRIAR_CAMPANHA_USE_CASE,
@@ -69,8 +73,10 @@ import {
   LISTAR_COTAS_CAMPANHA_USE_CASE,
   LISTAR_CUSTOS_CAMPANHA_USE_CASE,
   LISTAR_ITENS_AQUISICAO_USE_CASE,
+  LISTAR_ESTOQUE_CAMPANHA_USE_CASE,
   LISTAR_ORDENS_CAMPANHA_USE_CASE,
   LIQUIDAR_CAMPANHA_USE_CASE,
+  PREVIEW_RATEIO_CAMPANHA_USE_CASE,
   RASTREAR_CAMPANHA_USE_CASE,
   REGISTRAR_CONTRIBUICAO_USE_CASE,
   REGISTRAR_COTA_USE_CASE,
@@ -79,15 +85,27 @@ import {
   REMOVER_CUSTO_USE_CASE,
   REMOVER_ITEM_AQUISICAO_USE_CASE,
   RESUMO_CAPTACAO_USE_CASE,
+  REGISTRAR_PEDIDO_AQUISICAO_USE_CASE,
+  LISTAR_PEDIDOS_AQUISICAO_USE_CASE,
+  CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE,
+  MARCAR_PEDIDO_ENTREGUE_USE_CASE,
 } from '../../../producao.tokens'
 import { RastrearCampanhaUseCase } from '../../../application/use-cases'
+import {
+  ConfirmarPagamentoPedidoUseCase,
+  ListarPedidosAquisicaoUseCase,
+  MarcarPedidoEntregueUseCase,
+  RegistrarPedidoAquisicaoUseCase,
+} from '../../../application/use-cases/index'
 import {
   IAdicionarItemAquisicaoUseCase,
   IAtualizarItemAquisicaoUseCase,
   ICalcularConsumoUseCase,
   ICalcularDistribuicaoPreviewUseCase,
   IDistribuirItensUseCase,
+  IListarEstoqueCampanhaUseCase,
   IListarItensAquisicaoUseCase,
+  IPreviewRateioCampanhaUseCase,
   IRemoverItemAquisicaoUseCase,
   IResumoCaptacaoUseCase,
 } from '@apa/core'
@@ -104,7 +122,9 @@ export class CampanhasController {
     @Inject(CONCLUIR_CAMPANHA_USE_CASE) private readonly concluir: IConcluirCampanhaUseCase,
     @Inject(CANCELAR_CAMPANHA_USE_CASE) private readonly cancelar: ICancelarCampanhaUseCase,
     @Inject(DELETAR_CAMPANHA_USE_CASE) private readonly deletar: IDeletarCampanhaUseCase,
+    @Inject(ATUALIZAR_RECEITA_CAMPANHA_USE_CASE) private readonly atualizarReceita: IAtualizarReceitaCampanhaUseCase,
     @Inject(LIQUIDAR_CAMPANHA_USE_CASE) private readonly liquidar: ILiquidarCampanhaUseCase,
+    @Inject(PREVIEW_RATEIO_CAMPANHA_USE_CASE) private readonly previewRateio: IPreviewRateioCampanhaUseCase,
     @Inject(REGISTRAR_CONTRIBUICAO_USE_CASE) private readonly registrarContribuicao: IRegistrarContribuicaoUseCase,
     @Inject(LISTAR_CONTRIBUICOES_CAMPANHA_USE_CASE) private readonly listarContribuicoes: IListarContribuicoesPorCampanhaUseCase,
     @Inject(ATUALIZAR_CONTRIBUICAO_USE_CASE) private readonly atualizarContribuicao: IAtualizarContribuicaoUseCase,
@@ -120,7 +140,7 @@ export class CampanhasController {
     @Inject(CRIAR_ORDEM_PRODUCAO_USE_CASE) private readonly criarOrdem: ICriarOrdemProducaoUseCase,
     @Inject(LISTAR_ORDENS_CAMPANHA_USE_CASE) private readonly listarOrdens: IListarOrdensPorCampanhaUseCase,
     @Inject(EXECUTAR_ORDEM_PRODUCAO_USE_CASE) private readonly executarOrdem: IExecutarOrdemProducaoUseCase,
-    @Inject(CONCLUIR_ORDEM_PRODUCAO_USE_CASE) private readonly concluirOrdem: IConcluirOrdemProducaoUseCase,
+    @Inject(DELETAR_ORDEM_PRODUCAO_USE_CASE) private readonly deletarOrdem: IDeletarOrdemProducaoUseCase,
     @Inject(CALCULAR_CONSUMO_USE_CASE) private readonly calcularConsumo: ICalcularConsumoUseCase,
     @Inject(ADICIONAR_ITEM_AQUISICAO_USE_CASE) private readonly adicionarItem: IAdicionarItemAquisicaoUseCase,
     @Inject(LISTAR_ITENS_AQUISICAO_USE_CASE) private readonly listarItens: IListarItensAquisicaoUseCase,
@@ -130,6 +150,11 @@ export class CampanhasController {
     @Inject(CALCULAR_DISTRIBUICAO_PREVIEW_USE_CASE) private readonly previewDistribuicao: ICalcularDistribuicaoPreviewUseCase,
     @Inject(CONSULTAR_APURACAO_USE_CASE) private readonly consultarApuracao: IConsultarApuracaoUseCase,
     @Inject(RASTREAR_CAMPANHA_USE_CASE) private readonly rastrear: RastrearCampanhaUseCase,
+    @Inject(LISTAR_ESTOQUE_CAMPANHA_USE_CASE) private readonly listarEstoqueCampanha: IListarEstoqueCampanhaUseCase,
+    @Inject(REGISTRAR_PEDIDO_AQUISICAO_USE_CASE) private readonly registrarPedido: RegistrarPedidoAquisicaoUseCase,
+    @Inject(LISTAR_PEDIDOS_AQUISICAO_USE_CASE) private readonly listarPedidos: ListarPedidosAquisicaoUseCase,
+    @Inject(CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE) private readonly confirmarPagamento: ConfirmarPagamentoPedidoUseCase,
+    @Inject(MARCAR_PEDIDO_ENTREGUE_USE_CASE) private readonly marcarEntregue: MarcarPedidoEntregueUseCase,
   ) {}
 
   // ─── Campanha ─────────────────────────────────────────────────────────────
@@ -200,6 +225,15 @@ export class CampanhasController {
     await this.deletar.execute(id)
   }
 
+  @ApiOperation({ summary: 'Informar receita total da campanha antes da liquidação (campanha CONCLUIDA)' })
+  @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Patch(':id/receita')
+  async atualizarReceita_(@Param('id') id: string, @Body() dto: AtualizarReceitaDto) {
+    return this.toCampanhaResponse(await this.atualizarReceita.execute(id, dto.receitaTotal))
+  }
+
   @ApiOperation({ summary: 'Liquidar campanha — calcula rateio e gera movimentos financeiros (RN26, irreversível)' })
   @ApiParam({ name: 'id', type: String })
   @Roles(RoleUsuario.ADMIN)
@@ -207,6 +241,14 @@ export class CampanhasController {
   @Patch(':id/liquidar')
   async liquidarCampanha(@Param('id') id: string) {
     return this.toCampanhaResponse(await this.liquidar.execute(id))
+  }
+
+  @ApiOperation({ summary: 'Preview do rateio antes da liquidação — campanha CONCLUIDA com receitaTotal informada (RN13/RN18, read-only)' })
+  @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @Get(':id/rateio-preview')
+  async previewRateio_(@Param('id') id: string) {
+    return this.previewRateio.execute(id)
   }
 
   @ApiOperation({ summary: 'Consultar apuração financeira da campanha (disponível após liquidação — RN26)' })
@@ -363,6 +405,39 @@ export class CampanhasController {
     return this.toApuracaoResponse(await this.distribuir.execute(campanhaId))
   }
 
+  // ─── Pedidos de Aquisição ────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Registrar pedido em campanha de aquisição individual' })
+  @ApiParam({ name: 'id', type: String })
+  @Post(':id/pedidos-aquisicao')
+  async registrarPedido_(@Param('id') campanhaId: string, @Body() dto: any) {
+    return this.toPedidoAquisicaoResponse(await this.registrarPedido.execute({ ...dto, campanhaId }))
+  }
+
+  @ApiOperation({ summary: 'Listar pedidos de uma campanha de aquisição individual' })
+  @ApiParam({ name: 'id', type: String })
+  @Get(':id/pedidos-aquisicao')
+  async listarPedidos_(@Param('id') campanhaId: string, @Query('associadoId') associadoId?: string) {
+    const lista = await this.listarPedidos.execute(campanhaId, associadoId)
+    return lista.map(p => this.toPedidoAquisicaoResponse(p))
+  }
+
+  @ApiOperation({ summary: 'Confirmar pagamento de um pedido de aquisição' })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Patch('pedidos-aquisicao/:pedidoId/pagar')
+  async confirmarPagamento_(@Param('pedidoId') pedidoId: string) {
+    return this.toPedidoAquisicaoResponse(await this.confirmarPagamento.execute(pedidoId))
+  }
+
+  @ApiOperation({ summary: 'Marcar pedido de aquisição como entregue' })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Patch('pedidos-aquisicao/:pedidoId/entregar')
+  async marcarEntregue_(@Param('pedidoId') pedidoId: string) {
+    return this.toPedidoAquisicaoResponse(await this.marcarEntregue.execute(pedidoId))
+  }
+
   // ─── Rastreabilidade ─────────────────────────────────────────────────────
 
   @ApiOperation({ summary: 'Rastrear pedidos por código de campanha (RN24 — recall)' })
@@ -429,14 +504,14 @@ export class CampanhasController {
     return this.toOrdemResponse(await this.executarOrdem.execute(ordemId))
   }
 
-  @ApiOperation({ summary: 'Concluir ordem de produção (EM_EXECUCAO → CONCLUIDA)' })
+  @ApiOperation({ summary: 'Remover ordem de produção PENDENTE' })
   @ApiParam({ name: 'id', type: String })
   @ApiParam({ name: 'ordemId', type: String })
   @Roles(RoleUsuario.ADMIN)
-  @HttpCode(HttpStatus.OK)
-  @Patch(':id/ordens/:ordemId/concluir')
-  async concluirOrdem_(@Param('ordemId') ordemId: string) {
-    return this.toOrdemResponse(await this.concluirOrdem.execute(ordemId))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id/ordens/:ordemId')
+  async deletarOrdem_(@Param('ordemId') ordemId: string) {
+    await this.deletarOrdem.execute(ordemId)
   }
 
   @ApiOperation({ summary: 'Calcular consumo previsto da ordem (preview — não executa)' })
@@ -448,12 +523,28 @@ export class CampanhasController {
     return this.calcularConsumo.execute(ordemId)
   }
 
+  // ─── Estoque da Campanha ─────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Listar saldo de matéria-prima disponível na campanha' })
+  @ApiParam({ name: 'id', type: String })
+  @Get(':id/estoque-campanha')
+  async listarEstoque_(@Param('id') campanhaId: string) {
+    const lista = await this.listarEstoqueCampanha.execute(campanhaId)
+    return lista.map(e => ({
+      id: e.id,
+      tipoMateriaPrimaId: e.tipoMateriaPrimaId,
+      quantidadeDisponivel: e.quantidadeDisponivel,
+      unidade: e.unidade,
+    }))
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   private toCampanhaResponse(c: Campanha) {
     return {
       id: c.id, codigo: c.codigo, nome: c.nome, tipo: c.tipo, safraId: c.safraId,
       dataInicio: c.dataInicio, dataFim: c.dataFim, status: c.status,
+      destinatario: c.destinatario,
       valorMeta: c.valorMeta, prazoContribuicao: c.prazoContribuicao,
       valorMinimo: c.valorMinimo, valorMaximo: c.valorMaximo,
       receitaTotal: c.receitaTotal, custoTotal: c.custoTotal, criadoEm: c.criadoEm,
@@ -464,16 +555,19 @@ export class CampanhasController {
     return {
       id: c.id, campanhaId: c.campanhaId, associadoId: c.associadoId, tipo: c.tipo,
       valorMonetario: c.valorMonetario, colheitaId: c.colheitaId, volume: c.volume,
-      tipoMateriaPrimaId: c.tipoMateriaPrimaId, horas: c.horas,
-      regraCalculo: c.regraCalculo, regraParametro: c.regraParametro,
+      tipoMateriaPrimaId: c.tipoMateriaPrimaId,
       descricao: c.descricao, liquidado: c.liquidado, criadoEm: c.criadoEm,
     }
   }
 
   private toCotaResponse(c: Cota) {
     return {
-      id: c.id, campanhaId: c.campanhaId, associadoId: c.associadoId,
-      valor: c.valor, data: c.data, pago: c.pago, confirmadoEm: c.confirmadoEm,
+      id: c.id, campanhaId: c.campanhaId,
+      associadoId: c.associadoId ?? null,
+      origem: c.origem,
+      valor: c.valor, pago: c.pago,
+      dataRegistro: c.data,
+      dataConfirmacao: c.confirmadoEm ?? null,
     }
   }
 
@@ -498,16 +592,28 @@ export class CampanhasController {
     return {
       id: a.id, campanhaId: a.campanhaId,
       faturamentoTotal: a.faturamentoTotal, custoTotal: a.custoTotal, lucroLiquido: a.lucroLiquido,
-      liquidadoEm: a.liquidadoEm, rateios: a.rateios,
+      liquidadoEm: a.liquidadoEm, participantes: a.rateios,
     }
   }
 
   private toItemAquisicaoResponse(i: ItemAquisicao) {
     return {
-      id: i.id, campanhaId: i.campanhaId, descricao: i.descricao,
-      quantidade: i.quantidade, valorEstimado: i.valorEstimado, tipoDestino: i.tipoDestino,
-      equipamentoNome: i.equipamentoNome, tipoMateriaPrimaId: i.tipoMateriaPrimaId,
-      valorTotal: i.valorTotal(), criadoEm: i.criadoEm,
+      id: i.id, campanhaId: i.campanhaId, nome: i.nome,
+      precoUnitario: i.precoUnitario, quantidadeMeta: i.quantidadeMeta,
+      quantidadeTotalPedida: i.quantidadeTotalPedida, unidade: i.unidade,
+      tipoDestinoId: i.tipoDestinoId, metaAtingida: i.metaAtingida,
+      valorTotalPedido: i.valorTotalPedido(), criadoEm: i.criadoEm,
+    }
+  }
+
+  private toPedidoAquisicaoResponse(p: PedidoAquisicao) {
+    return {
+      id: p.id, campanhaId: p.campanhaId, itemAquisicaoId: p.itemAquisicaoId,
+      associadoId: p.associadoId, origem: p.origem,
+      quantidade: p.quantidade, valorTotal: p.valorTotal,
+      pago: p.pago, pagoEm: p.pagoEm,
+      entregue: p.entregue, entregueEm: p.entregueEm,
+      criadoEm: p.criadoEm,
     }
   }
 }

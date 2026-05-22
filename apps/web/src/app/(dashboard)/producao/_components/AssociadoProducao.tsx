@@ -31,17 +31,12 @@ const TIPO_CONFIG: Record<TipoCampanha, { label: string; className: string }> = 
 const TIPO_CONTRIBUICAO_LABELS: Record<string, string> = {
   COLHEITA: 'Colheita',
   DINHEIRO: 'Dinheiro',
-  MAO_DE_OBRA: 'Mão de obra',
-  CONSUMIVEL: 'Consumível',
-  EQUIPAMENTO: 'Equipamento',
-  ACORDO: 'Acordo',
 }
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-function contribuicaoDetalhe(tipo: string, volume?: number, horas?: number, descricao?: string): string {
-  if (tipo === 'COLHEITA' && volume) return `${TIPO_CONTRIBUICAO_LABELS[tipo]}: ${volume}`
-  if (tipo === 'MAO_DE_OBRA' && horas) return `${TIPO_CONTRIBUICAO_LABELS[tipo]}: ${horas}h`
+function contribuicaoDetalhe(tipo: string, volume?: number, descricao?: string): string {
+  if (tipo === 'COLHEITA' && volume) return `${TIPO_CONTRIBUICAO_LABELS[tipo] ?? tipo}: ${volume}`
   if (descricao) return `${TIPO_CONTRIBUICAO_LABELS[tipo] ?? tipo}: ${descricao}`
   return TIPO_CONTRIBUICAO_LABELS[tipo] ?? tipo
 }
@@ -74,7 +69,7 @@ function CampanhaContribuicaoCard({ campanha, associadoId }: {
         <CardContent className="pt-0 space-y-1">
           {minhas.map(c => (
             <p key={c.id} className="text-xs text-muted-foreground">
-              {contribuicaoDetalhe(c.tipo, c.volume, c.horas, c.descricao)}
+              {contribuicaoDetalhe(c.tipo, c.volume, c.descricao)}
               {' → '}
               <span className="text-foreground font-medium">{fmt(c.valorMonetario)}</span>
             </p>

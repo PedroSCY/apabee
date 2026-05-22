@@ -8,4 +8,5 @@ export interface ISafraRepository {
   findByStatus(status: StatusSafra): Promise<Safra[]>
   save(safra: Safra): Promise<Safra>
   update(safra: Safra): Promise<Safra>
+  delete(id: string): Promise<void>
 }

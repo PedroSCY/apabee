@@ -20,12 +20,14 @@ import {
   useLiquidarCampanha,
   useDeletarCampanha,
 } from '@/hooks/useCampanhas'
+import { useSafras } from '@/hooks/useSafras'
 import type { StatusCampanha, TipoCampanha } from '@/lib/api/campanhas'
 import { ContribuicoesTab } from '../../_components/ContribuicoesTab'
 import { CustosTab } from '../../_components/CustosTab'
 import { OrdensProducaoTab } from './OrdensProducaoTab'
 import { CotasTab } from './CotasTab'
 import { ItensAquisicaoTab } from './ItensAquisicaoTab'
+import { PedidosTab } from './PedidosTab'
 import { ApuracaoTab } from './ApuracaoTab'
 
 const STATUS_CONFIG: Record<StatusCampanha, { label: string; className: string }> = {
@@ -55,6 +57,7 @@ interface Props {
 export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
   const router = useRouter()
   const { data: campanha, isLoading } = useCampanha(campanhaId)
+  const { data: safras = [] } = useSafras()
   const [confirmCancelar, setConfirmCancelar] = React.useState(false)
   const [confirmLiquidar, setConfirmLiquidar] = React.useState(false)
   const [confirmDeletar, setConfirmDeletar] = React.useState(false)
@@ -88,6 +91,7 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
   const statusCfg = STATUS_CONFIG[campanha.status]
   const tipoCfg = TIPO_CONFIG[campanha.tipo]
   const resultado = campanha.receitaTotal - campanha.custoTotal
+  const safraNome = campanha.safraId ? (safras.find(s => s.id === campanha.safraId)?.nome ?? campanha.safraId.slice(0, 8)) : null
 
   async function handleIniciar() {
     try { await iniciar(campanha!.id); toast.success('Campanha iniciada.') }
@@ -125,6 +129,9 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
               <span className="font-mono text-xs text-muted-foreground">{campanha.codigo}</span>
               <Badge variant="outline" className={tipoCfg.className}>{tipoCfg.label}</Badge>
               <Badge variant="outline" className={statusCfg.className}>{statusCfg.label}</Badge>
+              {safraNome && (
+                <span className="text-xs text-muted-foreground">Safra: <span className="text-foreground font-medium">{safraNome}</span></span>
+              )}
             </span>
           }
         />
@@ -215,6 +222,9 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
           {campanha.tipo === 'AQUISICAO' && (
             <TabsTrigger value="itens">Itens</TabsTrigger>
           )}
+          {campanha.tipo === 'AQUISICAO' && campanha.destinatario === 'INDIVIDUAL' && (
+            <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
+          )}
           <TabsTrigger value="contribuicoes">Contribuições</TabsTrigger>
           <TabsTrigger value="custos">Custos</TabsTrigger>
           <TabsTrigger value="apuracao">Apuração</TabsTrigger>
@@ -242,17 +252,28 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
               campanhaId={campanha.id}
               statusCampanha={campanha.status}
               isAdmin={isAdmin}
+              destinatario={campanha.destinatario}
+            />
+          </TabsContent>
+        )}
+        {campanha.tipo === 'AQUISICAO' && campanha.destinatario === 'INDIVIDUAL' && (
+          <TabsContent value="pedidos" className="mt-4">
+            <PedidosTab
+              campanhaId={campanha.id}
+              statusCampanha={campanha.status}
+              isAdmin={isAdmin}
+              destinatario={campanha.destinatario}
             />
           </TabsContent>
         )}
         <TabsContent value="contribuicoes" className="mt-4">
-          <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} />
+          <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} tipoCampanha={campanha.tipo} />
         </TabsContent>
         <TabsContent value="custos" className="mt-4">
           <CustosTab campanhaId={campanha.id} statusCampanha={campanha.status} />
         </TabsContent>
         <TabsContent value="apuracao" className="mt-4">
-          <ApuracaoTab campanhaId={campanha.id} statusCampanha={campanha.status} />
+          <ApuracaoTab campanhaId={campanha.id} statusCampanha={campanha.status} campanha={campanha} />
         </TabsContent>
       </Tabs>
 

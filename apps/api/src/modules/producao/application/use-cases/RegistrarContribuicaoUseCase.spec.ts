@@ -3,8 +3,8 @@ import { RegistrarContribuicaoUseCase } from './RegistrarContribuicaoUseCase'
 import { Campanha, ICampanhaRepository, IContribuicaoRepository } from '@apa/core'
 import { StatusCampanha, TipoContribuicao, TipoLote } from '@apa/shared'
 
-const makeCampanha = (status: StatusCampanha) =>
-  new Campanha({ id: 'c-1', codigo: 'PROD-2025-001', nome: 'Teste', tipo: TipoLote.PRODUCAO, dataInicio: new Date(), status, receitaTotal: 0, custoTotal: 0, criadoEm: new Date() })
+const makeCampanha = (status: StatusCampanha, tipo = TipoLote.PRODUCAO) =>
+  new Campanha({ id: 'c-1', codigo: 'PROD-2025-001', nome: 'Teste', tipo, dataInicio: new Date(), status, receitaTotal: 0, custoTotal: 0, criadoEm: new Date() })
 
 const campanhaRepo: jest.Mocked<ICampanhaRepository> = {
   findById: jest.fn(),
@@ -29,6 +29,7 @@ const contribuicaoRepo: jest.Mocked<IContribuicaoRepository> = {
 describe('RegistrarContribuicaoUseCase', () => {
   let useCase: RegistrarContribuicaoUseCase
 
+  // campanha de AQUISICAO aceita DINHEIRO
   const input = {
     campanhaId: 'c-1',
     associadoId: 'assoc-1',
@@ -42,8 +43,8 @@ describe('RegistrarContribuicaoUseCase', () => {
     contribuicaoRepo.save.mockImplementation(async c => c)
   })
 
-  it('registra contribuição em campanha ATIVA', async () => {
-    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA))
+  it('registra contribuição DINHEIRO em campanha AQUISICAO ATIVA', async () => {
+    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA, TipoLote.AQUISICAO))
     const result = await useCase.execute(input)
     expect(result.campanhaId).toBe('c-1')
     expect(result.valorMonetario).toBe(200)
@@ -51,10 +52,23 @@ describe('RegistrarContribuicaoUseCase', () => {
     expect(contribuicaoRepo.save).toHaveBeenCalledTimes(1)
   })
 
+  it('registra contribuição COLHEITA em campanha PRODUCAO ATIVA', async () => {
+    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA, TipoLote.PRODUCAO))
+    const inputColheita = { campanhaId: 'c-1', associadoId: 'assoc-1', tipo: TipoContribuicao.COLHEITA, valorMonetario: 0, volume: 30 }
+    const result = await useCase.execute(inputColheita)
+    expect(result.tipo).toBe(TipoContribuicao.COLHEITA)
+    expect(contribuicaoRepo.save).toHaveBeenCalledTimes(1)
+  })
+
   it('aplica trim na descricao', async () => {
-    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA))
+    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA, TipoLote.AQUISICAO))
     const result = await useCase.execute({ ...input, descricao: '  Pagamento em dinheiro  ' })
     expect(result.descricao).toBe('Pagamento em dinheiro')
+  })
+
+  it('rejeita tipo incompatível com campanha (DINHEIRO em PRODUCAO)', async () => {
+    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA, TipoLote.PRODUCAO))
+    await expect(useCase.execute(input)).rejects.toThrow(BadRequestException)
   })
 
   it('lança NotFoundException se campanha não existe', async () => {
@@ -63,7 +77,7 @@ describe('RegistrarContribuicaoUseCase', () => {
   })
 
   it('lança BadRequestException se campanha não está ATIVA', async () => {
-    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.PLANEJADA))
+    campanhaRepo.findById.mockResolvedValue(makeCampanha(StatusCampanha.PLANEJADA, TipoLote.AQUISICAO))
     await expect(useCase.execute(input)).rejects.toThrow(BadRequestException)
   })
 })

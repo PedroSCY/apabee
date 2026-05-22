@@ -1,37 +1,31 @@
 import { ApiPropertyOptional } from '@nestjs/swagger'
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator'
-import { TipoDestinoAquisicao } from '@apa/shared'
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
 export class AtualizarItemAquisicaoDto {
-  @ApiPropertyOptional({ example: 'Centrífuga Elétrica 20 quadros — modelo atualizado' })
+  @ApiPropertyOptional({ example: 'Caixa de colmeia Langstroth — modelo atualizado' })
   @IsOptional()
   @IsString()
-  descricao?: string
+  nome?: string
 
-  @ApiPropertyOptional({ example: 2 })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  quantidade?: number
-
-  @ApiPropertyOptional({ example: 4800.0 })
+  @ApiPropertyOptional({ example: 360.0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  valorEstimado?: number
+  precoUnitario?: number
 
-  @ApiPropertyOptional({ enum: TipoDestinoAquisicao })
+  @ApiPropertyOptional({ example: 60 })
   @IsOptional()
-  @IsEnum(TipoDestinoAquisicao)
-  tipoDestino?: TipoDestinoAquisicao
+  @IsNumber()
+  @Min(1)
+  quantidadeMeta?: number
 
-  @ApiPropertyOptional({ example: 'Centrífuga Inox Premium' })
-  @IsOptional()
-  @IsString()
-  equipamentoNome?: string
-
-  @ApiPropertyOptional({ example: 'uuid-do-tipo-materia-prima' })
+  @ApiPropertyOptional({ example: 'unid' })
   @IsOptional()
   @IsString()
-  tipoMateriaPrimaId?: string
+  unidade?: string
+
+  @ApiPropertyOptional({ example: 'uuid-do-tipo-destino' })
+  @IsOptional()
+  @IsString()
+  tipoDestinoId?: string
 }

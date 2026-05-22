@@ -26,11 +26,13 @@ import {
 import { DecimalInput } from '@/components/shared'
 import { useCriarColheita, useTiposMateriaPrima } from '@/hooks/useProducao'
 import { useAssociados } from '@/hooks/useAssociados'
+import { useSafras } from '@/hooks/useSafras'
 import type { ApiError } from '@/lib/api/client'
 
 const schema = z.object({
-  associadoId: z.uuid('Selecione um associado.'),
-  tipoMateriaPrimaId: z.uuid('Selecione o tipo.'),
+  associadoId: z.string().uuid('Selecione um associado.'),
+  tipoMateriaPrimaId: z.string().uuid('Selecione o tipo.'),
+  safraId: z.string().uuid().optional(),
   volume: z.number().positive('Volume deve ser positivo'),
   unidade: z.string().min(1),
   dataColheita: z.string().min(1, 'Informe a data'),
@@ -50,10 +52,13 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
   const { mutateAsync, isPending } = useCriarColheita()
   const { data: tipos = [] } = useTiposMateriaPrima()
   const { data: associados = [] } = useAssociados()
+  const { data: safras = [] } = useSafras()
+
+  const safrasAtivas = safras.filter((s) => s.status === 'EM_ANDAMENTO')
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { associadoId: '', tipoMateriaPrimaId: '', unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
+    defaultValues: { unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
   })
 
   const tipoSelecionadoId = watch('tipoMateriaPrimaId')
@@ -67,6 +72,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
         ...data,
         unidade: tipoSelecionado?.unidade ?? data.unidade,
         campanhaId,
+        safraId: data.safraId || undefined,
       })
       toast.success('Colheita registrada e estoque atualizado!')
       onOpenChange(false)
@@ -95,7 +101,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
               control={control}
               name="associadoId"
               render={({ field }) => (
-                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>
@@ -116,7 +122,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
               control={control}
               name="tipoMateriaPrimaId"
               render={({ field }) => (
-                <Select value={field.value || ''} onValueChange={field.onChange} disabled={isPending}>
+                <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione…" />
                   </SelectTrigger>
@@ -130,6 +136,28 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
             />
             {errors.tipoMateriaPrimaId && <p className="text-xs text-destructive">{errors.tipoMateriaPrimaId.message}</p>}
           </div>
+
+          {safrasAtivas.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Safra <span className="text-muted-foreground">(opcional)</span></Label>
+              <Controller
+                control={control}
+                name="safraId"
+                render={({ field }) => (
+                  <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sem vínculo de safra" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safrasAtivas.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <Controller

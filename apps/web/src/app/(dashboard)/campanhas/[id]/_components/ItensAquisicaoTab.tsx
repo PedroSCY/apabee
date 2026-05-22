@@ -1,25 +1,23 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Trash2, Package } from 'lucide-react'
+import { Package, Plus, Trash2 } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -30,22 +28,14 @@ import {
   useRemoverItem,
   useDistribuirItens,
 } from '@/hooks/useCampanhas'
-import type { StatusCampanha } from '@/lib/api/campanhas'
+import type { DestinatarioCampanha, StatusCampanha } from '@/lib/api/campanhas'
 import type { ApiError } from '@/lib/api/client'
 
-const TIPO_DESTINO_LABELS: Record<string, string> = {
-  EQUIPAMENTO: 'Equipamento',
-  CONSUMIVEL: 'Consumível',
-  MATERIA_PRIMA: 'Matéria-prima',
-}
-
 const schema = z.object({
-  descricao: z.string().min(1, 'Descrição obrigatória'),
-  quantidade: z.number().int().positive('Quantidade deve ser positiva'),
-  valorEstimado: z.number().positive('Valor deve ser positivo'),
-  tipoDestino: z.enum(['EQUIPAMENTO', 'CONSUMIVEL', 'MATERIA_PRIMA'], { message: 'Selecione o destino' }),
-  equipamentoNome: z.string().optional(),
-  tipoMateriaPrimaId: z.string().optional(),
+  nome: z.string().min(1, 'Nome obrigatório'),
+  precoUnitario: z.number().positive('Preço deve ser positivo'),
+  quantidadeMeta: z.number().int().positive('Quantidade deve ser positiva'),
+  unidade: z.string().min(1, 'Unidade obrigatória'),
 })
 type FormData = z.infer<typeof schema>
 
@@ -56,13 +46,12 @@ function AdicionarItemDialog({ campanhaId, open, onOpenChange }: {
 }) {
   const { mutateAsync: adicionar, isPending } = useAdicionarItem(campanhaId)
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { unidade: 'unid' },
   })
 
-  const tipoDestino = watch('tipoDestino')
-
-  React.useEffect(() => { if (!open) reset() }, [open, reset])
+  React.useEffect(() => { if (!open) reset({ unidade: 'unid' }) }, [open, reset])
 
   async function onSubmit(data: FormData) {
     try {
@@ -80,32 +69,19 @@ function AdicionarItemDialog({ campanhaId, open, onOpenChange }: {
         <DialogHeader><DialogTitle>Adicionar Item de Aquisição</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="descricao">Descrição *</Label>
-            <Input id="descricao" {...register('descricao')} disabled={isPending} />
-            {errors.descricao && (
-              <p className="text-[0.8rem] font-medium text-destructive">{errors.descricao.message}</p>
+            <Label htmlFor="nome">Nome *</Label>
+            <Input id="nome" {...register('nome')} placeholder="Ex: Caixa de colmeia Langstroth" disabled={isPending} />
+            {errors.nome && (
+              <p className="text-[0.8rem] font-medium text-destructive">{errors.nome.message}</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="quantidade">Quantidade *</Label>
-              <Input
-                id="quantidade"
-                type="number"
-                min="1"
-                {...register('quantidade', { valueAsNumber: true })}
-                disabled={isPending}
-              />
-              {errors.quantidade && (
-                <p className="text-[0.8rem] font-medium text-destructive">{errors.quantidade.message}</p>
-              )}
-            </div>
             <Controller
               control={control}
-              name="valorEstimado"
+              name="precoUnitario"
               render={({ field, fieldState }) => (
                 <CurrencyInput
-                  label="Valor Estimado *"
+                  label="Preço Unitário *"
                   value={field.value}
                   onChange={field.onChange}
                   error={fieldState.error?.message}
@@ -113,37 +89,27 @@ function AdicionarItemDialog({ campanhaId, open, onOpenChange }: {
                 />
               )}
             />
+            <div className="space-y-1.5">
+              <Label htmlFor="quantidadeMeta">Qtd Meta *</Label>
+              <Input
+                id="quantidadeMeta"
+                type="number"
+                min="1"
+                {...register('quantidadeMeta', { valueAsNumber: true })}
+                disabled={isPending}
+              />
+              {errors.quantidadeMeta && (
+                <p className="text-[0.8rem] font-medium text-destructive">{errors.quantidadeMeta.message}</p>
+              )}
+            </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Destino *</Label>
-            <Controller
-              control={control}
-              name="tipoDestino"
-              render={({ field, fieldState }) => (
-                <>
-                  <Select value={field.value ?? undefined} onValueChange={field.onChange} disabled={isPending}>
-                    <SelectTrigger className={fieldState.error ? 'border-destructive' : ''}>
-                      <SelectValue placeholder="Selecione o destino…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EQUIPAMENTO">Equipamento</SelectItem>
-                      <SelectItem value="CONSUMIVEL">Consumível</SelectItem>
-                      <SelectItem value="MATERIA_PRIMA">Matéria-prima</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {fieldState.error && (
-                    <p className="text-[0.8rem] font-medium text-destructive">{fieldState.error.message}</p>
-                  )}
-                </>
-              )}
-            />
+            <Label htmlFor="unidade">Unidade *</Label>
+            <Input id="unidade" {...register('unidade')} placeholder="Ex: unid, kg, cx" disabled={isPending} />
+            {errors.unidade && (
+              <p className="text-[0.8rem] font-medium text-destructive">{errors.unidade.message}</p>
+            )}
           </div>
-          {tipoDestino === 'EQUIPAMENTO' && (
-            <div className="space-y-1.5">
-              <Label htmlFor="equipamentoNome">Nome do Equipamento</Label>
-              <Input id="equipamentoNome" {...register('equipamentoNome')} disabled={isPending} />
-            </div>
-          )}
           <DialogFooter>
             <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
               Cancelar
@@ -158,13 +124,16 @@ function AdicionarItemDialog({ campanhaId, open, onOpenChange }: {
   )
 }
 
+const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
 interface Props {
   campanhaId: string
   statusCampanha: StatusCampanha
   isAdmin: boolean
+  destinatario?: DestinatarioCampanha
 }
 
-export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props) {
+export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin, destinatario }: Props) {
   const { data: itens = [], isLoading } = useItensAquisicao(campanhaId)
   const { mutateAsync: remover } = useRemoverItem(campanhaId)
   const { mutateAsync: distribuir, isPending: distribuindo } = useDistribuirItens(campanhaId)
@@ -174,9 +143,7 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
   const [confirmDistribuir, setConfirmDistribuir] = React.useState(false)
 
   const podeEditar = statusCampanha === 'PLANEJADA' || statusCampanha === 'ATIVA'
-  const podeDistribuir = statusCampanha === 'CONCLUIDA' && itens.length > 0
-
-  const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const podeDistribuir = isAdmin && statusCampanha === 'CONCLUIDA' && destinatario === 'APA' && itens.length > 0
 
   async function handleRemover(itemId: string) {
     try {
@@ -189,13 +156,11 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
 
   async function handleDistribuir() {
     try {
-      const result = await distribuir()
-      toast.success(
-        `${result.itensDistribuidos} item(s) distribuído(s). ${result.equipamentosCriados} equipamento(s) criado(s).`
-      )
+      await distribuir()
+      toast.success('Campanha liquidada e apuração gerada.')
       setConfirmDistribuir(false)
     } catch (e) {
-      toast.error((e as ApiError).message ?? 'Erro ao distribuir itens.')
+      toast.error((e as ApiError).message ?? 'Erro ao liquidar campanha.')
       setConfirmDistribuir(false)
     }
   }
@@ -214,21 +179,27 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="text-right">Qtd</TableHead>
-              <TableHead className="text-right">Valor Est.</TableHead>
-              <TableHead>Destino</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead className="text-right">Preço Unit.</TableHead>
+              <TableHead className="text-right">Meta</TableHead>
+              <TableHead className="text-right">Pedido</TableHead>
+              <TableHead>Status</TableHead>
               {podeEditar && isAdmin && <TableHead />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {itens.map(item => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.descricao}</TableCell>
-                <TableCell className="text-right tabular-nums">{item.quantidade}</TableCell>
-                <TableCell className="text-right tabular-nums">{fmt(item.valorEstimado)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {TIPO_DESTINO_LABELS[item.tipoDestino] ?? item.tipoDestino}
+                <TableCell className="font-medium">{item.nome}</TableCell>
+                <TableCell className="text-right tabular-nums">{fmt(item.precoUnitario)}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.quantidadeMeta} {item.unidade}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.quantidadeTotalPedida} {item.unidade}</TableCell>
+                <TableCell>
+                  {item.metaAtingida ? (
+                    <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-transparent">Meta atingida</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-slate-100 text-slate-700 border-transparent">Em andamento</Badge>
+                  )}
                 </TableCell>
                 {podeEditar && isAdmin && (
                   <TableCell>
@@ -257,13 +228,8 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
             </Button>
           )}
           {podeDistribuir && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setConfirmDistribuir(true)}
-              disabled={distribuindo}
-            >
-              <Package className="h-3.5 w-3.5" /> Distribuir Itens
+            <Button size="sm" variant="outline" onClick={() => setConfirmDistribuir(true)} disabled={distribuindo}>
+              <Package className="h-3.5 w-3.5" /> Liquidar Campanha APA
             </Button>
           )}
         </div>
@@ -284,10 +250,9 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
       <AlertDialog open={confirmDistribuir} onOpenChange={setConfirmDistribuir}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Distribuir itens adquiridos?</AlertDialogTitle>
+            <AlertDialogTitle>Liquidar campanha APA?</AlertDialogTitle>
             <AlertDialogDescription>
-              Os itens serão registrados no patrimônio e estoque da associação conforme seu tipo de destino.
-              Esta operação não pode ser desfeita.
+              Será gerada a apuração financeira com base nas cotas pagas e a campanha será marcada como LIQUIDADA. Esta operação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -297,7 +262,7 @@ export function ItensAquisicaoTab({ campanhaId, statusCampanha, isAdmin }: Props
               disabled={distribuindo}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {distribuindo ? 'Distribuindo…' : 'Distribuir'}
+              {distribuindo ? 'Liquidando…' : 'Confirmar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

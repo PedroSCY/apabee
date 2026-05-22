@@ -24,6 +24,6 @@ export interface ICalcularConsumoUseCase {
   execute(ordemId: string): Promise<{ tipoMateriaPrimaId: string; quantidadeNecessaria: number; quantidadeComPerda: number; suficiente: boolean }[]>
 }
 
-export interface IConcluirOrdemProducaoUseCase {
-  execute(id: string): Promise<OrdemProducao>
+export interface IDeletarOrdemProducaoUseCase {
+  execute(id: string): Promise<void>
 }

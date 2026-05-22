@@ -10,7 +10,6 @@ export interface SafraResponse {
   dataInicio: string
   dataFim?: string
   status: StatusSafra
-  criadoEm: string
 }
 
 export interface CriarSafraInput {
@@ -18,18 +17,6 @@ export interface CriarSafraInput {
   floradaId: string
   dataInicio: string
   dataFim?: string
-}
-
-export interface PrecoSafraResponse {
-  id: string
-  safraId: string
-  tipoMateriaPrimaId: string
-  preco: number
-}
-
-export interface DefinirPrecoInput {
-  tipoMateriaPrimaId: string
-  preco: number
 }
 
 export const safrasApi = {
@@ -42,15 +29,12 @@ export const safrasApi = {
       body: JSON.stringify(input),
     }),
 
+  iniciar: (id: string) =>
+    apiFetch<SafraResponse>(`/producao/safras/${id}/iniciar`, { method: 'PATCH' }),
+
   encerrar: (id: string) =>
     apiFetch<SafraResponse>(`/producao/safras/${id}/encerrar`, { method: 'PATCH' }),
 
-  listarPrecos: (safraId: string) =>
-    apiFetch<PrecoSafraResponse[]>(`/producao/safras/${safraId}/precos`),
-
-  definirPreco: (safraId: string, input: DefinirPrecoInput) =>
-    apiFetch<PrecoSafraResponse>(`/producao/safras/${safraId}/precos`, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
+  deletar: (id: string) =>
+    apiFetch<void>(`/producao/safras/${id}`, { method: 'DELETE' }),
 }

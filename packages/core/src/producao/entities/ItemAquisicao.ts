@@ -1,18 +1,16 @@
-import { TipoDestinoAquisicao } from '@apa/shared'
-
 interface ItemAquisicaoProps {
   id: string
   campanhaId: string
-  descricao: string
-  quantidade: number
-  valorEstimado: number
-  tipoDestino: TipoDestinoAquisicao
-  equipamentoNome?: string
-  tipoMateriaPrimaId?: string
+  nome: string
+  precoUnitario: number
+  quantidadeMeta: number
+  quantidadeTotalPedida: number
+  unidade: string
+  tipoDestinoId?: string
   criadoEm: Date
 }
 
-/** Item planejado para aquisição coletiva. Define o que será comprado e como será distribuído após a compra. */
+/** Item de uma campanha de aquisição coletiva. Define o produto, preço unitário e meta mínima. */
 export class ItemAquisicao {
   private readonly props: ItemAquisicaoProps
 
@@ -22,20 +20,28 @@ export class ItemAquisicao {
 
   get id(): string { return this.props.id }
   get campanhaId(): string { return this.props.campanhaId }
-  get descricao(): string { return this.props.descricao }
-  get quantidade(): number { return this.props.quantidade }
-  get valorEstimado(): number { return this.props.valorEstimado }
-  get tipoDestino(): TipoDestinoAquisicao { return this.props.tipoDestino }
-  get equipamentoNome(): string | undefined { return this.props.equipamentoNome }
-  get tipoMateriaPrimaId(): string | undefined { return this.props.tipoMateriaPrimaId }
+  get nome(): string { return this.props.nome }
+  get precoUnitario(): number { return this.props.precoUnitario }
+  get quantidadeMeta(): number { return this.props.quantidadeMeta }
+  get quantidadeTotalPedida(): number { return this.props.quantidadeTotalPedida }
+  get unidade(): string { return this.props.unidade }
+  get tipoDestinoId(): string | undefined { return this.props.tipoDestinoId }
   get criadoEm(): Date { return this.props.criadoEm }
 
-  atualizar(dados: { descricao?: string; quantidade?: number; valorEstimado?: number; tipoDestino?: TipoDestinoAquisicao; equipamentoNome?: string; tipoMateriaPrimaId?: string }): ItemAquisicao {
-    return new ItemAquisicao({ ...this.props, ...dados })
+  get metaAtingida(): boolean {
+    return this.props.quantidadeTotalPedida >= this.props.quantidadeMeta
   }
 
-  valorTotal(): number {
-    return this.props.quantidade * this.props.valorEstimado
+  adicionarPedido(quantidade: number): ItemAquisicao {
+    return new ItemAquisicao({ ...this.props, quantidadeTotalPedida: this.props.quantidadeTotalPedida + quantidade })
+  }
+
+  removerPedido(quantidade: number): ItemAquisicao {
+    return new ItemAquisicao({ ...this.props, quantidadeTotalPedida: Math.max(0, this.props.quantidadeTotalPedida - quantidade) })
+  }
+
+  valorTotalPedido(): number {
+    return this.props.quantidadeTotalPedida * this.props.precoUnitario
   }
 
   toJSON() { return { ...this.props } }

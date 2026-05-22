@@ -1,4 +1,4 @@
-import { RegraAcordo, TipoContribuicao } from '@apa/shared'
+import { TipoContribuicao } from '@apa/shared'
 import { Contribuicao } from '../../entities/Contribuicao'
 
 export interface RegistrarContribuicaoInput {
@@ -10,17 +10,11 @@ export interface RegistrarContribuicaoInput {
   colheitaId?: string
   volume?: number
   tipoMateriaPrimaId?: string
-  // MAO_DE_OBRA
-  horas?: number
-  // ACORDO
-  regraCalculo?: RegraAcordo
-  regraParametro?: number
   descricao?: string
 }
 
 export interface AtualizarContribuicaoInput {
   valorMonetario?: number
-  horas?: number
   descricao?: string
 }
 
@@ -45,6 +39,6 @@ export interface IRemoverContribuicaoUseCase {
 }
 
 export interface ICalcularContribuicaoTotalUseCase {
-  /** Retorna o total monetário de contribuição de cada associado na campanha (usado na liquidação). */
+  /** Retorna o total proporcional de contribuição de cada associado na campanha (volume para PRODUCAO, valor para AQUISICAO). */
   execute(campanhaId: string): Promise<{ associadoId: string; total: number }[]>
 }

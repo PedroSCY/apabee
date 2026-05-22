@@ -26,6 +26,7 @@ export class CriarCampanhaUseCase implements ICriarCampanhaUseCase {
       dataInicio: input.dataInicio,
       dataFim: input.dataFim,
       status: StatusCampanha.PLANEJADA,
+      destinatario: input.destinatario,
       valorMeta: input.valorMeta,
       prazoContribuicao: input.prazoContribuicao,
       valorMinimo: input.valorMinimo,

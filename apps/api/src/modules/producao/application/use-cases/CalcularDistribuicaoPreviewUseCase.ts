@@ -9,7 +9,7 @@ import {
 import { CAMPANHA_REPOSITORY, COTA_REPOSITORY, ITEM_AQUISICAO_REPOSITORY } from '../../producao.tokens'
 
 @Injectable()
-/** Simula a distribuição dos itens de uma campanha de AQUISIÇÃO sem executar — usado para preview do admin. */
+/** Simula o resumo financeiro de uma campanha de AQUISIÇÃO sem executar — preview do admin. */
 export class CalcularDistribuicaoPreviewUseCase implements ICalcularDistribuicaoPreviewUseCase {
   constructor(
     @Inject(CAMPANHA_REPOSITORY)
@@ -32,18 +32,20 @@ export class CalcularDistribuicaoPreviewUseCase implements ICalcularDistribuicao
 
     const distribuicaoItens = itens.map(item => ({
       itemId: item.id,
-      descricao: item.descricao,
-      tipoDestino: item.tipoDestino,
-      cotistas: cotasPagas.map(cota => {
-        const percentual = totalArrecadado > 0 ? (cota.valor / totalArrecadado) * 100 : 0
-        const quantidadeRecebida = (item.quantidade * percentual) / 100
-        return {
-          associadoId: cota.associadoId,
-          valorCota: cota.valor,
-          percentual,
-          quantidadeRecebida,
-        }
-      }),
+      descricao: item.nome,
+      tipoDestino: item.tipoDestinoId ?? null,
+      cotistas: cotasPagas
+        .filter(c => c.associadoId)
+        .map(cota => {
+          const percentual = totalArrecadado > 0 ? (cota.valor / totalArrecadado) * 100 : 0
+          const quantidadeRecebida = (item.quantidadeTotalPedida * percentual) / 100
+          return {
+            associadoId: cota.associadoId!,
+            valorCota: cota.valor,
+            percentual,
+            quantidadeRecebida,
+          }
+        }),
     }))
 
     return { totalArrecadado, itens: distribuicaoItens }

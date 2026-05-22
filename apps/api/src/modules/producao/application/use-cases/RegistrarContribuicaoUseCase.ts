@@ -6,7 +6,7 @@ import {
   IRegistrarContribuicaoUseCase,
   RegistrarContribuicaoInput,
 } from '@apa/core'
-import { StatusCampanha } from '@apa/shared'
+import { StatusCampanha, TipoContribuicao, TipoLote } from '@apa/shared'
 import { randomUUID } from 'crypto'
 import { CAMPANHA_REPOSITORY, CONTRIBUICAO_REPOSITORY } from '../../producao.tokens'
 
@@ -25,6 +25,15 @@ export class RegistrarContribuicaoUseCase implements IRegistrarContribuicaoUseCa
     if (campanha.status !== StatusCampanha.ATIVA)
       throw new BadRequestException('Contribuições só podem ser registradas em campanhas ATIVAS')
 
+    // Valida compatibilidade entre tipo de contribuição e tipo de campanha
+    const tipoEsperado = campanha.tipo === TipoLote.PRODUCAO
+      ? TipoContribuicao.COLHEITA
+      : TipoContribuicao.DINHEIRO
+    if (input.tipo !== tipoEsperado)
+      throw new BadRequestException(
+        `Campanha de ${campanha.tipo === TipoLote.PRODUCAO ? 'PRODUÇÃO' : 'AQUISIÇÃO'} aceita apenas contribuições do tipo ${tipoEsperado}`,
+      )
+
     const contribuicao = new Contribuicao({
       id: randomUUID(),
       campanhaId: input.campanhaId,
@@ -34,9 +43,6 @@ export class RegistrarContribuicaoUseCase implements IRegistrarContribuicaoUseCa
       colheitaId: input.colheitaId,
       volume: input.volume,
       tipoMateriaPrimaId: input.tipoMateriaPrimaId,
-      horas: input.horas,
-      regraCalculo: input.regraCalculo,
-      regraParametro: input.regraParametro,
       descricao: input.descricao?.trim(),
       liquidado: false,
       criadoEm: new Date(),
