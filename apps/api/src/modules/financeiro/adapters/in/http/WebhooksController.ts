@@ -34,7 +34,8 @@ export class WebhooksController {
     private readonly sse: SseService,
     config: ConfigService,
   ) {
-    this.webhookToken = config.getOrThrow<string>('ASAAS_WEBHOOK_TOKEN')
+    // Opcional — se não configurado, o endpoint de validação de saque rejeita qualquer token.
+    this.webhookToken = config.get<string>('ASAAS_WEBHOOK_TOKEN') ?? ''
   }
 
   /**
