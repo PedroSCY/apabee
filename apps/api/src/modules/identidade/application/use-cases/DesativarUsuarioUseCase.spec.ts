@@ -20,6 +20,7 @@ const makeRepo = (): jest.Mocked<IUsuarioRepository> => ({
   update: jest.fn(),
   delete: jest.fn(),
   contemRegistrosDeAutoria: jest.fn(),
+  anonymizar: jest.fn(),
 })
 
 const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({

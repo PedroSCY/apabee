@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { ScheduleModule } from '@nestjs/schedule'
 import { validateEnv } from './shared/config/env.validation'
 import { SharedModule } from './shared/shared.module'
+import { SseModule } from './shared/sse/sse.module'
 import { IdentidadeModule } from './modules/identidade/identidade.module'
 import { PatrimonioModule } from './modules/patrimonio/patrimonio.module'
 import { ProducaoModule } from './modules/producao/producao.module'
@@ -12,6 +13,7 @@ import { GestaoModule } from './modules/gestao/gestao.module'
 import { CatalogoModule } from './modules/catalogo/catalogo.module'
 import { ComercialModule } from './modules/comercial/comercial.module'
 import { ComunicacaoModule } from './modules/comunicacao/comunicacao.module'
+import { FinanceiroModule } from './modules/financeiro/financeiro.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -20,6 +22,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 30 }]),
     ScheduleModule.forRoot(),
     SharedModule,
+    SseModule,
     IdentidadeModule,
     PatrimonioModule,
     ProducaoModule,
@@ -27,6 +30,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     CatalogoModule,
     ComercialModule,
     ComunicacaoModule,
+    FinanceiroModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

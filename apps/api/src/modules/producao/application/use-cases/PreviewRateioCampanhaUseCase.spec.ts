@@ -34,8 +34,8 @@ const custoRepo: jest.Mocked<ICustoCampanhaRepository> = {
   save: jest.fn(), delete: jest.fn(),
 }
 const movimentoRepo: jest.Mocked<IMovimentoFinanceiroRepository> = {
-  findByCampanha: jest.fn(), findByAssociadoECampanha: jest.fn(),
-  save: jest.fn(), saveMany: jest.fn(),
+  findAll: jest.fn(), findByCampanha: jest.fn(), findByAssociadoECampanha: jest.fn(),
+  findByAssociado: jest.fn(), save: jest.fn(), saveMany: jest.fn(),
 }
 
 describe('PreviewRateioCampanhaUseCase', () => {

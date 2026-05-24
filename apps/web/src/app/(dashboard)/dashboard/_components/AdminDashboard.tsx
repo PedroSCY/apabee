@@ -12,9 +12,10 @@ import {
   Bar,
   Legend,
 } from 'recharts'
-import { TrendingUp, TrendingDown, DollarSign, AlertCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, AlertCircle, Receipt } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MONTHLY_DATA, RECEITA_POR_CATEGORIA, REPASSES_PENDENTES } from '../_mock/dashboard.mock'
+import { useMensalidades } from '@/hooks/useFinanceiro'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -51,14 +52,24 @@ function KpiCard({
   )
 }
 
+const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+
 export function AdminDashboard() {
   const totalReceita = MONTHLY_DATA.reduce((s, d) => s + d.receita, 0)
   const totalDespesa = MONTHLY_DATA.reduce((s, d) => s + d.despesa, 0)
   const liquido = totalReceita - totalDespesa
 
+  const now = new Date()
+  const { data: mensalidadesPendentes = [] } = useMensalidades({
+    ano: now.getFullYear(),
+    mes: now.getMonth() + 1,
+    status: 'PENDENTE',
+  })
+  const competenciaLabel = `${MESES_ABREV[now.getMonth()]}/${now.getFullYear()}`
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="Receita YTD"
           value={fmt(totalReceita)}
@@ -79,6 +90,13 @@ export function AdminDashboard() {
           subtitle="Saldo acumulado no período"
           icon={TrendingUp}
           trend="up"
+        />
+        <KpiCard
+          title="Mensalidades Pendentes"
+          value={String(mensalidadesPendentes.length)}
+          subtitle={`Competência ${competenciaLabel}`}
+          icon={Receipt}
+          trend={mensalidadesPendentes.length > 0 ? 'down' : undefined}
         />
       </div>
 

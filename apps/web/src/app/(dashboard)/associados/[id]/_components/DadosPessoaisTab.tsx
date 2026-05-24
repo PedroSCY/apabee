@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { StatusBadge, ConfirmDialog } from '@/components/shared'
+import { StatusBadge, ConfirmDialog, CpfInput } from '@/components/shared'
 import {
   useAtualizarUsuario,
   useAtualizarAssociado,
@@ -52,6 +52,7 @@ const schema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
   email: z.string().email('E-mail inválido.'),
   role: z.enum(['ADMIN', 'ASSOCIADO']),
+  cpf: z.string().optional(),
   dataIngresso: z.date(),
   observacoes: z.string().optional(),
 })
@@ -245,7 +246,8 @@ export function DadosPessoaisTab({ associado }: Props) {
       nome: associado.usuario.nome,
       email: associado.usuario.email,
       role: associado.usuario.role as 'ADMIN' | 'ASSOCIADO',
-      dataIngresso: parseISO(associado.dataIngresso),
+      cpf: associado.cpf ?? '',
+      dataIngresso: new Date(associado.dataIngresso.slice(0, 10) + 'T12:00:00'),
       observacoes: associado.observacoes ?? '',
     },
   })
@@ -255,7 +257,11 @@ export function DadosPessoaisTab({ associado }: Props) {
       await Promise.all([
         atualizarUsuario({ nome: data.nome, email: data.email, role: data.role }),
         atualizarAssociado({
-          dataIngresso: data.dataIngresso.toISOString(),
+          cpf: data.cpf?.replace(/\D/g, '') || undefined,
+          dataIngresso: (() => {
+            const d = data.dataIngresso
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T12:00:00`
+          })(),
           observacoes: data.observacoes || undefined,
         }),
       ])
@@ -320,6 +326,19 @@ export function DadosPessoaisTab({ associado }: Props) {
               <div>
                 <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Associado</p>
                 <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField control={form.control} name="cpf" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF</FormLabel>
+                      <FormControl>
+                        <CpfInput
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                          disabled={isSaving}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   <FormField control={form.control} name="dataIngresso" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data de ingresso</FormLabel>
@@ -413,9 +432,10 @@ export function DadosPessoaisTab({ associado }: Props) {
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Associado</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Status" value={<StatusBadge status={associado.status} />} />
+              <Field label="CPF" value={associado.cpf ?? '—'} />
               <Field
                 label="Data de ingresso"
-                value={format(parseISO(associado.dataIngresso), 'dd/MM/yyyy', { locale: ptBR })}
+                value={format(new Date(associado.dataIngresso.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
               />
               <Field label="Observações" value={associado.observacoes || '—'} />
             </div>

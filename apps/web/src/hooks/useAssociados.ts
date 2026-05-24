@@ -148,3 +148,27 @@ export function useDesativarUsuario() {
     },
   })
 }
+
+/** Marca isenção estrutural de mensalidade para o associado. */
+export function useMarcarIsentoAssociado() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => identidadeApi.marcarIsentoAssociado(id),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: ASSOCIADOS_KEY })
+      void queryClient.invalidateQueries({ queryKey: ASSOCIADO_KEY(id) })
+    },
+  })
+}
+
+/** Remove isenção estrutural de mensalidade do associado. */
+export function useRemoverIsencaoAssociado() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => identidadeApi.removerIsencaoAssociado(id),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: ASSOCIADOS_KEY })
+      void queryClient.invalidateQueries({ queryKey: ASSOCIADO_KEY(id) })
+    },
+  })
+}

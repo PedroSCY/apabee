@@ -17,6 +17,7 @@ import {
   CriarProdutoUseCase,
   GerarEstoqueProdutoUseCase,
   ListarProdutosUseCase,
+  ListarProdutosComEstoqueUseCase,
   PublicarProdutoUseCase,
   RemoverComposicaoProdutoUseCase,
 } from './application/use-cases'
@@ -32,6 +33,7 @@ import {
   ESTOQUE_PRODUTO_REPOSITORY,
   GERAR_ESTOQUE_PRODUTO_USE_CASE,
   LISTAR_PRODUTOS_USE_CASE,
+  LISTAR_PRODUTOS_COM_ESTOQUE_USE_CASE,
   PRODUTO_REPOSITORY,
   PUBLICAR_PRODUTO_USE_CASE,
   REMOVER_COMPOSICAO_USE_CASE,
@@ -46,6 +48,7 @@ import {
     { provide: COMPOSICAO_PRODUTO_REPOSITORY, useClass: PrismaComposicaoProdutoRepository },
     { provide: CRIAR_PRODUTO_USE_CASE, useClass: CriarProdutoUseCase },
     { provide: LISTAR_PRODUTOS_USE_CASE, useClass: ListarProdutosUseCase },
+    { provide: LISTAR_PRODUTOS_COM_ESTOQUE_USE_CASE, useClass: ListarProdutosComEstoqueUseCase },
     { provide: BUSCAR_PRODUTO_USE_CASE, useClass: BuscarProdutoUseCase },
     { provide: ATUALIZAR_PRODUTO_USE_CASE, useClass: AtualizarProdutoUseCase },
     { provide: PUBLICAR_PRODUTO_USE_CASE, useClass: PublicarProdutoUseCase },

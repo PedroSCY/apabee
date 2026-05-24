@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { PhoneInput } from '@/components/shared'
+import { PhoneInput, CpfInput } from '@/components/shared'
 import { useCriarUsuario, useCriarAssociado } from '@/hooks/useAssociados'
 
 interface Props {
@@ -29,6 +29,7 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
   const [form, setForm] = React.useState({
     nome: '',
     email: '',
+    cpf: '',
     telefone: '',
     dataIngresso: '',
     observacoes: '',
@@ -43,7 +44,7 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
   }
 
   function resetForm() {
-    setForm({ nome: '', email: '', telefone: '', dataIngresso: '', observacoes: '', senha: '', confirmarSenha: '' })
+    setForm({ nome: '', email: '', cpf: '', telefone: '', dataIngresso: '', observacoes: '', senha: '', confirmarSenha: '' })
     setSenhaError('')
   }
 
@@ -73,7 +74,8 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
       })
       await criarAssociado({
         usuarioId: usuario.id,
-        dataIngresso: form.dataIngresso || undefined,
+        cpf: form.cpf.replace(/\D/g, '') || undefined,
+        dataIngresso: form.dataIngresso ? form.dataIngresso + 'T12:00:00' : undefined,
         observacoes: form.observacoes.trim() || undefined,
       })
       toast.success(`Associado ${form.nome} cadastrado com sucesso.`)
@@ -122,6 +124,15 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
               />
             </div>
 
+            <CpfInput
+              id="cpf"
+              name="cpf"
+              label="CPF"
+              value={form.cpf}
+              onChange={(v) => setForm((p) => ({ ...p, cpf: v }))}
+              disabled={isPending}
+            />
+
             <PhoneInput
               id="telefone"
               name="telefone"
@@ -133,14 +144,29 @@ export function CadastrarAssociadoDialog({ open, onOpenChange }: Props) {
 
             <div className="space-y-1.5">
               <Label htmlFor="dataIngresso">Data de ingresso</Label>
-              <Input
-                id="dataIngresso"
-                name="dataIngresso"
-                type="date"
-                value={form.dataIngresso}
-                onChange={handleChange}
-                disabled={isPending}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="dataIngresso"
+                  name="dataIngresso"
+                  type="date"
+                  value={form.dataIngresso}
+                  onChange={handleChange}
+                  disabled={isPending}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isPending}
+                  onClick={() => {
+                    const d = new Date()
+                    const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                    setForm((p) => ({ ...p, dataIngresso: v }))
+                  }}
+                >
+                  Hoje
+                </Button>
+              </div>
             </div>
 
             <div className="col-span-2 space-y-1.5">

@@ -34,6 +34,4 @@ export class Ata {
   despublicar(): Ata {
     return new Ata({ ...this.props, publicada: false });
   }
-
-  toJSON() { return { ...this.props } }
 }

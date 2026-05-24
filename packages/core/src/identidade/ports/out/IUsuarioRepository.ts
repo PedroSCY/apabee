@@ -12,6 +12,8 @@ export interface IUsuarioRepository {
   update(usuario: Usuario): Promise<Usuario>
   /** Remove usuário pelo ID. */
   delete(id: string): Promise<void>
+  /** Soft delete: marca deletadoEm e anonimiza o email, liberando o unique constraint para recadastro. */
+  anonymizar(id: string): Promise<void>
   /** Verifica se o usuário possui atas ou documentos de autoria (impede exclusão). */
   contemRegistrosDeAutoria(id: string): Promise<boolean>
 }

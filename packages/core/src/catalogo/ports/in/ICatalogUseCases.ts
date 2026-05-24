@@ -107,3 +107,13 @@ export interface IRemoverComposicaoProdutoUseCase {
 export interface IConsultarCapacidadeUseCase {
   execute(input: ConsultarCapacidadeInput): Promise<ConsultarCapacidadeResponse>
 }
+
+export interface ProdutoComEstoqueItem {
+  produto: Produto
+  quantidadeEstoque: number
+}
+
+/** Use case: listar produtos com quantidade de estoque disponível. */
+export interface IListarProdutosComEstoqueUseCase {
+  execute(options?: { apenasPublicados?: boolean }): Promise<ProdutoComEstoqueItem[]>
+}

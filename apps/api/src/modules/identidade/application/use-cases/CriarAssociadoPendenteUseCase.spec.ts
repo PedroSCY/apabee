@@ -16,6 +16,7 @@ const makeUsuarioRepo = (): jest.Mocked<IUsuarioRepository> => ({
   update: jest.fn(),
   delete: jest.fn(),
   contemRegistrosDeAutoria: jest.fn(),
+  anonymizar: jest.fn(),
 })
 
 const makeAssociadoRepo = (): jest.Mocked<IAssociadoRepository> => ({

@@ -9,6 +9,12 @@ export class AprovarAssociadoPendenteDto {
   @MinLength(8)
   senha!: string
 
+  /** CPF do associado (somente dígitos) */
+  @ApiPropertyOptional({ example: '12345678901' })
+  @IsOptional()
+  @IsString()
+  cpf?: string
+
   /** Data de ingresso. Se omitida, usa a data atual */
   @ApiPropertyOptional({ example: '2024-01-15', description: 'Data de ingresso. Se omitida, usa a data atual.' })
   @IsOptional()

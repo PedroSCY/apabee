@@ -27,7 +27,8 @@ export class PrismaConfiguracaoAssociacaoRepository implements IConfiguracaoAsso
         corPrimariaForeground: config.corPrimariaForeground ?? null,
         corSidebar: config.corSidebar ?? null,
         corAccent: config.corAccent ?? null,
-        valorDiaria: config.valorDiaria ?? null,
+        valorMensalidade: config.valorMensalidade ?? null,
+        diaVencimento: config.diaVencimento ?? null,
       },
     })
     return this.toDomain(record)
@@ -48,7 +49,8 @@ export class PrismaConfiguracaoAssociacaoRepository implements IConfiguracaoAsso
         corPrimariaForeground: config.corPrimariaForeground ?? null,
         corSidebar: config.corSidebar ?? null,
         corAccent: config.corAccent ?? null,
-        valorDiaria: config.valorDiaria ?? null,
+        valorMensalidade: config.valorMensalidade ?? null,
+        diaVencimento: config.diaVencimento ?? null,
       },
     })
     return this.toDomain(record)
@@ -68,7 +70,8 @@ export class PrismaConfiguracaoAssociacaoRepository implements IConfiguracaoAsso
       corPrimariaForeground: record.corPrimariaForeground ?? undefined,
       corSidebar: record.corSidebar ?? undefined,
       corAccent: record.corAccent ?? undefined,
-      valorDiaria: record.valorDiaria ? Number(record.valorDiaria) : undefined,
+      valorMensalidade: record.valorMensalidade ? Number(record.valorMensalidade) : undefined,
+      diaVencimento: record.diaVencimento ?? undefined,
       atualizadoEm: record.atualizadoEm,
     })
   }

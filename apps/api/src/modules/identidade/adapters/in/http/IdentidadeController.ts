@@ -35,9 +35,13 @@ import {
   IListarAssociadosUseCase,
   IAtualizarAssociadoUseCase,
   IAtualizarUsuarioUseCase,
+  IMarcarIsentoAssociadoUseCase,
+  IRemoverIsencaoAssociadoUseCase,
   Usuario,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
+import { AuditService } from '../../../../../shared/audit/audit.service'
+import { SseService } from '../../../../../shared/sse/sse.service'
 import { AprovarAssociadoPendenteDto, AtualizarAssociadoDto, AtualizarSenhaDto, AtualizarUsuarioDto, CriarAssociadoDto, CriarAssociadoPendenteDto, CriarUsuarioDto } from './dto'
 import { AtualizarSenhaUseCase } from '../../../application/use-cases'
 import {
@@ -54,6 +58,8 @@ import {
   DESATIVAR_USUARIO_USE_CASE,
   EXCLUIR_ASSOCIADO_USE_CASE,
   LISTAR_ASSOCIADOS_USE_CASE,
+  MARCAR_ISENTO_ASSOCIADO_USE_CASE,
+  REMOVER_ISENCAO_ASSOCIADO_USE_CASE,
 } from '../../../identidade.tokens'
 
 @ApiTags('Identidade')
@@ -89,6 +95,12 @@ export class IdentidadeController {
     private readonly excluirAssociado: IExcluirAssociadoUseCase,
     @Inject(BUSCAR_ASSOCIADO_POR_USUARIO_USE_CASE)
     private readonly buscarAssociadoPorUsuario: IBuscarAssociadoPorUsuarioUseCase,
+    @Inject(MARCAR_ISENTO_ASSOCIADO_USE_CASE)
+    private readonly marcarIsentoAssociado: IMarcarIsentoAssociadoUseCase,
+    @Inject(REMOVER_ISENCAO_ASSOCIADO_USE_CASE)
+    private readonly removerIsencaoAssociado: IRemoverIsencaoAssociadoUseCase,
+    private readonly audit: AuditService,
+    private readonly sse: SseService,
   ) {}
 
   @ApiOperation({ summary: 'Criar usuário', description: 'Cria o usuário no banco e a credencial no Supabase Auth.' })
@@ -110,13 +122,15 @@ export class IdentidadeController {
   /** Registra uma solicitação de associação pendente (auto-cadastro) */
   @Post('associados/pendentes')
   @HttpCode(HttpStatus.CREATED)
-  async criarAssociadoPendenteHandler(@Body() dto: CriarAssociadoPendenteDto) {
+  async criarAssociadoPendenteHandler(@Body() dto: CriarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
     const associado = await this.criarAssociadoPendente.execute({
       nome: dto.nome,
       email: dto.email,
+      cpf: dto.cpf,
       telefone: dto.telefone,
       observacoes: dto.observacoes,
     })
+    void this.audit.log({ usuarioId: req.user?.sub, acao: 'CRIAR_ASSOCIADO_PENDENTE', recurso: 'associado', recursoId: associado.id, ip: req.ip })
     return this.toAssociadoResponse(associado)
   }
 
@@ -127,12 +141,15 @@ export class IdentidadeController {
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   /** Aprova um associado pendente: define senha e libera acesso */
   @Post('associados/:id/aprovar')
-  async aprovarAssociadoPendenteHandler(@Param('id') id: string, @Body() dto: AprovarAssociadoPendenteDto) {
+  async aprovarAssociadoPendenteHandler(@Param('id') id: string, @Body() dto: AprovarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
     const associado = await this.aprovarAssociadoPendente.execute({
       associadoId: id,
+      cpf: dto.cpf,
       senha: dto.senha,
       dataIngresso: dto.dataIngresso ? new Date(dto.dataIngresso) : undefined,
     })
+    void this.audit.log({ usuarioId: req.user?.sub, acao: 'APROVAR_ASSOCIADO', recurso: 'associado', recursoId: associado.id, ip: req.ip })
+    this.sse.emit('identidade:associado-aprovado', associado.id)
     return this.toAssociadoResponse(associado)
   }
 
@@ -143,12 +160,15 @@ export class IdentidadeController {
   /** Vincula um usuário existente como associado da APA */
   @Post('associados')
   @HttpCode(HttpStatus.CREATED)
-  async criarAssociadoHandler(@Body() dto: CriarAssociadoDto) {
+  async criarAssociadoHandler(@Body() dto: CriarAssociadoDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
     const associado = await this.criarAssociado.execute({
       usuarioId: dto.usuarioId,
+      cpf: dto.cpf,
       dataIngresso: dto.dataIngresso ? new Date(dto.dataIngresso) : undefined,
       observacoes: dto.observacoes,
     })
+    void this.audit.log({ usuarioId: req.user?.sub, acao: 'CRIAR_ASSOCIADO', recurso: 'associado', recursoId: associado.id, ip: req.ip })
+    this.sse.emit('identidade:associado-criado', associado.id)
     return this.toAssociadoResponse(associado)
   }
 
@@ -161,7 +181,7 @@ export class IdentidadeController {
   async meuPerfilHandler(@Req() req: { user: { sub: string } }) {
     const associado = await this.buscarAssociadoPorUsuario.execute(req.user.sub)
     if (!associado) throw new NotFoundException('Perfil de associado não encontrado.')
-    return this.toAssociadoResponse(associado)
+    return this.toAssociadoResponse(associado, false)
   }
 
   @ApiOperation({ summary: 'Listar associados', description: 'Retorna todos os associados com dados do usuário vinculado.' })
@@ -170,7 +190,7 @@ export class IdentidadeController {
   @Get('associados')
   async listarAssociadosHandler() {
     const lista = await this.listarAssociados.execute()
-    return lista.map((a) => this.toAssociadoResponse(a))
+    return lista.map((a) => this.toAssociadoResponse(a, true))
   }
 
   @ApiOperation({ summary: 'Ativar usuário', description: 'Remove o ban no Supabase Auth e marca o usuário como ativo.' })
@@ -182,6 +202,7 @@ export class IdentidadeController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async ativarUsuarioHandler(@Param('id') id: string) {
     await this.ativarUsuario.execute({ usuarioId: id })
+    this.sse.emit('identidade:usuario-ativado', id)
   }
 
   @ApiOperation({ summary: 'Desativar usuário', description: 'Aplica ban permanente no Supabase Auth e marca o usuário como inativo.' })
@@ -193,6 +214,7 @@ export class IdentidadeController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async desativarUsuarioHandler(@Param('id') id: string) {
     await this.desativarUsuario.execute({ usuarioId: id })
+    this.sse.emit('identidade:usuario-desativado', id)
   }
 
   @ApiOperation({ summary: 'Excluir associado' })
@@ -203,8 +225,10 @@ export class IdentidadeController {
   /** Exclui um associado, seu usuário e credencial Supabase */
   @Delete('associados/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async excluirAssociadoHandler(@Param('id') id: string) {
+  async excluirAssociadoHandler(@Param('id') id: string, @Req() req: { user?: { sub?: string }; ip?: string }) {
     await this.excluirAssociado.execute(id)
+    void this.audit.log({ usuarioId: req.user?.sub, acao: 'EXCLUIR_ASSOCIADO', recurso: 'associado', recursoId: id, ip: req.ip })
+    this.sse.emit('identidade:associado-excluido', id)
   }
 
   @ApiOperation({ summary: 'Buscar associado por ID' })
@@ -215,7 +239,7 @@ export class IdentidadeController {
   @Get('associados/:id')
   async buscarAssociadoHandler(@Param('id') id: string) {
     const associado = await this.buscarAssociado.execute(id)
-    return this.toAssociadoResponse(associado)
+    return this.toAssociadoResponse(associado, false)
   }
 
   @ApiOperation({ summary: 'Atualizar dados do associado' })
@@ -227,10 +251,12 @@ export class IdentidadeController {
   async atualizarAssociadoHandler(@Param('id') id: string, @Body() dto: AtualizarAssociadoDto) {
     const associado = await this.atualizarAssociado.execute({
       associadoId: id,
+      cpf: dto.cpf,
       status: dto.status,
       dataIngresso: dto.dataIngresso ? new Date(dto.dataIngresso) : undefined,
       observacoes: dto.observacoes,
     })
+    this.sse.emit('identidade:associado-atualizado', id)
     return this.toAssociadoResponse(associado)
   }
 
@@ -272,9 +298,37 @@ export class IdentidadeController {
     }
   }
 
-  private toAssociadoResponse(a: Associado) {
+  @ApiOperation({ summary: 'Marcar isenção estrutural de mensalidade' })
+  @ApiParam({ name: 'id', description: 'UUID do associado' })
+  @ApiResponse({ status: 200, description: 'Associado marcado como isento.' })
+  @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
+  @Patch('associados/:id/isencao-mensalidade')
+  async marcarIsentoAssociadoHandler(@Param('id') id: string) {
+    const associado = await this.marcarIsentoAssociado.execute(id)
+    this.sse.emit('identidade:isencao-marcada', id)
+    return this.toAssociadoResponse(associado)
+  }
+
+  @ApiOperation({ summary: 'Remover isenção estrutural de mensalidade' })
+  @ApiParam({ name: 'id', description: 'UUID do associado' })
+  @ApiResponse({ status: 200, description: 'Isenção removida.' })
+  @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
+  @Delete('associados/:id/isencao-mensalidade')
+  async removerIsencaoAssociadoHandler(@Param('id') id: string) {
+    const associado = await this.removerIsencaoAssociado.execute(id)
+    this.sse.emit('identidade:isencao-removida', id)
+    return this.toAssociadoResponse(associado)
+  }
+
+  private toAssociadoResponse(a: Associado, maskCpf = true) {
+    const cpf = a.cpf
+      ? maskCpf
+        ? `***.${a.cpf.slice(3, 6)}.${a.cpf.slice(6, 9)}-**`
+        : a.cpf
+      : undefined
     return {
       id: a.id,
+      cpf,
       usuario: {
         id: a.usuario.id,
         nome: a.usuario.nome,
@@ -286,6 +340,7 @@ export class IdentidadeController {
       dataIngresso: a.dataIngresso,
       observacoes: a.observacoes,
       status: a.status,
+      isentoMensalidade: a.isentoMensalidade,
     }
   }
 }

@@ -65,9 +65,20 @@ export const ASSOCIADO_NAV: NavGroup[] = [
     group: null,
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { label: 'Insumos', href: '/insumos', icon: Package },
+    ],
+  },
+  {
+    group: 'Minha Área',
+    items: [
+      { label: 'Financeiro', href: '/financeiro', icon: Wallet },
       { label: 'Produção', href: '/producao', icon: Layers },
       { label: 'Campanhas', href: '/campanhas', icon: Target },
+      { label: 'Insumos', href: '/insumos', icon: Package },
+    ],
+  },
+  {
+    group: 'Associação',
+    items: [
       { label: 'Produtos', href: '/produtos', icon: ShoppingBag },
       { label: 'Documentos', href: '/documentos', icon: FileText },
     ],

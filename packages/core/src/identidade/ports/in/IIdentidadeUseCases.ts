@@ -17,6 +17,7 @@ export interface ICriarUsuarioUseCase {
 /** Dados para vincular um usuário existente como associado. */
 export interface CriarAssociadoInput {
   usuarioId: string
+  cpf?: string
   dataIngresso?: Date
   observacoes?: string
 }
@@ -61,6 +62,7 @@ export interface IExcluirAssociadoUseCase {
 /** Dados para atualizar um associado. Status aciona side effects no Supabase (suspender/reativar). */
 export interface AtualizarAssociadoInput {
   associadoId: string
+  cpf?: string
   status?: string
   dataIngresso?: Date
   observacoes?: string
@@ -86,6 +88,7 @@ export interface IAtualizarUsuarioUseCase {
 export interface CriarAssociadoPendenteInput {
   nome: string
   email: string
+  cpf?: string
   telefone?: string
   observacoes?: string
 }
@@ -97,10 +100,21 @@ export interface ICriarAssociadoPendenteUseCase {
 /** Dados para aprovar um associado pendente. Define senha e libera acesso. */
 export interface AprovarAssociadoPendenteInput {
   associadoId: string
+  cpf?: string
   senha: string
   dataIngresso?: Date
 }
 /** Aprova um associado pendente: define senha, libera acesso no Supabase e ativa a conta. */
 export interface IAprovarAssociadoPendenteUseCase {
   execute(input: AprovarAssociadoPendenteInput): Promise<Associado>
+}
+
+/** Marca o associado como isento estrutural — não receberá mensalidades em batches futuros. Reversível. */
+export interface IMarcarIsentoAssociadoUseCase {
+  execute(associadoId: string): Promise<Associado>
+}
+
+/** Remove a isenção estrutural do associado — volta a receber mensalidades em batches futuros. */
+export interface IRemoverIsencaoAssociadoUseCase {
+  execute(associadoId: string): Promise<Associado>
 }

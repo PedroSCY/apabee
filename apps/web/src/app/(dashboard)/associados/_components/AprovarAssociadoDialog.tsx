@@ -37,7 +37,7 @@ export function AprovarAssociadoDialog({ open, associadoId, nomeAssociado, onOpe
     try {
       await aprovar({
         id: associadoId,
-        input: { senha, dataIngresso: dataIngresso || undefined },
+        input: { senha, dataIngresso: dataIngresso ? dataIngresso + 'T12:00:00' : undefined },
       })
       toast.success(`${nomeAssociado} aprovado e ativado com sucesso.`)
       handleOpenChange(false)

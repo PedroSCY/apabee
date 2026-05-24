@@ -1,12 +1,15 @@
 'use client'
 
 import * as React from 'react'
-import { Package, BarChart2, Droplets } from 'lucide-react'
+import Link from 'next/link'
+import { Package, BarChart2, Droplets, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { useMeuPerfil } from '@/hooks/useAssociados'
 import { useAtribuicoesPorAssociado } from '@/hooks/useAtribuicoes'
 import { useColheitasPorAssociado } from '@/hooks/useProducao'
+import { useMinhasMensalidades } from '@/hooks/useFinanceiro'
 
 function StatCard({
   title,
@@ -44,6 +47,8 @@ export function AssociadoDashboard() {
 
   const { data: atribuicoes = [], isLoading: loadingAtrib } = useAtribuicoesPorAssociado(meuId)
   const { data: colheitas = [], isLoading: loadingColheitas } = useColheitasPorAssociado(meuId)
+  const { data: mensalidades = [] } = useMinhasMensalidades()
+  const mensalidadesPendentes = mensalidades.filter((m) => m.status === 'PENDENTE')
 
   const emprestimosAtivos = atribuicoes.filter((a) => a.status === 'ATIVO').length
 
@@ -79,6 +84,29 @@ export function AssociadoDashboard() {
           loading={loadingColheitas && !meuId}
         />
       </div>
+
+      {mensalidadesPendentes.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+          <CardContent className="flex items-start justify-between gap-4 p-5">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
+                  {mensalidadesPendentes.length === 1
+                    ? 'Você tem 1 mensalidade em aberto'
+                    : `Você tem ${mensalidadesPendentes.length} mensalidades em aberto`}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  Entre em contato com a associação para regularizar sua situação.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" asChild className="shrink-0 border-amber-300 dark:border-amber-700">
+              <Link href="/financeiro">Ver detalhes</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

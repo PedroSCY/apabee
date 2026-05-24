@@ -49,11 +49,26 @@ export enum TipoVenda {
   INDIVIDUAL = 'INDIVIDUAL',
 }
 
-/** Tipo de movimento financeiro: ANTECIPACAO (venda individual), RATEIO_FINAL (fechamento) ou CUSTO (despesa da campanha adiantada por associado). */
+/** Tipo de movimento financeiro. */
 export enum TipoMovimentoFinanceiro {
   ANTECIPACAO = 'ANTECIPACAO',
   RATEIO_FINAL = 'RATEIO_FINAL',
   CUSTO = 'CUSTO',
+  MENSALIDADE = 'MENSALIDADE',
+}
+
+/** Ciclo de vida de uma mensalidade associativa. ISENTO é reversível; PAGO é terminal (até estorno via Asaas). */
+export enum StatusMensalidade {
+  PENDENTE = 'PENDENTE',
+  PAGO = 'PAGO',
+  ISENTO = 'ISENTO',
+}
+
+/** Forma de pagamento registrada ao quitar uma mensalidade. ONLINE reservado para integração Asaas (Fase Asaas). */
+export enum MetodoPagamentoMensalidade {
+  PRESENCIAL = 'PRESENCIAL',
+  TRANSFERENCIA = 'TRANSFERENCIA',
+  ONLINE = 'ONLINE',
 }
 
 /** Ciclo de vida de um pedido da loja. Cancelamento só permitido até PENDENTE. */

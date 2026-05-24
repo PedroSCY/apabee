@@ -31,8 +31,8 @@ import {
   ICriarComposicaoProdutoUseCase,
   ICriarProdutoUseCase,
   IDeletarProdutoUseCase,
-  IEstoqueProdutoRepository,
   IGerarEstoqueProdutoUseCase,
+  IListarProdutosComEstoqueUseCase,
   IListarProdutosUseCase,
   IPublicarProdutoUseCase,
   IRemoverComposicaoProdutoUseCase,
@@ -48,8 +48,8 @@ import {
   BUSCAR_PRODUTO_USE_CASE,
   CONSULTAR_CAPACIDADE_USE_CASE,
   CRIAR_PRODUTO_USE_CASE,
-  ESTOQUE_PRODUTO_REPOSITORY,
   GERAR_ESTOQUE_PRODUTO_USE_CASE,
+  LISTAR_PRODUTOS_COM_ESTOQUE_USE_CASE,
   LISTAR_PRODUTOS_USE_CASE,
   PUBLICAR_PRODUTO_USE_CASE,
   REMOVER_COMPOSICAO_USE_CASE,
@@ -69,7 +69,7 @@ export class ProdutosController {
     @Inject(ARQUIVAR_PRODUTO_USE_CASE) private readonly arquivar: IArquivarProdutoUseCase,
     @Inject(DELETAR_PRODUTO_USE_CASE) private readonly deletar: IDeletarProdutoUseCase,
     @Inject(GERAR_ESTOQUE_PRODUTO_USE_CASE) private readonly gerarEstoque: IGerarEstoqueProdutoUseCase,
-    @Inject(ESTOQUE_PRODUTO_REPOSITORY) private readonly estoqueRepo: IEstoqueProdutoRepository,
+    @Inject(LISTAR_PRODUTOS_COM_ESTOQUE_USE_CASE) private readonly listarComEstoque: IListarProdutosComEstoqueUseCase,
     @Inject(ADICIONAR_COMPOSICAO_USE_CASE) private readonly adicionarComposicao: ICriarComposicaoProdutoUseCase,
     @Inject(REMOVER_COMPOSICAO_USE_CASE) private readonly removerComposicao: IRemoverComposicaoProdutoUseCase,
     @Inject(CONSULTAR_CAPACIDADE_USE_CASE) private readonly consultarCapacidade: IConsultarCapacidadeUseCase,
@@ -90,11 +90,10 @@ export class ProdutosController {
   @Public()
   async listarHandler(@Query('publicos') publicos?: string) {
     const apenasPublicados = publicos === 'true'
-    const lista = await this.listar.execute({ apenasPublicados })
-    const estoques = await Promise.all(lista.map((p) => this.estoqueRepo.findByProduto(p.id)))
-    return lista.map((p, i) => ({
-      ...this.toProdutoResponse(p),
-      quantidadeEstoque: estoques[i]?.quantidadeDisponivel ?? 0,
+    const items = await this.listarComEstoque.execute({ apenasPublicados })
+    return items.map(({ produto, quantidadeEstoque }) => ({
+      ...this.toProdutoResponse(produto),
+      quantidadeEstoque,
     }))
   }
 

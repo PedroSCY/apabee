@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/shared'
 import { useMovimentosPorAssociado } from '@/hooks/useFinanceiro'
+import { MensalidadesAssociadoSection } from './MensalidadesAssociadoSection'
 
 interface Props {
   associadoId: string
@@ -24,7 +25,7 @@ interface Props {
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-const TIPO_CONFIG = {
+const TIPO_CONFIG: Record<string, { label: string; className: string; sign: number }> = {
   ANTECIPACAO: {
     label: 'Antecipação',
     className: 'bg-amber-100 text-amber-700 border-transparent dark:bg-amber-950 dark:text-amber-400',
@@ -35,7 +36,17 @@ const TIPO_CONFIG = {
     className: 'bg-emerald-100 text-emerald-700 border-transparent dark:bg-emerald-950 dark:text-emerald-400',
     sign: 1,
   },
-} as const
+  CUSTO: {
+    label: 'Custo',
+    className: 'bg-orange-100 text-orange-700 border-transparent dark:bg-orange-950 dark:text-orange-400',
+    sign: -1,
+  },
+  MENSALIDADE: {
+    label: 'Mensalidade',
+    className: 'bg-blue-100 text-blue-700 border-transparent dark:bg-blue-950 dark:text-blue-400',
+    sign: -1,
+  },
+}
 
 interface KpiCardProps {
   title: string
@@ -86,6 +97,7 @@ export function FinanceiroTab({ associadoId }: Props) {
 
   return (
     <div className="space-y-4">
+      <MensalidadesAssociadoSection associadoId={associadoId} />
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard
           title="Total de Antecipações"

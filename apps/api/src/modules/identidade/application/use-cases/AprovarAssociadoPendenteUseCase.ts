@@ -45,6 +45,7 @@ export class AprovarAssociadoPendenteUseCase implements IAprovarAssociadoPendent
 
     // Ativa o Associado
     const atualizado = associado.atualizarDados({
+      cpf: input.cpf,
       status: StatusAssociado.ATIVO,
       dataIngresso: input.dataIngresso ?? associado.dataIngresso,
     })

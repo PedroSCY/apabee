@@ -37,6 +37,7 @@ import {
   PedidoAquisicao,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
+import { SseService } from '../../../../../shared/sse/sse.service'
 import {
   AdicionarItemAquisicaoDto,
   AtualizarContribuicaoDto,
@@ -47,6 +48,7 @@ import {
   RegistrarContribuicaoDto,
   RegistrarCotaDto,
   RegistrarCustoDto,
+  RegistrarPedidoAquisicaoDto,
 } from './dto'
 import {
   ADICIONAR_ITEM_AQUISICAO_USE_CASE,
@@ -155,6 +157,7 @@ export class CampanhasController {
     @Inject(LISTAR_PEDIDOS_AQUISICAO_USE_CASE) private readonly listarPedidos: ListarPedidosAquisicaoUseCase,
     @Inject(CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE) private readonly confirmarPagamento: ConfirmarPagamentoPedidoUseCase,
     @Inject(MARCAR_PEDIDO_ENTREGUE_USE_CASE) private readonly marcarEntregue: MarcarPedidoEntregueUseCase,
+    private readonly sse: SseService,
   ) {}
 
   // ─── Campanha ─────────────────────────────────────────────────────────────
@@ -164,14 +167,14 @@ export class CampanhasController {
   @Roles(RoleUsuario.ADMIN)
   @Post()
   async criarCampanha(@Body() dto: CriarCampanhaDto) {
-    return this.toCampanhaResponse(
-      await this.criar.execute({
-        ...dto,
-        dataInicio: new Date(dto.dataInicio),
-        dataFim: dto.dataFim ? new Date(dto.dataFim) : undefined,
-        prazoContribuicao: dto.prazoContribuicao ? new Date(dto.prazoContribuicao) : undefined,
-      }),
-    )
+    const campanha = await this.criar.execute({
+      ...dto,
+      dataInicio: new Date(dto.dataInicio),
+      dataFim: dto.dataFim ? new Date(dto.dataFim) : undefined,
+      prazoContribuicao: dto.prazoContribuicao ? new Date(dto.prazoContribuicao) : undefined,
+    })
+    this.sse.emit('producao:campanha-criada', campanha.id)
+    return this.toCampanhaResponse(campanha)
   }
 
   @ApiOperation({ summary: 'Listar campanhas' })
@@ -194,7 +197,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/iniciar')
   async iniciarCampanha(@Param('id') id: string) {
-    return this.toCampanhaResponse(await this.iniciar.execute(id))
+    const campanha = await this.iniciar.execute(id)
+    this.sse.emit('producao:campanha-iniciada', id)
+    return this.toCampanhaResponse(campanha)
   }
 
   @ApiOperation({ summary: 'Concluir campanha (ATIVA → CONCLUIDA)' })
@@ -203,7 +208,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/concluir')
   async concluirCampanha(@Param('id') id: string) {
-    return this.toCampanhaResponse(await this.concluir.execute(id))
+    const campanha = await this.concluir.execute(id)
+    this.sse.emit('producao:campanha-concluida', id)
+    return this.toCampanhaResponse(campanha)
   }
 
   @ApiOperation({ summary: 'Cancelar campanha (guard: sem contribuições, não LIQUIDADA)' })
@@ -212,7 +219,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/cancelar')
   async cancelarCampanha(@Param('id') id: string) {
-    return this.toCampanhaResponse(await this.cancelar.execute(id))
+    const campanha = await this.cancelar.execute(id)
+    this.sse.emit('producao:campanha-cancelada', id)
+    return this.toCampanhaResponse(campanha)
   }
 
   @ApiOperation({ summary: 'Excluir campanha permanentemente (apenas PLANEJADA ou CANCELADA)' })
@@ -240,7 +249,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/liquidar')
   async liquidarCampanha(@Param('id') id: string) {
-    return this.toCampanhaResponse(await this.liquidar.execute(id))
+    const campanha = await this.liquidar.execute(id)
+    this.sse.emit('producao:campanha-liquidada', id)
+    return this.toCampanhaResponse(campanha)
   }
 
   @ApiOperation({ summary: 'Preview do rateio antes da liquidação — campanha CONCLUIDA com receitaTotal informada (RN13/RN18, read-only)' })
@@ -264,7 +275,9 @@ export class CampanhasController {
   @ApiParam({ name: 'id', type: String })
   @Post(':id/contribuicoes')
   async registrarContribuicao_(@Param('id') campanhaId: string, @Body() dto: RegistrarContribuicaoDto) {
-    return this.toContribuicaoResponse(await this.registrarContribuicao.execute({ ...dto, campanhaId }))
+    const contribuicao = await this.registrarContribuicao.execute({ ...dto, campanhaId })
+    this.sse.emit('producao:contribuicao-registrada', campanhaId)
+    return this.toContribuicaoResponse(contribuicao)
   }
 
   @ApiOperation({ summary: 'Listar contribuições da campanha' })
@@ -307,7 +320,9 @@ export class CampanhasController {
   @ApiParam({ name: 'id', type: String })
   @Post(':id/cotas')
   async registrarCota_(@Param('id') campanhaId: string, @Body() dto: RegistrarCotaDto) {
-    return this.toCotaResponse(await this.registrarCota.execute({ ...dto, campanhaId }))
+    const cota = await this.registrarCota.execute({ ...dto, campanhaId })
+    this.sse.emit('producao:cota-registrada', campanhaId)
+    return this.toCotaResponse(cota)
   }
 
   @ApiOperation({ summary: 'Listar cotas da campanha' })
@@ -325,7 +340,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/cotas/:cotaId/confirmar')
   async confirmarCota_(@Param('cotaId') cotaId: string) {
-    return this.toCotaResponse(await this.confirmarCota.execute(cotaId))
+    const cota = await this.confirmarCota.execute(cotaId)
+    this.sse.emit('producao:cota-confirmada', cotaId)
+    return this.toCotaResponse(cota)
   }
 
   @ApiOperation({ summary: 'Cancelar cota não paga' })
@@ -407,10 +424,13 @@ export class CampanhasController {
 
   // ─── Pedidos de Aquisição ────────────────────────────────────────────────
 
-  @ApiOperation({ summary: 'Registrar pedido em campanha de aquisição individual' })
-  @ApiParam({ name: 'id', type: String })
+  @ApiOperation({ summary: 'Registrar pedido em campanha de aquisição individual', description: 'Campanha deve estar ATIVA e ser do destinatário INDIVIDUAL. AssociadoId obrigatório quando origem=ASSOCIADO.' })
+  @ApiParam({ name: 'id', type: String, description: 'UUID da campanha' })
+  @ApiResponse({ status: 201, description: 'Pedido registrado.' })
+  @ApiResponse({ status: 400, description: 'Campanha inativa, não é individual, ou associadoId ausente.' })
+  @ApiResponse({ status: 404, description: 'Campanha ou item não encontrado.' })
   @Post(':id/pedidos-aquisicao')
-  async registrarPedido_(@Param('id') campanhaId: string, @Body() dto: any) {
+  async registrarPedido_(@Param('id') campanhaId: string, @Body() dto: RegistrarPedidoAquisicaoDto) {
     return this.toPedidoAquisicaoResponse(await this.registrarPedido.execute({ ...dto, campanhaId }))
   }
 
@@ -501,7 +521,9 @@ export class CampanhasController {
   @HttpCode(HttpStatus.OK)
   @Patch(':id/ordens/:ordemId/executar')
   async executarOrdem_(@Param('ordemId') ordemId: string) {
-    return this.toOrdemResponse(await this.executarOrdem.execute(ordemId))
+    const ordem = await this.executarOrdem.execute(ordemId)
+    this.sse.emit('producao:ordem-executada', ordemId)
+    return this.toOrdemResponse(ordem)
   }
 
   @ApiOperation({ summary: 'Remover ordem de produção PENDENTE' })

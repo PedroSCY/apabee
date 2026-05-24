@@ -31,6 +31,7 @@ import {
   IPublicarAvisoUseCase,
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
+import { SseService } from '../../../../../shared/sse/sse.service'
 import { CriarAvisoDto } from './dto/CriarAvisoDto'
 import {
   CRIAR_AVISO_USE_CASE,
@@ -50,6 +51,7 @@ export class AvisosController {
     @Inject(PUBLICAR_AVISO_USE_CASE) private readonly publicar: IPublicarAvisoUseCase,
     @Inject(DESPUBLICAR_AVISO_USE_CASE) private readonly despublicar: IDespublicarAvisoUseCase,
     @Inject(EXCLUIR_AVISO_USE_CASE) private readonly excluir: IExcluirAvisoUseCase,
+    private readonly sse: SseService,
   ) {}
 
   @ApiOperation({ summary: 'Criar aviso (ADMIN)' })
@@ -78,7 +80,9 @@ export class AvisosController {
   @Patch(':id/publicar')
   @Roles(RoleUsuario.ADMIN)
   async publicarHandler(@Param('id') id: string) {
-    return this.toResponse(await this.publicar.execute(id))
+    const aviso = await this.publicar.execute(id)
+    this.sse.emit('comunicacao:aviso-publicado', id)
+    return this.toResponse(aviso)
   }
 
   @ApiOperation({ summary: 'Despublicar aviso (ADMIN)' })
@@ -86,7 +90,9 @@ export class AvisosController {
   @Patch(':id/despublicar')
   @Roles(RoleUsuario.ADMIN)
   async despublicarHandler(@Param('id') id: string) {
-    return this.toResponse(await this.despublicar.execute(id))
+    const aviso = await this.despublicar.execute(id)
+    this.sse.emit('comunicacao:aviso-despublicado', id)
+    return this.toResponse(aviso)
   }
 
   @ApiOperation({ summary: 'Excluir aviso (ADMIN)' })

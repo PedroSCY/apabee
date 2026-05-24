@@ -31,3 +31,7 @@ export const EXCLUIR_ASSOCIADO_USE_CASE = 'EXCLUIR_ASSOCIADO_USE_CASE'
 export const CRIAR_ASSOCIADO_PENDENTE_USE_CASE = 'CRIAR_ASSOCIADO_PENDENTE_USE_CASE'
 /** Use case: aprovar associado pendente */
 export const APROVAR_ASSOCIADO_PENDENTE_USE_CASE = 'APROVAR_ASSOCIADO_PENDENTE_USE_CASE'
+/** Use case: marcar associado como isento de mensalidade (isenção estrutural) */
+export const MARCAR_ISENTO_ASSOCIADO_USE_CASE = 'MARCAR_ISENTO_ASSOCIADO_USE_CASE'
+/** Use case: remover isenção estrutural de mensalidade do associado */
+export const REMOVER_ISENCAO_ASSOCIADO_USE_CASE = 'REMOVER_ISENCAO_ASSOCIADO_USE_CASE'

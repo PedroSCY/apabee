@@ -11,14 +11,17 @@ export interface UsuarioResponse {
 
 export interface AssociadoResponse {
   id: string
+  cpf?: string
   usuario: UsuarioResponse
   dataIngresso: string
   observacoes?: string
   status: string
+  isentoMensalidade: boolean
 }
 
 export interface CriarAssociadoInput {
   usuarioId: string
+  cpf?: string
   dataIngresso?: string
   observacoes?: string
 }
@@ -26,12 +29,14 @@ export interface CriarAssociadoInput {
 export interface CriarAssociadoPendenteInput {
   nome: string
   email: string
+  cpf?: string
   telefone?: string
   observacoes?: string
 }
 
 export interface AprovarAssociadoPendenteInput {
   senha: string
+  cpf?: string
   dataIngresso?: string
 }
 
@@ -50,6 +55,7 @@ export interface AtualizarUsuarioInput {
 }
 
 export interface AtualizarAssociadoInput {
+  cpf?: string
   dataIngresso?: string
   observacoes?: string
   status?: string
@@ -125,4 +131,12 @@ export const identidadeApi = {
   /** Desativa um usuário ativo. */
   desativarUsuario: (id: string) =>
     apiFetch<void>(`/identidade/usuarios/${id}/desativar`, { method: 'PATCH' }),
+
+  /** Marca isenção estrutural de mensalidade (não receberá mensalidades em batches futuros). */
+  marcarIsentoAssociado: (id: string) =>
+    apiFetch<AssociadoResponse>(`/identidade/associados/${id}/isencao-mensalidade`, { method: 'PATCH' }),
+
+  /** Remove isenção estrutural de mensalidade. */
+  removerIsencaoAssociado: (id: string) =>
+    apiFetch<AssociadoResponse>(`/identidade/associados/${id}/isencao-mensalidade`, { method: 'DELETE' }),
 }

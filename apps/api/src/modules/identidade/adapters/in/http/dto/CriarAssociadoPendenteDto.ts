@@ -14,6 +14,12 @@ export class CriarAssociadoPendenteDto {
   @IsEmail()
   email!: string
 
+  /** CPF do solicitante (somente dígitos) */
+  @ApiPropertyOptional({ example: '12345678901' })
+  @IsOptional()
+  @IsString()
+  cpf?: string
+
   /** Telefone de contato (opcional) */
   @ApiPropertyOptional({ example: '83999990000' })
   @IsOptional()

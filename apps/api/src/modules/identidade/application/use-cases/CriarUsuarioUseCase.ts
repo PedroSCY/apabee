@@ -37,6 +37,7 @@ export class CriarUsuarioUseCase implements ICriarUsuarioUseCase {
       id,
       nome: input.nome,
       email,
+      telefone: input.telefone,
       role: input.role,
       ativo: true,
       criadoEm: new Date(),

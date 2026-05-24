@@ -28,6 +28,7 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        telefone: usuario.telefone,
         role: usuario.role,
         ativo: usuario.ativo,
         criadoEm: usuario.criadoEm,
@@ -43,8 +44,10 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
       data: {
         nome: usuario.nome,
         email: usuario.email,
+        telefone: usuario.telefone,
         role: usuario.role,
         ativo: usuario.ativo,
+        deletadoEm: usuario.deletadoEm,
       },
     })
     return this.toDomain(record)
@@ -53,6 +56,20 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
   /** Remove um usuário pelo ID */
   async delete(id: string): Promise<void> {
     await this.prisma.usuario.delete({ where: { id } })
+  }
+
+  /** Soft delete com anonimização de email — libera o unique constraint para recadastro */
+  async anonymizar(id: string): Promise<void> {
+    await this.prisma.usuario.update({
+      where: { id },
+      data: {
+        email: `deleted-${id}@deleted.local`,
+        nome: 'Usuário Excluído',
+        telefone: null,
+        ativo: false,
+        deletadoEm: new Date(),
+      },
+    })
   }
 
   /** Verifica se o usuário possui atas ou documentos como autor */
@@ -69,9 +86,11 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
       id: record.id,
       nome: record.nome,
       email: record.email,
+      telefone: record.telefone ?? undefined,
       role: record.role as RoleUsuario,
       ativo: record.ativo,
       criadoEm: record.criadoEm,
+      deletadoEm: record.deletadoEm ?? undefined,
     })
   }
 }

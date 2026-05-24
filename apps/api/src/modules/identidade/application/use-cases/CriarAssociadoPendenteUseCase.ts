@@ -46,6 +46,7 @@ export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUse
       id,
       nome: input.nome,
       email,
+      telefone: input.telefone,
       role: RoleUsuario.ASSOCIADO,
       ativo: false,
       criadoEm: new Date(),
@@ -55,6 +56,7 @@ export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUse
     const associado = new Associado({
       id: crypto.randomUUID(),
       usuario,
+      cpf: input.cpf,
       dataIngresso: new Date(),
       observacoes: input.observacoes,
       status: StatusAssociado.PENDENTE,

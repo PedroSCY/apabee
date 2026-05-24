@@ -44,7 +44,7 @@ function toRow(a: AssociadoResponse): AssociadoRow {
     email: a.usuario.email,
     status: a.status,
     dataIngresso: a.dataIngresso
-      ? format(new Date(a.dataIngresso), 'dd/MM/yyyy', { locale: ptBR })
+      ? format(new Date(a.dataIngresso.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })
       : '—',
     observacoes: a.observacoes,
   }

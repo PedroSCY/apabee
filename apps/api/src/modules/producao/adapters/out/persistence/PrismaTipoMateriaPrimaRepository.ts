@@ -40,7 +40,6 @@ export class PrismaTipoMateriaPrimaRepository implements ITipoMateriaPrimaReposi
       await tx.colheita.deleteMany({ where: { tipoMateriaPrimaId: id } })
       await tx.materialOrdemProducao.deleteMany({ where: { tipoMateriaPrimaId: id } })
       await tx.composicaoProduto.deleteMany({ where: { tipoMateriaPrimaId: id } })
-      await tx.precoSafra.deleteMany({ where: { tipoMateriaPrimaId: id } })
       await tx.tipoMateriaPrima.delete({ where: { id } })
     })
   }

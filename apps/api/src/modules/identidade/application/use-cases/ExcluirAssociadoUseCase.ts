@@ -35,8 +35,9 @@ export class ExcluirAssociadoUseCase implements IExcluirAssociadoUseCase {
       )
     }
 
-    // Deletar o usuário dispara onDelete: Cascade → Associado → todos os filhos
-    await this.usuarioRepository.delete(associado.usuario.id)
+    // Soft delete: marca deletadoEm no Associado e anonimiza o Usuario (libera email para recadastro)
+    await this.associadoRepository.delete(associado.id)
+    await this.usuarioRepository.anonymizar(associado.usuario.id)
     await this.provedorAuth.removerCredencial(associado.usuario.id)
   }
 }

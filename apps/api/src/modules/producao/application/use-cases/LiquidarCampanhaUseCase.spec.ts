@@ -45,8 +45,8 @@ const apuracaoRepo: jest.Mocked<IApuracaoCampanhaRepository> = {
   findByCampanha: jest.fn(), save: jest.fn(),
 }
 const movimentoRepo: jest.Mocked<IMovimentoFinanceiroRepository> = {
-  findByCampanha: jest.fn(), findByAssociadoECampanha: jest.fn(),
-  save: jest.fn(), saveMany: jest.fn(),
+  findAll: jest.fn(), findByCampanha: jest.fn(), findByAssociadoECampanha: jest.fn(),
+  findByAssociado: jest.fn(), save: jest.fn(), saveMany: jest.fn(),
 }
 const estoqueCampanhaRepo: jest.Mocked<IEstoqueCampanhaRepository> = {
   findByCampanha: jest.fn(), findByCampanhaETipo: jest.fn(),

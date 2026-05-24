@@ -75,6 +75,7 @@ import {
     { provide: OBTER_CONFIGURACAO_USE_CASE, useClass: ObterConfiguracaoUseCase },
     { provide: ATUALIZAR_CONFIGURACAO_USE_CASE, useClass: AtualizarConfiguracaoUseCase },
   ],
+  exports: [CONFIGURACAO_REPOSITORY],
 })
 /** Módulo NestJS de gestão — atas, documentos e configurações da associação. */
 export class GestaoModule {}

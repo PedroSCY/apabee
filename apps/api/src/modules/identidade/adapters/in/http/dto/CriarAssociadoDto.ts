@@ -14,6 +14,12 @@ export class CriarAssociadoDto {
   @IsDateString()
   dataIngresso?: string
 
+  /** CPF do associado (somente dígitos) */
+  @ApiPropertyOptional({ example: '12345678901', description: 'CPF sem pontuação' })
+  @IsOptional()
+  @IsString()
+  cpf?: string
+
   /** Observações sobre o associado */
   @ApiPropertyOptional({ example: 'Apicultor com 5 anos de experiência na região' })
   @IsOptional()

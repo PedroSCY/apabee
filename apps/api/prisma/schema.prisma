@@ -55,6 +55,19 @@ enum TipoMovimentoFinanceiro {
   ANTECIPACAO
   RATEIO_FINAL
   CUSTO
+  MENSALIDADE
+}
+
+enum StatusMensalidade {
+  PENDENTE
+  PAGO
+  ISENTO
+}
+
+enum MetodoPagamentoMensalidade {
+  PRESENCIAL
+  TRANSFERENCIA
+  ONLINE
 }
 
 enum StatusPedido {
@@ -183,16 +196,19 @@ enum OrigemContribuicao {
 // ─── Modelos ─────────────────────────────────────────────────────────────────
 
 model Usuario {
-  id        String      @id @default(uuid())
-  nome      String
-  email     String      @unique
-  role      RoleUsuario @default(ASSOCIADO)
-  ativo     Boolean     @default(true)
-  criadoEm DateTime    @default(now()) @map("criado_em")
+  id         String      @id @default(uuid())
+  nome       String
+  email      String      @unique
+  telefone   String?
+  role       RoleUsuario @default(ASSOCIADO)
+  ativo      Boolean     @default(true)
+  criadoEm  DateTime    @default(now()) @map("criado_em")
+  deletadoEm DateTime?   @map("deletado_em")
 
   associado  Associado?
   atas       Ata[]
   documentos Documento[]
+  auditLogs  AuditLog[]
 
   @@map("usuarios")
 }
@@ -200,9 +216,13 @@ model Usuario {
 model Associado {
   id           String          @id @default(uuid())
   usuarioId    String          @unique @map("usuario_id")
+  cpf          String?         @unique
   dataIngresso DateTime        @map("data_ingresso")
   observacoes  String?
   status       StatusAssociado @default(ATIVO)
+  deletadoEm   DateTime?       @map("deletado_em")
+
+  isentoMensalidade        Boolean                    @default(false) @map("isento_mensalidade")
 
   usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   atribuicoesPatrimonio    AtribuicaoPatrimonio[]
@@ -216,6 +236,7 @@ model Associado {
   custosAdiantados         CustoCampanha[]
   rateios                  RateioCampanha[]
   pedidosAquisicao         PedidoAquisicao[]
+  mensalidades             Mensalidade[]
 
   @@map("associados")
 }
@@ -720,6 +741,29 @@ model MovimentoFinanceiro {
 }
 
 
+model Mensalidade {
+  id              String                      @id @default(uuid())
+  associadoId     String                      @map("associado_id")
+  competenciaAno  Int                         @map("competencia_ano")
+  competenciaMes  Int                         @map("competencia_mes")
+  valor           Decimal                     @db.Decimal(10, 2)
+  status          StatusMensalidade           @default(PENDENTE)
+  metodoPagamento MetodoPagamentoMensalidade? @map("metodo_pagamento")
+  dataPagamento   DateTime?                   @map("data_pagamento")
+  motivoIsencao      String?                     @map("motivo_isencao")
+  criadoEm           DateTime                    @default(now()) @map("criado_em")
+  cobrancaGatewayId      String?  @map("asaas_cobranca_id")
+  cobrancaLink           String?  @map("asaas_link_pagamento")
+  cobrancaStatus         String?  @map("asaas_status")
+  cobrancaPixCopiaECola  String?  @map("cobranca_pix_copia_e_cola")
+  cobrancaValorCobrado   Decimal? @db.Decimal(10, 2) @map("cobranca_valor_cobrado")
+
+  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+
+  @@unique([associadoId, competenciaAno, competenciaMes])
+  @@map("mensalidades")
+}
+
 model Ata {
   id          String   @id @default(uuid())
   titulo      String
@@ -775,7 +819,8 @@ model ConfiguracaoAssociacao {
   corPrimariaForeground String?  @map("cor_primaria_foreground")
   corSidebar            String?  @map("cor_sidebar")
   corAccent             String?  @map("cor_accent")
-  valorDiaria           Decimal? @map("valor_diaria") @db.Decimal(10, 2)
+  valorMensalidade      Decimal? @map("valor_mensalidade") @db.Decimal(10, 2)
+  diaVencimento         Int?     @map("dia_vencimento")
   atualizadoEm          DateTime @updatedAt @map("atualizado_em")
 
   @@map("configuracao_associacao")
@@ -815,4 +860,18 @@ model SolicitacaoContato {
   criadoEm   DateTime                 @default(now()) @map("criado_em")
 
   @@map("solicitacoes_contato")
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  usuarioId  String?   @map("usuario_id")
+  acao       String
+  recurso    String
+  recursoId  String?   @map("recurso_id")
+  ip         String?
+  criadoEm  DateTime  @default(now()) @map("criado_em")
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
 }

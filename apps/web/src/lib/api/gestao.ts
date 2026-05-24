@@ -15,6 +15,8 @@ export interface ConfiguracaoAssociacaoResponse {
   corPrimariaForeground?: string
   corSidebar?: string
   corAccent?: string
+  valorMensalidade?: number
+  diaVencimento?: number
   atualizadoEm: string
 }
 
@@ -30,6 +32,8 @@ export interface AtualizarConfiguracaoInput {
   corPrimariaForeground?: string
   corSidebar?: string
   corAccent?: string
+  valorMensalidade?: number
+  diaVencimento?: number
 }
 
 // ── Ata ──────────────────────────────────────────────────────────────────────

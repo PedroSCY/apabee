@@ -28,6 +28,7 @@ export class AtualizarAssociadoUseCase implements IAtualizarAssociadoUseCase {
     if (!associado) throw new NotFoundException('Associado não encontrado')
 
     const atualizado = associado.atualizarDados({
+      cpf: input.cpf,
       status: input.status as StatusAssociado | undefined,
       dataIngresso: input.dataIngresso,
       observacoes: input.observacoes,

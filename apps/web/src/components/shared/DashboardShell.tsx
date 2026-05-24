@@ -3,6 +3,7 @@
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './Sidebar'
 import { Header } from './Header'
+import { useSseEvents } from '@/lib/hooks/useSseEvents'
 
 interface DashboardShellProps {
   role: 'ADMIN' | 'ASSOCIADO'
@@ -20,6 +21,8 @@ export function DashboardShell({
   defaultOpen = true,
   children,
 }: DashboardShellProps) {
+  useSseEvents()
+
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar role={role} />

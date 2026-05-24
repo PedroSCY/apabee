@@ -35,6 +35,7 @@ export class CriarAssociadoUseCase implements ICriarAssociadoUseCase {
     const associado = new Associado({
       id: crypto.randomUUID(),
       usuario,
+      cpf: input.cpf,
       dataIngresso: input.dataIngresso ?? new Date(),
       observacoes: input.observacoes,
       status: StatusAssociado.ATIVO,

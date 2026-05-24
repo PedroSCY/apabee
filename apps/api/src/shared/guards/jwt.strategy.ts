@@ -28,7 +28,10 @@ export interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (req) => (req?.query as Record<string, string>)?.token ?? null,
+      ]),
       ignoreExpiration: false,
       secretOrKeyProvider: passportJwtSecret({
         cache: true,

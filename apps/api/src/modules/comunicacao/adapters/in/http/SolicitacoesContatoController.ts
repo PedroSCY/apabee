@@ -12,8 +12,12 @@ import {
   Query,
 } from '@nestjs/common'
 import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger'
 import {
@@ -55,6 +59,7 @@ class AtualizarStatusDto {
 }
 
 @ApiTags('Contato — Solicitações')
+@ApiBearerAuth('JWT')
 @Controller('contato/solicitacoes')
 export class SolicitacoesContatoController {
   constructor(
@@ -64,7 +69,9 @@ export class SolicitacoesContatoController {
     @Inject(EXCLUIR_SOLICITACAO_CONTATO_USE_CASE) private readonly excluir: IExcluirSolicitacaoContatoUseCase,
   ) {}
 
-  @ApiOperation({ summary: 'Enviar solicitação de contato (público)' })
+  @ApiOperation({ summary: 'Enviar solicitação de contato (público)', description: 'Não requer autenticação. Tipos: CONTATO (dúvidas gerais), COLETA (venda de mel), INTEGRACAO (solicitação de associação).' })
+  @ApiResponse({ status: 201, description: 'Solicitação registrada.' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -73,8 +80,9 @@ export class SolicitacoesContatoController {
     return this.toResponse(s)
   }
 
-  @ApiOperation({ summary: 'Listar solicitações de contato (admin)' })
+  @ApiOperation({ summary: 'Listar solicitações de contato (ADMIN)', description: 'Filtrável por status. Inclui solicitações de associação (tipo INTEGRACAO).' })
   @ApiQuery({ name: 'status', enum: StatusSolicitacaoContato, enumName: 'StatusSolicitacaoContato', required: false })
+  @ApiResponse({ status: 200, description: 'Lista de solicitações.' })
   @Roles(RoleUsuario.ADMIN)
   @Get()
   async listarHandler(@Query('status') status?: StatusSolicitacaoContato) {
@@ -82,7 +90,10 @@ export class SolicitacoesContatoController {
     return lista.map((s) => this.toResponse(s))
   }
 
-  @ApiOperation({ summary: 'Atualizar status da solicitação (admin)' })
+  @ApiOperation({ summary: 'Atualizar status da solicitação (ADMIN)', description: 'Permite marcar como EM_ANALISE, RESPONDIDA ou ARQUIVADA.' })
+  @ApiParam({ name: 'id', description: 'UUID da solicitação' })
+  @ApiResponse({ status: 200, description: 'Status atualizado.' })
+  @ApiResponse({ status: 404, description: 'Solicitação não encontrada.' })
   @Roles(RoleUsuario.ADMIN)
   @Patch(':id/status')
   async atualizarStatusHandler(@Param('id') id: string, @Body() dto: AtualizarStatusDto) {
@@ -90,7 +101,10 @@ export class SolicitacoesContatoController {
     return this.toResponse(s)
   }
 
-  @ApiOperation({ summary: 'Excluir solicitação (admin)' })
+  @ApiOperation({ summary: 'Excluir solicitação (ADMIN)' })
+  @ApiParam({ name: 'id', description: 'UUID da solicitação' })
+  @ApiNoContentResponse({ description: 'Solicitação excluída.' })
+  @ApiResponse({ status: 404, description: 'Solicitação não encontrada.' })
   @Roles(RoleUsuario.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -16,6 +16,12 @@ export class AtualizarAssociadoDto {
   @IsDateString()
   dataIngresso?: string
 
+  /** CPF do associado (somente dígitos) */
+  @ApiPropertyOptional({ example: '12345678901' })
+  @IsOptional()
+  @IsString()
+  cpf?: string
+
   /** Novas observações */
   @ApiPropertyOptional()
   @IsOptional()
