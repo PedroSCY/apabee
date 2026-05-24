@@ -17,7 +17,7 @@ coverage
 
 # Turbo
 .turbo
-out/
+/out/
 
 # Vercel
 .vercel
