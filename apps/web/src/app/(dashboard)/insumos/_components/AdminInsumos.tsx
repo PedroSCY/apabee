@@ -25,8 +25,6 @@ import { useSolicitacoes, useAprovarSolicitacao, useRejeitarSolicitacao } from '
 import { DataTable, StatusBadge, ConfirmDialog, ViewToggle, type Column } from '@/components/shared'
 import { useViewToggle } from '@/hooks/useViewToggle'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -36,13 +34,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type {
   EquipamentoResponse,
@@ -53,71 +44,13 @@ import type {
 import { EquipamentoFormDialog } from './EquipamentoFormDialog'
 import { TipoInsumoFormDialog } from './TipoInsumoFormDialog'
 import { AdicionarUnidadesDialog } from './AdicionarUnidadesDialog'
+import { AtribuirDialog, type AtribuirTarget } from './AtribuirDialog'
 
 const LABEL_CATEGORIA: Record<string, string> = { FERRAMENTA: 'Ferramenta', INSUMO: 'Insumo' }
 const LABEL_TIPO: Record<string, string> = { EQUIPAMENTO: 'Equipamento', INSUMO: 'Insumo' }
 
-type AtribuirTarget = { id: string; tipoPatrimonio: 'EQUIPAMENTO' | 'INSUMO'; nome: string }
 type ExcluirTarget = { tipo: 'equipamento' | 'insumo' | 'tipo-insumo'; id: string; nome: string }
 type AcaoConfirm = { tipo: 'aprovar' | 'rejeitar'; solicitacao: SolicitacaoPatrimonioResponse; nome: string }
-
-function AtribuirDialog({
-  target, onClose, associados, onConfirm,
-}: {
-  target: AtribuirTarget | null
-  onClose: () => void
-  associados: Array<{ id: string; usuario: { nome: string } }>
-  onConfirm: (associadoId: string, observacao?: string) => Promise<void>
-}) {
-  const [associadoId, setAssociadoId] = React.useState('')
-  const [observacao, setObservacao] = React.useState('')
-  const [loading, setLoading] = React.useState(false)
-
-  React.useEffect(() => {
-    if (target) { setAssociadoId(''); setObservacao('') }
-  }, [target])
-
-  const handle = async () => {
-    if (!associadoId) { toast.error('Selecione um associado.'); return }
-    setLoading(true)
-    try { await onConfirm(associadoId, observacao || undefined) }
-    finally { setLoading(false) }
-  }
-
-  return (
-    <Dialog open={!!target} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Atribuir — {target?.nome}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-3">
-          <div className="grid gap-2">
-            <Label>Associado</Label>
-            <Select value={associadoId} onValueChange={setAssociadoId}>
-              <SelectTrigger><SelectValue placeholder="Selecione um associado ativo" /></SelectTrigger>
-              <SelectContent>
-                {associados.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.usuario.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-            <Textarea value={observacao} onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Instruções ou observações…" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handle} disabled={loading}>
-            <UserCheck className="mr-2 h-4 w-4" />Atribuir
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 export function AdminInsumos() {
   const { data: equipamentos = [], isLoading: loadingEq } = useEquipamentos()

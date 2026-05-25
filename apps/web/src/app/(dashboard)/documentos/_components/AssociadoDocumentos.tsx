@@ -9,15 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { DocumentoResponse, AtaResponse } from '@/lib/api/gestao'
 
-const CATEGORIAS = [
-  { value: '', label: 'Todas' },
-  { value: 'ATA', label: 'Atas' },
-  { value: 'FINANCEIRO', label: 'Financeiro' },
-  { value: 'PRESTACAO_CONTAS', label: 'Prestação de Contas' },
-  { value: 'RELATORIO', label: 'Relatórios' },
-  { value: 'OUTRO', label: 'Outros' },
-]
-
 const CATEGORIA_LABEL: Record<string, string> = {
   ATA: 'Ata',
   FINANCEIRO: 'Financeiro',
@@ -27,8 +18,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
 }
 
 function DocumentosTab() {
-  const [categoria, setCategoria] = React.useState('')
-  const { data: documentos = [], isLoading } = useDocumentos(categoria || undefined)
+  const { data: documentos = [], isLoading } = useDocumentos()
 
   const cols: Column<DocumentoResponse>[] = [
     { key: 'titulo', label: 'Título' },
@@ -46,31 +36,13 @@ function DocumentosTab() {
   ]
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap">
-        {CATEGORIAS.map((c) => (
-          <button
-            key={c.value}
-            onClick={() => setCategoria(c.value)}
-            className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-              categoria === c.value
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'border-border text-muted-foreground hover:border-primary hover:text-primary'
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
-
-      <DataTable
-        data={documentos} columns={cols} rowKey={(r) => r.id}
-        isLoading={isLoading}
-        searchable searchPlaceholder="Buscar por título…" searchKeys={['titulo']}
-        emptyTitle="Nenhum documento encontrado"
-        emptyDescription="Ainda não há documentos publicados nesta categoria."
-      />
-    </div>
+    <DataTable
+      data={documentos} columns={cols} rowKey={(r) => r.id}
+      isLoading={isLoading}
+      searchable searchPlaceholder="Buscar por título ou categoria…" searchKeys={['titulo', 'categoria']}
+      emptyTitle="Nenhum documento publicado"
+      emptyDescription="Ainda não há documentos disponíveis para visualização."
+    />
   )
 }
 

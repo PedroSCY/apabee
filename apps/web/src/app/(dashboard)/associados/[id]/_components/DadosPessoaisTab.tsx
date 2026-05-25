@@ -6,40 +6,20 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CalendarIcon, KeyRound, Pencil, Trash2, ShieldOff, ShieldCheck, UserX } from 'lucide-react'
+import { CalendarIcon, KeyRound, Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { StatusBadge, ConfirmDialog, CpfInput } from '@/components/shared'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { StatusBadge, CpfInput } from '@/components/shared'
 import {
   useAtualizarUsuario,
   useAtualizarAssociado,
@@ -47,6 +27,8 @@ import {
   useExcluirAssociado,
 } from '@/hooks/useAssociados'
 import type { AssociadoResponse } from '@/lib/api/identidade'
+import { StatusActions } from './StatusActions'
+import { RedefinirSenhaDialog } from './RedefinirSenhaDialog'
 
 const schema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
@@ -72,124 +54,10 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-type StatusAction = 'suspender' | 'inativar' | 'reativar' | null
-
-const STATUS_ACTION_CONFIG: Record<
-  NonNullable<StatusAction>,
-  {
-    label: string
-    targetStatus: string
-    title: string
-    description: string
-    confirmLabel: string
-    variant: 'destructive' | 'default'
-  }
-> = {
-  suspender: {
-    label: 'Suspender',
-    targetStatus: 'SUSPENSO',
-    title: 'Suspender associado',
-    description:
-      'O acesso ao sistema será bloqueado imediatamente. O associado não conseguirá fazer login até ser reativado.',
-    confirmLabel: 'Suspender',
-    variant: 'destructive',
-  },
-  inativar: {
-    label: 'Inativar',
-    targetStatus: 'INATIVO',
-    title: 'Inativar associado',
-    description:
-      'O associado será marcado como inativo e terá o acesso ao sistema revogado. Use esta opção para membros que saíram da associação.',
-    confirmLabel: 'Inativar',
-    variant: 'destructive',
-  },
-  reativar: {
-    label: 'Reativar',
-    targetStatus: 'ATIVO',
-    title: 'Reativar associado',
-    description: 'O acesso ao sistema será restaurado e o associado poderá fazer login normalmente.',
-    confirmLabel: 'Reativar',
-    variant: 'default',
-  },
-}
-
-function StatusActions({
-  status,
-  onAction,
-  isPending,
-}: {
-  status: string
-  onAction: (targetStatus: string) => Promise<void>
-  isPending: boolean
-}) {
-  const [confirm, setConfirm] = useState<StatusAction>(null)
-
-  const actions: StatusAction[] = []
-  if (status === 'ATIVO') {
-    actions.push('suspender', 'inativar')
-  } else if (status === 'SUSPENSO') {
-    actions.push('reativar', 'inativar')
-  } else if (status === 'INATIVO') {
-    actions.push('reativar')
-  }
-
-  if (actions.length === 0) return null
-
-  const cfg = confirm ? STATUS_ACTION_CONFIG[confirm] : null
-
-  return (
-    <>
-      <div className="flex flex-wrap gap-2">
-        {actions.map((action) => {
-          const c = STATUS_ACTION_CONFIG[action!]
-          return (
-            <Button
-              key={action}
-              size="sm"
-              variant={c.variant === 'destructive' ? 'outline' : 'outline'}
-              className={
-                c.variant === 'destructive'
-                  ? 'border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive'
-                  : ''
-              }
-              disabled={isPending}
-              onClick={() => setConfirm(action)}
-            >
-              {action === 'suspender' && <ShieldOff className="h-3.5 w-3.5 mr-1.5" />}
-              {action === 'inativar' && <UserX className="h-3.5 w-3.5 mr-1.5" />}
-              {action === 'reativar' && <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
-              {c.label}
-            </Button>
-          )
-        })}
-      </div>
-
-      {cfg && (
-        <ConfirmDialog
-          open={confirm !== null}
-          onOpenChange={(o) => { if (!o) setConfirm(null) }}
-          title={cfg.title}
-          description={cfg.description}
-          confirmLabel={cfg.confirmLabel}
-          variant={cfg.variant}
-          isPending={isPending}
-          onConfirm={async () => {
-            await onAction(cfg.targetStatus)
-            setConfirm(null)
-          }}
-        />
-      )}
-    </>
-  )
-}
-
 export function DadosPessoaisTab({ associado }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [senhaDialog, setSenhaDialog] = useState(false)
-  const [novaSenha, setNovaSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [senhaError, setSenhaError] = useState('')
   const [excluirDialog, setExcluirDialog] = useState(false)
 
   const { mutateAsync: atualizarUsuario, isPending: salvandoUsuario } = useAtualizarUsuario(associado.usuario.id)
@@ -204,30 +72,9 @@ export function DadosPessoaisTab({ associado }: Props) {
       toast.success('Conta excluída com sucesso.')
       router.push('/associados')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao excluir conta.'
-      toast.error(msg)
+      toast.error(err instanceof Error ? err.message : 'Erro ao excluir conta.')
       setExcluirDialog(false)
     }
-  }
-
-  async function handleRedefinirSenha() {
-    if (novaSenha.length < 8) { setSenhaError('A senha deve ter no mínimo 8 caracteres.'); return }
-    if (novaSenha !== confirmarSenha) { setSenhaError('As senhas não coincidem.'); return }
-    try {
-      await atualizarSenha(novaSenha)
-      toast.success('Senha redefinida com sucesso.')
-      setSenhaDialog(false)
-      setNovaSenha('')
-      setConfirmarSenha('')
-      setSenhaError('')
-    } catch {
-      toast.error('Erro ao redefinir senha. Tente novamente.')
-    }
-  }
-
-  function handleSenhaDialogChange(open: boolean) {
-    if (!open) { setNovaSenha(''); setConfirmarSenha(''); setSenhaError('') }
-    setSenhaDialog(open)
   }
 
   async function handleStatusAction(targetStatus: string) {
@@ -270,11 +117,6 @@ export function DadosPessoaisTab({ associado }: Props) {
     } catch {
       toast.error('Erro ao salvar. Tente novamente.')
     }
-  }
-
-  function handleCancel() {
-    form.reset()
-    setEditing(false)
   }
 
   if (editing) {
@@ -330,11 +172,7 @@ export function DadosPessoaisTab({ associado }: Props) {
                     <FormItem>
                       <FormLabel>CPF</FormLabel>
                       <FormControl>
-                        <CpfInput
-                          value={field.value ?? ''}
-                          onChange={field.onChange}
-                          disabled={isSaving}
-                        />
+                        <CpfInput value={field.value ?? ''} onChange={field.onChange} disabled={isSaving} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -354,18 +192,12 @@ export function DadosPessoaisTab({ associado }: Props) {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            locale={ptBR}
-                          />
+                          <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={ptBR} />
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
                     </FormItem>
                   )} />
-
                   <FormField control={form.control} name="observacoes" render={({ field }) => (
                     <FormItem className="sm:col-span-2">
                       <FormLabel>Observações</FormLabel>
@@ -379,7 +211,7 @@ export function DadosPessoaisTab({ associado }: Props) {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving}>
+                <Button type="button" variant="outline" onClick={() => { form.reset(); setEditing(false) }} disabled={isSaving}>
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isSaving}>
@@ -400,12 +232,10 @@ export function DadosPessoaisTab({ associado }: Props) {
           <CardTitle className="text-base">Dados Cadastrais</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setSenhaDialog(true)}>
-              <KeyRound className="h-3.5 w-3.5" />
-              Redefinir Senha
+              <KeyRound className="h-3.5 w-3.5" />Redefinir Senha
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-3.5 w-3.5" />
-              Editar
+              <Pencil className="h-3.5 w-3.5" />Editar
             </Button>
           </div>
         </CardHeader>
@@ -415,14 +245,8 @@ export function DadosPessoaisTab({ associado }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nome completo" value={associado.usuario.nome} />
               <Field label="E-mail" value={associado.usuario.email} />
-              <Field
-                label="Perfil"
-                value={associado.usuario.role === 'ADMIN' ? 'Administrador' : 'Associado'}
-              />
-              <Field
-                label="Cadastrado em"
-                value={format(parseISO(associado.usuario.criadoEm), 'dd/MM/yyyy', { locale: ptBR })}
-              />
+              <Field label="Perfil" value={associado.usuario.role === 'ADMIN' ? 'Administrador' : 'Associado'} />
+              <Field label="Cadastrado em" value={format(parseISO(associado.usuario.criadoEm), 'dd/MM/yyyy', { locale: ptBR })} />
             </div>
           </div>
 
@@ -433,10 +257,7 @@ export function DadosPessoaisTab({ associado }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Status" value={<StatusBadge status={associado.status} />} />
               <Field label="CPF" value={associado.cpf ?? '—'} />
-              <Field
-                label="Data de ingresso"
-                value={format(new Date(associado.dataIngresso.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
-              />
+              <Field label="Data de ingresso" value={format(new Date(associado.dataIngresso.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })} />
               <Field label="Observações" value={associado.observacoes || '—'} />
             </div>
           </div>
@@ -453,60 +274,23 @@ export function DadosPessoaisTab({ associado }: Props) {
                   {associado.status === 'SUSPENSO' && 'Acesso temporariamente bloqueado. O associado não consegue fazer login.'}
                   {associado.status === 'INATIVO' && 'Associado inativo. Acesso ao sistema revogado.'}
                 </p>
-                <StatusActions
-                  status={associado.status}
-                  onAction={handleStatusAction}
-                  isPending={salvandoAssociado}
-                />
+                <StatusActions status={associado.status} onAction={handleStatusAction} isPending={salvandoAssociado} />
               </div>
             </>
           )}
         </CardContent>
       </Card>
 
-      {/* Dialog de redefinir senha */}
-      <Dialog open={senhaDialog} onOpenChange={handleSenhaDialogChange}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Redefinir Senha</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="novaSenha">Nova senha</Label>
-              <Input
-                id="novaSenha"
-                type="password"
-                placeholder="Mín. 8 caracteres"
-                value={novaSenha}
-                onChange={(e) => { setNovaSenha(e.target.value); setSenhaError('') }}
-                disabled={salvandoSenha}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmarSenha">Confirmar nova senha</Label>
-              <Input
-                id="confirmarSenha"
-                type="password"
-                placeholder="Repita a senha"
-                value={confirmarSenha}
-                onChange={(e) => { setConfirmarSenha(e.target.value); setSenhaError('') }}
-                disabled={salvandoSenha}
-              />
-            </div>
-            {senhaError && <p className="text-xs text-destructive">{senhaError}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => handleSenhaDialogChange(false)} disabled={salvandoSenha}>
-              Cancelar
-            </Button>
-            <Button size="sm" onClick={() => void handleRedefinirSenha()} disabled={salvandoSenha}>
-              {salvandoSenha ? 'Salvando…' : 'Redefinir'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RedefinirSenhaDialog
+        open={senhaDialog}
+        onOpenChange={setSenhaDialog}
+        onConfirm={async (senha) => {
+          await atualizarSenha(senha)
+          toast.success('Senha redefinida com sucesso.')
+        }}
+        isPending={salvandoSenha}
+      />
 
-      {/* Zona de perigo */}
       <Card className="border-destructive/40">
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-destructive">Zona de Perigo</CardTitle>
@@ -518,14 +302,8 @@ export function DadosPessoaisTab({ associado }: Props) {
               Remove permanentemente o associado, todos os seus dados e o acesso ao sistema.
             </p>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setExcluirDialog(true)}
-            disabled={excluindo}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Excluir
+          <Button variant="destructive" size="sm" onClick={() => setExcluirDialog(true)} disabled={excluindo}>
+            <Trash2 className="h-3.5 w-3.5" />Excluir
           </Button>
         </CardContent>
       </Card>

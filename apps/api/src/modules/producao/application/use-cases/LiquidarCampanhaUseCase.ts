@@ -52,6 +52,8 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     if (!campanha) throw new NotFoundException('Campanha não encontrada')
     if (campanha.status !== StatusCampanha.CONCLUIDA)
       throw new BadRequestException('Apenas campanhas CONCLUIDAS podem ser liquidadas')
+    if (campanha.tipo !== TipoLote.PRODUCAO)
+      throw new BadRequestException('Apenas campanhas de produção podem ser liquidadas')
     if (campanha.receitaTotal <= 0)
       throw new BadRequestException('Informe a receita total antes de liquidar (use PATCH /campanhas/:id/receita)')
 

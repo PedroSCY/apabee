@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useCriarSolicitacaoContato } from '@/hooks/useComunicacao'
+import { PhoneInput } from '@/components/shared'
 
 type Tipo = 'CONTATO' | 'COLETA' | 'INTEGRACAO'
 
@@ -39,6 +40,7 @@ export function ContatoForm() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(baseSchema) })
 
@@ -100,10 +102,18 @@ export function ContatoForm() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="c-tel">Telefone</Label>
-          <Input id="c-tel" type="tel" placeholder="(83) 9 0000-0000" {...register('telefone')} />
-        </div>
+        <Controller
+          control={control}
+          name="telefone"
+          render={({ field }) => (
+            <PhoneInput
+              id="c-tel"
+              label="Telefone"
+              value={field.value ?? ''}
+              onChange={field.onChange}
+            />
+          )}
+        />
 
         {tipo === 'COLETA' && (
           <div className="space-y-1.5">
