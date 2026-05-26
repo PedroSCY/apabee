@@ -1,5 +1,3 @@
-import { UnidadeMedida } from '@apa/shared'
-
 interface ColheitaProps {
   id: string
   associadoId: string
@@ -10,7 +8,6 @@ interface ColheitaProps {
   /** Safra em que a colheita foi realizada (define tier de qualidade). */
   safraId?: string
   volume: number
-  unidade: UnidadeMedida
   dataColheita: Date
   observacao?: string
   criadoEm: Date
@@ -31,7 +28,6 @@ export class Colheita {
   get campanhaId(): string | undefined { return this.props.campanhaId }
   get safraId(): string | undefined { return this.props.safraId }
   get volume(): number { return this.props.volume }
-  get unidade(): UnidadeMedida { return this.props.unidade }
   get dataColheita(): Date { return this.props.dataColheita }
   get observacao(): string | undefined { return this.props.observacao }
   get criadoEm(): Date { return this.props.criadoEm }

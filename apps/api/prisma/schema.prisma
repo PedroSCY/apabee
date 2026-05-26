@@ -155,8 +155,7 @@ enum StatusCampanha {
 }
 
 enum StatusOrdemProducao {
-  PENDENTE
-  EM_EXECUCAO
+  RASCUNHO
   CONCLUIDA
 }
 
@@ -399,6 +398,7 @@ model Campanha {
   vendas                Venda[]
   estoques              EstoqueCampanha[]
   pedidosAquisicao      PedidoAquisicao[]
+  metasProducao         MetaProducao[]
 
   @@map("campanhas")
 }
@@ -406,7 +406,7 @@ model Campanha {
 model Contribuicao {
   id             String           @id @default(uuid())
   campanhaId     String           @map("campanha_id")
-  associadoId    String           @map("associado_id")
+  associadoId    String?          @map("associado_id")
   tipo           TipoContribuicao
   valorMonetario Decimal          @map("valor_monetario") @db.Decimal(10, 2)
 
@@ -419,8 +419,8 @@ model Contribuicao {
   liquidado Boolean  @default(false)
   criadoEm  DateTime @default(now()) @map("criado_em")
 
-  campanha  Campanha  @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  associado Associado @relation(fields: [associadoId], references: [id], onDelete: Cascade)
+  campanha  Campanha   @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  associado Associado? @relation(fields: [associadoId], references: [id], onDelete: Cascade)
 
   @@map("contribuicoes")
 }
@@ -484,11 +484,14 @@ model OrdemProducao {
   campanhaId      String              @map("campanha_id")
   produtoId       String              @map("produto_id")
   quantidade      Int
-  status          StatusOrdemProducao @default(PENDENTE)
+  status          StatusOrdemProducao @default(RASCUNHO)
   perdaPercentual Decimal             @default(0) @map("perda_percentual") @db.Decimal(5, 2)
-  produtosGerados Int?                @map("produtos_gerados")
-  criadoEm        DateTime            @default(now()) @map("criado_em")
-  executadoEm     DateTime?           @map("executado_em")
+  produtosGerados     Int?     @map("produtos_gerados")
+  quantidadeReal      Int?     @map("quantidade_real")
+  sobrasRecuperadas   Decimal? @map("sobras_recuperadas") @db.Decimal(10, 3)
+  observacao          String?
+  criadoEm            DateTime @default(now()) @map("criado_em")
+  confirmadoEm        DateTime? @map("confirmado_em")
 
   campanha            Campanha                @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
   produto             Produto                 @relation(fields: [produtoId], references: [id])
@@ -559,15 +562,14 @@ model RateioCampanha {
 }
 
 model Colheita {
-  id                 String        @id @default(uuid())
-  associadoId        String        @map("associado_id")
-  tipoMateriaPrimaId String        @map("tipo_materia_prima_id")
-  equipamentoId      String?       @map("equipamento_id")
-  campanhaId         String?       @map("campanha_id")
-  safraId            String?       @map("safra_id")
-  volume             Decimal       @db.Decimal(10, 3)
-  unidade            UnidadeMedida
-  dataColheita       DateTime      @map("data_colheita")
+  id                 String   @id @default(uuid())
+  associadoId        String   @map("associado_id")
+  tipoMateriaPrimaId String   @map("tipo_materia_prima_id")
+  equipamentoId      String?  @map("equipamento_id")
+  campanhaId         String?  @map("campanha_id")
+  safraId            String?  @map("safra_id")
+  volume             Decimal  @db.Decimal(10, 3)
+  dataColheita       DateTime @map("data_colheita")
   observacao         String?
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
@@ -651,8 +653,24 @@ model Produto {
   composicoes    ComposicaoProduto[]
   itensPedido    ItemPedido[]
   ordensProducao OrdemProducao[]
+  metasProducao  MetaProducao[]
 
   @@map("produtos")
+}
+
+model MetaProducao {
+  id                      String   @id @default(uuid())
+  campanhaId              String   @map("campanha_id")
+  produtoId               String   @map("produto_id")
+  quantidadePlanejada     Int      @map("quantidade_planejada")
+  perdaPercentualEstimada Decimal  @default(5) @map("perda_percentual_estimada") @db.Decimal(5, 2)
+  criadoEm               DateTime @default(now()) @map("criado_em")
+
+  campanha Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  produto  Produto  @relation(fields: [produtoId], references: [id])
+
+  @@unique([campanhaId, produtoId])
+  @@map("metas_producao")
 }
 
 model EstoqueProduto {
@@ -667,11 +685,10 @@ model EstoqueProduto {
 }
 
 model ComposicaoProduto {
-  id                   String        @id @default(uuid())
-  produtoId            String        @map("produto_id")
-  tipoMateriaPrimaId   String        @map("tipo_materia_prima_id")
-  quantidadeNecessaria Decimal       @map("quantidade_necessaria") @db.Decimal(10, 3)
-  unidade              UnidadeMedida
+  id                   String  @id @default(uuid())
+  produtoId            String  @map("produto_id")
+  tipoMateriaPrimaId   String  @map("tipo_materia_prima_id")
+  quantidadeNecessaria Decimal @map("quantidade_necessaria") @db.Decimal(10, 3)
 
   produto          Produto          @relation(fields: [produtoId], references: [id])
   tipoMateriaPrima TipoMateriaPrima @relation(fields: [tipoMateriaPrimaId], references: [id])

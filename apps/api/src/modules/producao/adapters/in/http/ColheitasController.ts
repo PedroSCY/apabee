@@ -91,7 +91,6 @@ export class ColheitasController {
       campanhaId: c.campanhaId,
       safraId: c.safraId,
       volume: c.volume,
-      unidade: c.unidade,
       dataColheita: c.dataColheita,
       observacao: c.observacao,
       criadoEm: c.criadoEm,

@@ -27,7 +27,7 @@ export class RegistrarCustoUseCase implements IRegistrarCustoUseCase {
     if (input.valor <= 0)
       throw new BadRequestException('Valor do custo deve ser maior que zero')
 
-    const custo = new CustoCampanha({
+    const custo = await this.custoRepo.save(new CustoCampanha({
       id: randomUUID(),
       campanhaId: input.campanhaId,
       descricao: input.descricao.trim(),
@@ -36,7 +36,11 @@ export class RegistrarCustoUseCase implements IRegistrarCustoUseCase {
       pagoPorId: input.pagoPorId,
       comprovanteUrl: input.comprovanteUrl,
       criadoEm: new Date(),
-    })
-    return this.custoRepo.save(custo)
+    }))
+
+    const novoTotal = await this.custoRepo.sumByCampanha(input.campanhaId)
+    await this.campanhaRepo.update(campanha.comCustoTotal(novoTotal))
+
+    return custo
   }
 }

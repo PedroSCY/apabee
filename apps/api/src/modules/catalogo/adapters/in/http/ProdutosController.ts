@@ -181,7 +181,6 @@ export class ProdutosController {
       produtoId: id,
       tipoMateriaPrimaId: dto.tipoMateriaPrimaId,
       quantidadeNecessaria: dto.quantidadeNecessaria,
-      unidade: dto.unidade,
     })
     return this.toComposicaoResponse(composicao)
   }
@@ -224,7 +223,6 @@ export class ProdutosController {
       id: c.id,
       tipoMateriaPrimaId: c.tipoMateriaPrimaId,
       quantidadeNecessaria: c.quantidadeNecessaria,
-      unidade: c.unidade,
     }
   }
 }

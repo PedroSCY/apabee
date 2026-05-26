@@ -73,6 +73,10 @@ export class Campanha {
     return new Campanha({ ...this.props, receitaTotal })
   }
 
+  comCustoTotal(custoTotal: number): Campanha {
+    return new Campanha({ ...this.props, custoTotal })
+  }
+
   liquidar(receitaTotal: number, custoTotal: number): Campanha {
     if (this.props.status !== StatusCampanha.CONCLUIDA)
       throw new Error('Apenas campanhas CONCLUIDAS podem ser liquidadas')

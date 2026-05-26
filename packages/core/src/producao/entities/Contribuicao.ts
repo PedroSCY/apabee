@@ -3,7 +3,8 @@ import { TipoContribuicao } from '@apa/shared'
 interface ContribuicaoProps {
   id: string
   campanhaId: string
-  associadoId: string
+  /** null = contribuição da própria associação (ex: alocação do pool) */
+  associadoId: string | null
   tipo: TipoContribuicao
   /** Valor monetário (R$). Para COLHEITA: volume × preço referência. Para DINHEIRO: valor direto. */
   valorMonetario: number
@@ -26,7 +27,7 @@ export class Contribuicao {
 
   get id(): string { return this.props.id }
   get campanhaId(): string { return this.props.campanhaId }
-  get associadoId(): string { return this.props.associadoId }
+  get associadoId(): string | null { return this.props.associadoId }
   get tipo(): TipoContribuicao { return this.props.tipo }
   get valorMonetario(): number { return this.props.valorMonetario }
   get colheitaId(): string | undefined { return this.props.colheitaId }

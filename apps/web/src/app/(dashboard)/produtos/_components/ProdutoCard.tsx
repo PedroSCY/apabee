@@ -53,8 +53,6 @@ function EstoqueLabel({ qtd }: { qtd: number }) {
 
 // ─── Dialog de composição (ingredientes) ─────────────────────────────────────
 
-const UNIDADES = ['KG', 'LITRO', 'GRAMA', 'UNIDADE'] as const
-
 function ComposicaoDialog({
   produto,
   open,
@@ -72,8 +70,9 @@ function ComposicaoDialog({
   const [form, setForm] = React.useState({
     tipoMateriaPrimaId: '',
     quantidadeNecessaria: '',
-    unidade: 'KG',
   })
+
+  const tipoSelecionado = tipos.find((t) => t.id === form.tipoMateriaPrimaId)
 
   async function handleAdicionar(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -83,10 +82,9 @@ function ComposicaoDialog({
       await adicionar({
         tipoMateriaPrimaId: form.tipoMateriaPrimaId,
         quantidadeNecessaria: qtd,
-        unidade: form.unidade,
       })
       toast.success('Ingrediente adicionado.')
-      setForm({ tipoMateriaPrimaId: '', quantidadeNecessaria: '', unidade: 'KG' })
+      setForm({ tipoMateriaPrimaId: '', quantidadeNecessaria: '' })
     } catch {
       toast.error('Erro ao adicionar ingrediente.')
     }
@@ -102,6 +100,7 @@ function ComposicaoDialog({
   }
 
   const tipoNome = (id: string) => tipos.find((t) => t.id === id)?.nome ?? id
+  const tipoUnidade = (id: string) => tipos.find((t) => t.id === id)?.unidade ?? ''
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +123,7 @@ function ComposicaoDialog({
               <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
                 <span>
                   <span className="font-medium">{tipoNome(c.tipoMateriaPrimaId)}</span>
-                  <span className="text-muted-foreground ml-2">— {c.quantidadeNecessaria} {c.unidade}</span>
+                  <span className="text-muted-foreground ml-2">— {c.quantidadeNecessaria} {tipoUnidade(c.tipoMateriaPrimaId)}</span>
                 </span>
                 <button
                   onClick={() => void handleRemover(c.id)}
@@ -174,19 +173,13 @@ function ComposicaoDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="unid-mp">Unidade *</Label>
-              <Select
-                value={form.unidade}
-                onValueChange={(v) => setForm((p) => ({ ...p, unidade: v }))}
-                disabled={adicionando}
-              >
-                <SelectTrigger id="unid-mp">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNIDADES.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="unid-mp">Unidade</Label>
+              <Input
+                id="unid-mp"
+                readOnly
+                value={tipoSelecionado?.unidade ?? '—'}
+                className="bg-muted/50 cursor-default"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -388,11 +381,60 @@ function AdminMenu({ produto }: { produto: ProdutoResponse }) {
 interface Props {
   produto: ProdutoResponse
   isAdmin: boolean
+  compact?: boolean
 }
 
-export function ProdutoCard({ produto, isAdmin }: Props) {
+export function ProdutoCard({ produto, isAdmin, compact = false }: Props) {
   const esgotado = produto.quantidadeEstoque === 0
   const indisponivel = produto.status !== 'PUBLICADO' || esgotado
+
+  if (compact) {
+    return (
+      <div className={cn(
+        'flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 hover:shadow-sm transition-shadow',
+        produto.status === 'ARQUIVADO' && 'opacity-60',
+      )}>
+        {/* Thumbnail compacto */}
+        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted/40 overflow-hidden">
+          {produto.imagemUrl ? (
+            <img src={produto.imagemUrl} alt={produto.nome} className="h-full w-full object-cover" />
+          ) : (
+            <Package className="h-5 w-5 text-muted-foreground/30" />
+          )}
+        </div>
+
+        {/* Nome + descrição */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold truncate">{produto.nome}</p>
+          {produto.descricao && (
+            <p className="text-xs text-muted-foreground truncate">{produto.descricao}</p>
+          )}
+        </div>
+
+        {/* Preço + estoque */}
+        <div className="shrink-0 text-right hidden sm:block">
+          <p className="text-sm font-bold">{fmt(produto.preco)}</p>
+          <EstoqueLabel qtd={produto.quantidadeEstoque} />
+        </div>
+
+        {/* Status */}
+        <div className="shrink-0 hidden md:block">
+          <StatusBadge status={produto.status} />
+        </div>
+
+        {/* Ações */}
+        {isAdmin ? (
+          <div className="shrink-0">
+            <AdminMenu produto={produto} />
+          </div>
+        ) : produto.status === 'PUBLICADO' ? (
+          <Button size="sm" className="shrink-0" disabled={indisponivel}>
+            {esgotado ? 'Indisponível' : 'Adicionar'}
+          </Button>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div className={cn(

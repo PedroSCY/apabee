@@ -30,6 +30,7 @@ export type SseEventTipo =
   | 'producao:cota-confirmada'
   | 'producao:cota-cancelada'
   | 'producao:ordem-executada'
+  | 'producao:ordem-confirmada'
   | 'producao:colheita-confirmada'
   // Gestão
   | 'gestao:documento-publicado'

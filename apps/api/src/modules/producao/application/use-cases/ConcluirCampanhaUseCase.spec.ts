@@ -54,9 +54,9 @@ describe('ConcluirCampanhaUseCase', () => {
     await expect(useCase.execute('c-1')).rejects.toThrow(BadRequestException)
   })
 
-  it('lança ConflictException se existem ordens PENDENTE', async () => {
+  it('lança ConflictException se existem ordens RASCUNHO', async () => {
     repo.findById.mockResolvedValue(makeCampanha(StatusCampanha.ATIVA))
-    ordemRepo.findByCampanha.mockResolvedValue([makeOrdem(StatusOrdemProducao.PENDENTE)])
+    ordemRepo.findByCampanha.mockResolvedValue([makeOrdem(StatusOrdemProducao.RASCUNHO)])
     await expect(useCase.execute('c-1')).rejects.toThrow(ConflictException)
   })
 })

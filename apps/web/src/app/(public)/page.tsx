@@ -30,15 +30,19 @@ function ProdutoCard({ produto }: { produto: ProdutoResponse }) {
       href={`/loja/${produto.slug}`}
       className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
     >
-      <div className="flex h-44 items-center justify-center bg-amber-50 dark:bg-amber-950/20">
+      <div className="relative h-44 bg-amber-50 dark:bg-amber-950/20 overflow-hidden">
         {produto.imagemUrl ? (
           <Image
             src={produto.imagemUrl}
             alt={produto.nome}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover"
           />
         ) : (
-          <Package className="h-12 w-12 text-amber-300" />
+          <div className="flex h-full items-center justify-center">
+            <Package className="h-12 w-12 text-amber-300" />
+          </div>
         )}
       </div>
       <div className="flex flex-col flex-1 p-4 gap-1.5">

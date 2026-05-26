@@ -11,13 +11,11 @@ export interface ComposicaoResponse {
   id: string
   tipoMateriaPrimaId: string
   quantidadeNecessaria: number
-  unidade: string
 }
 
 export interface AdicionarComposicaoInput {
   tipoMateriaPrimaId: string
   quantidadeNecessaria: number
-  unidade: string
 }
 
 export interface ProdutoResponse {

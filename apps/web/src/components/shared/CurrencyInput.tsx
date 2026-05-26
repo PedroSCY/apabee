@@ -66,9 +66,11 @@ export function CurrencyInput({
     if (!focused) setDisplay(value != null ? formatDisplay(value) : '')
   }, [value, focused])
 
-  function handleFocus() {
+  function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
     setFocused(true)
     setDisplay(value != null ? String(value).replace('.', ',') : '')
+    const target = e.target
+    setTimeout(() => target.select(), 0)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

@@ -19,7 +19,6 @@ import {
   ICriarCampanhaUseCase,
   ICriarOrdemProducaoUseCase,
   IDeletarCampanhaUseCase,
-  IExecutarOrdemProducaoUseCase,
   IIniciarCampanhaUseCase,
   IListarCampanhasUseCase,
   IListarContribuicoesPorCampanhaUseCase,
@@ -44,6 +43,9 @@ import {
   AtualizarItemAquisicaoDto,
   AtualizarReceitaDto,
   CriarCampanhaDto,
+  AlocarPoolParaCampanhaDto,
+  ConfirmarOrdemProducaoDto,
+  CriarMetaProducaoDto,
   CriarOrdemProducaoDto,
   RegistrarContribuicaoDto,
   RegistrarCotaDto,
@@ -68,7 +70,6 @@ import {
   CRIAR_CAMPANHA_USE_CASE,
   CRIAR_ORDEM_PRODUCAO_USE_CASE,
   DISTRIBUIR_ITENS_USE_CASE,
-  EXECUTAR_ORDEM_PRODUCAO_USE_CASE,
   INICIAR_CAMPANHA_USE_CASE,
   LISTAR_CAMPANHAS_USE_CASE,
   LISTAR_CONTRIBUICOES_CAMPANHA_USE_CASE,
@@ -91,6 +92,12 @@ import {
   LISTAR_PEDIDOS_AQUISICAO_USE_CASE,
   CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE,
   MARCAR_PEDIDO_ENTREGUE_USE_CASE,
+  CRIAR_META_PRODUCAO_USE_CASE,
+  LISTAR_METAS_PRODUCAO_USE_CASE,
+  REMOVER_META_PRODUCAO_USE_CASE,
+  CONFIRMAR_ORDEM_PRODUCAO_USE_CASE,
+  ESTORNAR_ORDEM_PRODUCAO_USE_CASE,
+  ALOCAR_POOL_PARA_CAMPANHA_USE_CASE,
 } from '../../../producao.tokens'
 import { RastrearCampanhaUseCase } from '../../../application/use-cases'
 import {
@@ -110,6 +117,13 @@ import {
   IPreviewRateioCampanhaUseCase,
   IRemoverItemAquisicaoUseCase,
   IResumoCaptacaoUseCase,
+  ICriarMetaProducaoUseCase,
+  IListarMetasProducaoUseCase,
+  IRemoverMetaProducaoUseCase,
+  IConfirmarOrdemProducaoUseCase,
+  IEstornarOrdemProducaoUseCase,
+  IAlocarPoolParaCampanhaUseCase,
+  MetaProducaoDetalhe,
 } from '@apa/core'
 
 @ApiTags('Produção — Campanhas')
@@ -141,7 +155,6 @@ export class CampanhasController {
     @Inject(REMOVER_CUSTO_USE_CASE) private readonly removerCusto: IRemoverCustoUseCase,
     @Inject(CRIAR_ORDEM_PRODUCAO_USE_CASE) private readonly criarOrdem: ICriarOrdemProducaoUseCase,
     @Inject(LISTAR_ORDENS_CAMPANHA_USE_CASE) private readonly listarOrdens: IListarOrdensPorCampanhaUseCase,
-    @Inject(EXECUTAR_ORDEM_PRODUCAO_USE_CASE) private readonly executarOrdem: IExecutarOrdemProducaoUseCase,
     @Inject(DELETAR_ORDEM_PRODUCAO_USE_CASE) private readonly deletarOrdem: IDeletarOrdemProducaoUseCase,
     @Inject(CALCULAR_CONSUMO_USE_CASE) private readonly calcularConsumo: ICalcularConsumoUseCase,
     @Inject(ADICIONAR_ITEM_AQUISICAO_USE_CASE) private readonly adicionarItem: IAdicionarItemAquisicaoUseCase,
@@ -157,6 +170,12 @@ export class CampanhasController {
     @Inject(LISTAR_PEDIDOS_AQUISICAO_USE_CASE) private readonly listarPedidos: ListarPedidosAquisicaoUseCase,
     @Inject(CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE) private readonly confirmarPagamento: ConfirmarPagamentoPedidoUseCase,
     @Inject(MARCAR_PEDIDO_ENTREGUE_USE_CASE) private readonly marcarEntregue: MarcarPedidoEntregueUseCase,
+    @Inject(CONFIRMAR_ORDEM_PRODUCAO_USE_CASE) private readonly confirmarOrdem: IConfirmarOrdemProducaoUseCase,
+    @Inject(ESTORNAR_ORDEM_PRODUCAO_USE_CASE) private readonly estornarOrdemUC: IEstornarOrdemProducaoUseCase,
+    @Inject(CRIAR_META_PRODUCAO_USE_CASE) private readonly criarMeta: ICriarMetaProducaoUseCase,
+    @Inject(LISTAR_METAS_PRODUCAO_USE_CASE) private readonly listarMetas: IListarMetasProducaoUseCase,
+    @Inject(REMOVER_META_PRODUCAO_USE_CASE) private readonly removerMeta: IRemoverMetaProducaoUseCase,
+    @Inject(ALOCAR_POOL_PARA_CAMPANHA_USE_CASE) private readonly alocarPool: IAlocarPoolParaCampanhaUseCase,
     private readonly sse: SseService,
   ) {}
 
@@ -514,19 +533,36 @@ export class CampanhasController {
     return lista.map(o => this.toOrdemResponse(o))
   }
 
-  @ApiOperation({ summary: 'Executar ordem de produção (valida estoque, consome pool com perda)' })
+  @ApiOperation({ summary: 'Confirmar ordem de produção RASCUNHO — consome estoque, credita produto, devolve sobras ao pool (RN15/RN24)' })
   @ApiParam({ name: 'id', type: String })
   @ApiParam({ name: 'ordemId', type: String })
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @Patch(':id/ordens/:ordemId/executar')
-  async executarOrdem_(@Param('ordemId') ordemId: string) {
-    const ordem = await this.executarOrdem.execute(ordemId)
-    this.sse.emit('producao:ordem-executada', ordemId)
+  @Patch(':id/ordens/:ordemId/confirmar')
+  async confirmarOrdem_(
+    @Param('ordemId') ordemId: string,
+    @Body() dto: ConfirmarOrdemProducaoDto,
+  ) {
+    const ordem = await this.confirmarOrdem.execute({ ordemId, ...dto })
+    this.sse.emit('producao:ordem-confirmada', ordemId)
     return this.toOrdemResponse(ordem)
   }
 
-  @ApiOperation({ summary: 'Remover ordem de produção PENDENTE' })
+  @ApiOperation({ summary: 'Estornar ordem de produção CONCLUIDA para RASCUNHO' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiParam({ name: 'ordemId', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Patch(':id/ordens/:ordemId/estornar')
+  async estornarOrdem_(
+    @Param('id') id: string,
+    @Param('ordemId') ordemId: string,
+  ) {
+    const ordem = await this.estornarOrdemUC.execute(id, ordemId)
+    return this.toOrdemResponse(ordem)
+  }
+
+  @ApiOperation({ summary: 'Remover ordem de produção RASCUNHO' })
   @ApiParam({ name: 'id', type: String })
   @ApiParam({ name: 'ordemId', type: String })
   @Roles(RoleUsuario.ADMIN)
@@ -542,7 +578,39 @@ export class CampanhasController {
   @Roles(RoleUsuario.ADMIN)
   @Get(':id/ordens/:ordemId/consumo')
   async calcularConsumo_(@Param('ordemId') ordemId: string) {
-    return this.calcularConsumo.execute(ordemId)
+    const materiais = await this.calcularConsumo.execute(ordemId)
+    return { materiais }
+  }
+
+  // ─── Metas de Produção ────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Adicionar meta de produção à campanha PLANEJADA (apenas PRODUCAO)' })
+  @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @Post(':id/metas')
+  async criarMeta_(@Param('id') campanhaId: string, @Body() dto: CriarMetaProducaoDto) {
+    const meta = await this.criarMeta.execute({ ...dto, campanhaId })
+    return { id: meta.id, campanhaId: meta.campanhaId, produtoId: meta.produtoId,
+      quantidadePlanejada: meta.quantidadePlanejada,
+      perdaPercentualEstimada: meta.perdaPercentualEstimada, criadoEm: meta.criadoEm }
+  }
+
+  @ApiOperation({ summary: 'Listar metas de produção da campanha com viabilidade de estoque' })
+  @ApiParam({ name: 'id', type: String })
+  @Get(':id/metas')
+  async listarMetas_(@Param('id') campanhaId: string) {
+    const lista = await this.listarMetas.execute(campanhaId)
+    return lista.map(d => this.toMetaDetalheResponse(d))
+  }
+
+  @ApiOperation({ summary: 'Remover meta de produção (apenas campanha PLANEJADA)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiParam({ name: 'metaId', type: String })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':id/metas/:metaId')
+  async removerMeta_(@Param('metaId') metaId: string) {
+    await this.removerMeta.execute(metaId)
   }
 
   // ─── Estoque da Campanha ─────────────────────────────────────────────────
@@ -558,6 +626,16 @@ export class CampanhasController {
       quantidadeDisponivel: e.quantidadeDisponivel,
       unidade: e.unidade,
     }))
+  }
+
+  @ApiOperation({ summary: 'Alocar matéria-prima do pool para o estoque da campanha' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 204 })
+  @Roles(RoleUsuario.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post(':id/alocar-pool')
+  async alocarPoolParaCampanha(@Param('id') campanhaId: string, @Body() dto: AlocarPoolParaCampanhaDto) {
+    await this.alocarPool.execute({ campanhaId, ...dto })
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -605,8 +683,12 @@ export class CampanhasController {
     return {
       id: o.id, campanhaId: o.campanhaId, produtoId: o.produtoId,
       quantidade: o.quantidade, status: o.status, perdaPercentual: o.perdaPercentual,
-      produtosGerados: o.produtosGerados, materiaisConsumidos: o.materiaisConsumidos,
-      criadoEm: o.criadoEm, executadoEm: o.executadoEm,
+      produtosGerados: o.produtosGerados,
+      quantidadeReal: o.quantidadeReal ?? null,
+      sobrasRecuperadas: o.sobrasRecuperadas ?? null,
+      observacao: o.observacao ?? null,
+      materiaisConsumidos: o.materiaisConsumidos,
+      criadoEm: o.criadoEm, confirmadoEm: o.confirmadoEm ?? null,
     }
   }
 
@@ -625,6 +707,19 @@ export class CampanhasController {
       quantidadeTotalPedida: i.quantidadeTotalPedida, unidade: i.unidade,
       tipoDestinoId: i.tipoDestinoId, metaAtingida: i.metaAtingida,
       valorTotalPedido: i.valorTotalPedido(), criadoEm: i.criadoEm,
+    }
+  }
+
+  private toMetaDetalheResponse(d: MetaProducaoDetalhe) {
+    return {
+      id: d.meta.id, campanhaId: d.meta.campanhaId, produtoId: d.meta.produtoId,
+      nomeProduto: d.nomeProduto, precoProduto: d.precoProduto,
+      quantidadePlanejada: d.meta.quantidadePlanejada,
+      perdaPercentualEstimada: d.meta.perdaPercentualEstimada,
+      receitaEsperada: d.receitaEsperada,
+      materiaisNecessarios: d.materiaisNecessarios,
+      viavelComEstoqueCampanha: d.viavelComEstoqueCampanha,
+      criadoEm: d.meta.criadoEm,
     }
   }
 

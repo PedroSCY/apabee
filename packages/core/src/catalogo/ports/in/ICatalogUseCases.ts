@@ -9,7 +9,6 @@ export interface CriarComposicaoInput {
   produtoId: string
   tipoMateriaPrimaId: string
   quantidadeNecessaria: number
-  unidade: string
 }
 
 /** Dados de entrada para criar um novo produto. */

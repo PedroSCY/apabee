@@ -85,10 +85,12 @@ export function DecimalInput({
     if (!focused) setDisplay(value != null ? format(value, decimals) : '')
   }, [value, focused, decimals])
 
-  function handleFocus() {
+  function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
     setFocused(true)
-    // Mostra o valor com separador pt-BR (vírgula) para edição
     setDisplay(value != null ? String(value).replace('.', ',') : '')
+    const target = e.target
+    // Seleciona todo o texto após o re-render para que o usuário substitua o valor ao digitar
+    setTimeout(() => target.select(), 0)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

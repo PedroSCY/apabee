@@ -12,3 +12,4 @@ export { PrismaApuracaoCampanhaRepository } from './PrismaApuracaoCampanhaReposi
 export { PrismaMovimentoFinanceiroRepository } from './PrismaMovimentoFinanceiroRepository'
 export { PrismaItemAquisicaoRepository } from './PrismaItemAquisicaoRepository'
 export { PrismaEstoqueCampanhaRepository } from './PrismaEstoqueCampanhaRepository'
+export { PrismaMetaProducaoRepository } from './PrismaMetaProducaoRepository'

@@ -1,11 +1,8 @@
-import { UnidadeMedida } from '@apa/shared';
-
 interface ComposicaoProdutoProps {
   id: string;
   produtoId: string;
   tipoMateriaPrimaId: string;
   quantidadeNecessaria: number;
-  unidade: UnidadeMedida;
 }
 
 /** Entidade que define a receita (matéria-prima necessária) de um produto. */
@@ -20,7 +17,6 @@ export class ComposicaoProduto {
   get produtoId(): string { return this.props.produtoId; }
   get tipoMateriaPrimaId(): string { return this.props.tipoMateriaPrimaId; }
   get quantidadeNecessaria(): number { return this.props.quantidadeNecessaria; }
-  get unidade(): UnidadeMedida { return this.props.unidade; }
 
   /** Verifica se há matéria-prima suficiente para produzir N unidades (RN05). */
   verificarDisponibilidade(estoqueDisponivel: number, quantidadeProdutos: number): boolean {

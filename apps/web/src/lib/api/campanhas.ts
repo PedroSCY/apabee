@@ -42,7 +42,8 @@ export interface CriarCampanhaInput {
 export interface ContribuicaoResponse {
   id: string
   campanhaId: string
-  associadoId: string
+  /** null = contribuição da associação (ex: alocação do pool) */
+  associadoId: string | null
   tipo: TipoContribuicao
   valorMonetario: number
   colheitaId?: string
@@ -82,14 +83,31 @@ export interface RegistrarCustoInput {
 }
 
 // --- Ordens de Produção ---
+export interface MaterialConsumidoOrdem {
+  tipoMateriaPrimaId: string
+  quantidade: number
+}
+
 export interface OrdemProducaoResponse {
   id: string
   campanhaId: string
   produtoId: string
   quantidade: number
   perdaPercentual: number
-  status: 'PENDENTE' | 'EM_EXECUCAO' | 'CONCLUIDA'
+  status: 'RASCUNHO' | 'CONCLUIDA'
+  quantidadeReal?: number
+  sobrasRecuperadas?: number
+  observacao?: string
+  produtosGerados?: number
+  materiaisConsumidos: MaterialConsumidoOrdem[]
+  confirmadoEm?: string
   criadoEm: string
+}
+
+export interface ConfirmarOrdemInput {
+  quantidadeReal: number
+  sobrasRecuperadas?: number
+  observacao?: string
 }
 
 export interface CriarOrdemInput {
@@ -167,6 +185,36 @@ export interface RegistrarPedidoInput {
   quantidade: number
 }
 
+// --- Metas de Produção ---
+export interface MaterialNecessarioResponse {
+  tipoMateriaPrimaId: string
+  nomeTipo: string
+  unidade: string
+  quantidadeNecessaria: number
+  quantidadeDisponivel: number
+  deficit: number
+}
+
+export interface MetaProducaoDetalheResponse {
+  id: string
+  campanhaId: string
+  produtoId: string
+  nomeProduto: string
+  precoProduto: number
+  quantidadePlanejada: number
+  perdaPercentualEstimada: number
+  receitaEsperada: number
+  materiaisNecessarios: MaterialNecessarioResponse[]
+  viavelComEstoqueCampanha: boolean
+  criadoEm: string
+}
+
+export interface CriarMetaInput {
+  produtoId: string
+  quantidadePlanejada: number
+  perdaPercentualEstimada?: number
+}
+
 // --- Apuração ---
 export interface ApuracaoParticipante {
   associadoId: string
@@ -193,6 +241,12 @@ export interface EstoqueCampanhaResponse {
   tipoMateriaPrimaId: string
   quantidadeDisponivel: number
   unidade: string
+}
+
+export interface AlocarPoolInput {
+  tipoMateriaPrimaId: string
+  quantidade: number
+  valorMonetario: number
 }
 
 export const campanhasApi = {
@@ -241,12 +295,15 @@ export const campanhasApi = {
     apiFetch<OrdemProducaoResponse>(`/producao/campanhas/${campanhaId}/ordens`, {
       method: 'POST', body: JSON.stringify(input),
     }),
-  executarOrdem: (campanhaId: string, ordemId: string) =>
+  confirmarOrdem: (campanhaId: string, ordemId: string, input: ConfirmarOrdemInput) =>
     apiFetch<OrdemProducaoResponse>(
-      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/executar`, { method: 'PATCH' }
+      `/producao/campanhas/${campanhaId}/ordens/${ordemId}/confirmar`,
+      { method: 'PATCH', body: JSON.stringify(input) },
     ),
   removerOrdem: (campanhaId: string, ordemId: string) =>
     apiFetch<void>(`/producao/campanhas/${campanhaId}/ordens/${ordemId}`, { method: 'DELETE' }),
+  estornarOrdem: (campanhaId: string, ordemId: string) =>
+    apiFetch<OrdemProducaoResponse>(`/producao/campanhas/${campanhaId}/ordens/${ordemId}/estornar`, { method: 'PATCH' }),
   calcularConsumo: (campanhaId: string, ordemId: string) =>
     apiFetch<{ materiais: ConsumoMaterial[] }>(
       `/producao/campanhas/${campanhaId}/ordens/${ordemId}/consumo`
@@ -281,6 +338,11 @@ export const campanhasApi = {
   // Estoque da campanha
   listarEstoque: (campanhaId: string) =>
     apiFetch<EstoqueCampanhaResponse[]>(`/producao/campanhas/${campanhaId}/estoque-campanha`),
+  alocarPool: (campanhaId: string, input: AlocarPoolInput) =>
+    apiFetch<void>(`/producao/campanhas/${campanhaId}/alocar-pool`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   // Pedidos de Aquisição
   listarPedidos: (campanhaId: string, associadoId?: string) =>
@@ -295,6 +357,17 @@ export const campanhasApi = {
     apiFetch<PedidoAquisicaoResponse>(`/producao/campanhas/pedidos-aquisicao/${pedidoId}/pagar`, { method: 'PATCH' }),
   marcarPedidoEntregue: (pedidoId: string) =>
     apiFetch<PedidoAquisicaoResponse>(`/producao/campanhas/pedidos-aquisicao/${pedidoId}/entregar`, { method: 'PATCH' }),
+
+  // Metas de Produção
+  listarMetas: (campanhaId: string) =>
+    apiFetch<MetaProducaoDetalheResponse[]>(`/producao/campanhas/${campanhaId}/metas`),
+  criarMeta: (campanhaId: string, input: CriarMetaInput) =>
+    apiFetch<{ id: string; campanhaId: string; produtoId: string; quantidadePlanejada: number; perdaPercentualEstimada: number; criadoEm: string }>(
+      `/producao/campanhas/${campanhaId}/metas`,
+      { method: 'POST', body: JSON.stringify(input) },
+    ),
+  removerMeta: (campanhaId: string, metaId: string) =>
+    apiFetch<void>(`/producao/campanhas/${campanhaId}/metas/${metaId}`, { method: 'DELETE' }),
 
   // Apuração
   obterApuracao: (campanhaId: string) =>

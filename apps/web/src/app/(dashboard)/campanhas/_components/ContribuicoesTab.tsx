@@ -60,7 +60,7 @@ export function ContribuicoesTab({ campanhaId, statusCampanha, tipoCampanha }: P
   const podeEditar = statusCampanha === 'ATIVA'
   const isProducao = tipoCampanha === 'PRODUCAO'
 
-  const nomeAssociado = (id: string) => associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)
+  const nomeAssociado = (id: string | null) => id ? (associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)) : 'Associação'
   const nomeTipo = (id?: string) => id ? (tipos.find(t => t.id === id)?.nome ?? id.slice(0, 8)) : '—'
 
   if (isLoading) return <Skeleton className="h-32 w-full" />
@@ -170,12 +170,13 @@ function ProducaoForm({ campanhaId, tipos, associados, isPending, criarColheita,
         associadoId: data.associadoId,
         tipoMateriaPrimaId: data.tipoMateriaPrimaId,
         volume: data.volume,
-        unidade: tipoSelecionado?.unidade ?? 'KG',
         dataColheita: data.dataColheita ?? new Date().toISOString().slice(0, 10),
         campanhaId,
         observacao: data.descricao || undefined,
       })
       void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'contribuicoes'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] })
       toast.success('Colheita registrada.')
       onClose()
     } catch {

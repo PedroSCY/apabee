@@ -1,4 +1,3 @@
-import { UnidadeMedida } from '@apa/shared'
 import { Colheita } from '../../entities/Colheita'
 
 /** Dados para registro de uma nova colheita. campanhaId é opcional — colheita sem vínculo vai ao pool diretamente (RN14). */
@@ -11,7 +10,6 @@ export interface CriarColheitaInput {
   /** Safra para calcular tier de qualidade no rateio (RN28). */
   safraId?: string
   volume: number
-  unidade: UnidadeMedida
   dataColheita: Date
   observacao?: string
 }

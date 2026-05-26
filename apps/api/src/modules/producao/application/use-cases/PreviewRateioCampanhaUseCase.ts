@@ -52,7 +52,7 @@ export class PreviewRateioCampanhaUseCase implements IPreviewRateioCampanhaUseCa
     if (contribuicoes.length === 0)
       throw new BadRequestException('Campanha não possui contribuições registradas')
 
-    const proporcaoPorAssociado = new Map<string, number>()
+    const proporcaoPorAssociado = new Map<string | null, number>()
     for (const c of contribuicoes) {
       const base = campanha.tipo === TipoLote.PRODUCAO ? (c.volume ?? 0) : c.valorMonetario
       proporcaoPorAssociado.set(c.associadoId, (proporcaoPorAssociado.get(c.associadoId) ?? 0) + base)
@@ -75,6 +75,9 @@ export class PreviewRateioCampanhaUseCase implements IPreviewRateioCampanhaUseCa
     const participantes: PreviewRateioResult['participantes'] = []
 
     for (const [associadoId, proporcao] of proporcaoPorAssociado) {
+      // Contribuições da associação (null) afetam o somaTotal mas não aparecem no preview de rateio
+      if (associadoId === null) continue
+
       const percentual = proporcao / somaTotal
       const valorBruto = percentual * faturamentoTotal
       const custosRateados = percentual * custoTotal

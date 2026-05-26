@@ -53,7 +53,7 @@ export function ColheitasTab() {
   const cols: Column<ColheitaResponse>[] = [
     { key: 'associadoId', label: 'Associado', render: (r) => associadoNome(r.associadoId) },
     { key: 'tipoMateriaPrimaId', label: 'Tipo', render: (r) => tipoNome(r.tipoMateriaPrimaId) },
-    { key: 'volume', label: 'Volume', render: (r) => `${r.volume} ${r.unidade}` },
+    { key: 'volume', label: 'Volume', render: (r) => `${r.volume} ${tipos.find((t) => t.id === r.tipoMateriaPrimaId)?.unidade ?? ''}` },
     { key: 'dataColheita', label: 'Data', render: (r) => format(new Date(r.dataColheita), 'dd/MM/yyyy', { locale: ptBR }) },
     {
       key: 'campanhaId', label: 'Destino',
@@ -78,7 +78,7 @@ export function ColheitasTab() {
             <AlertDialogHeader>
               <AlertDialogTitle>Excluir colheita?</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta colheita de <strong>{r.volume} {r.unidade}</strong> de <strong>{tipoNome(r.tipoMateriaPrimaId)}</strong> será removida permanentemente junto com seu movimento de estoque.
+                Esta colheita de <strong>{r.volume} {tipos.find((t) => t.id === r.tipoMateriaPrimaId)?.unidade ?? ''}</strong> de <strong>{tipoNome(r.tipoMateriaPrimaId)}</strong> será removida permanentemente junto com seu movimento de estoque.
                 <br /><br />
                 A exclusão só é permitida se a matéria-prima ainda não foi consumida em nenhuma ordem de produção.
               </AlertDialogDescription>

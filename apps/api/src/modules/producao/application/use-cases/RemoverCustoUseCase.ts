@@ -21,5 +21,10 @@ export class RemoverCustoUseCase implements IRemoverCustoUseCase {
       throw new BadRequestException('Não é possível remover custos de campanha liquidada')
 
     await this.custoRepo.delete(id)
+
+    if (campanha) {
+      const novoTotal = await this.custoRepo.sumByCampanha(custo.campanhaId)
+      await this.campanhaRepo.update(campanha.comCustoTotal(novoTotal))
+    }
   }
 }

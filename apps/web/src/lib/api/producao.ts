@@ -23,7 +23,6 @@ export interface ColheitaResponse {
   campanhaId?: string
   safraId?: string
   volume: number
-  unidade: string
   dataColheita: string
   observacao?: string
   criadoEm: string
@@ -36,7 +35,6 @@ export interface CriarColheitaInput {
   campanhaId?: string
   safraId?: string
   volume: number
-  unidade: string
   dataColheita: string
   observacao?: string
 }
@@ -47,6 +45,36 @@ export interface EstoquePoolResponse {
   quantidadeDisponivel: number
   unidade: string
   atualizadoEm: string
+}
+
+// --- Metas de produção ---
+export interface MaterialNecessarioResponse {
+  tipoMateriaPrimaId: string
+  nomeTipo: string
+  unidade: string
+  quantidadeNecessaria: number
+  quantidadeDisponivel: number
+  deficit: number
+}
+
+export interface MetaProducaoDetalheResponse {
+  id: string
+  campanhaId: string
+  produtoId: string
+  nomeProduto: string
+  precoProduto: number
+  quantidadePlanejada: number
+  perdaPercentualEstimada: number
+  receitaEsperada: number
+  materiaisNecessarios: MaterialNecessarioResponse[]
+  viavelComEstoqueCampanha: boolean
+  criadoEm: string
+}
+
+export interface CriarMetaProducaoInput {
+  produtoId: string
+  quantidadePlanejada: number
+  perdaPercentualEstimada?: number
 }
 
 export const producaoApi = {
@@ -95,4 +123,19 @@ export const producaoApi = {
   /** Remove item do pool quando saldo é zero. */
   deletarItemPool: (tipoId: string) =>
     apiFetch<void>(`/producao/tipos-materia-prima/pool/${tipoId}`, { method: 'DELETE' }),
+
+  /** Lista metas de produção de uma campanha com detalhes de viabilidade. */
+  listarMetas: (campanhaId: string) =>
+    apiFetch<MetaProducaoDetalheResponse[]>(`/producao/campanhas/${campanhaId}/metas`),
+
+  /** Adiciona meta de produção à campanha PLANEJADA. */
+  criarMeta: (campanhaId: string, input: CriarMetaProducaoInput) =>
+    apiFetch<{ id: string; campanhaId: string; produtoId: string; quantidadePlanejada: number; perdaPercentualEstimada: number; criadoEm: string }>(
+      `/producao/campanhas/${campanhaId}/metas`,
+      { method: 'POST', body: JSON.stringify(input) },
+    ),
+
+  /** Remove meta de produção (campanha deve ser PLANEJADA). */
+  removerMeta: (campanhaId: string, metaId: string) =>
+    apiFetch<void>(`/producao/campanhas/${campanhaId}/metas/${metaId}`, { method: 'DELETE' }),
 }

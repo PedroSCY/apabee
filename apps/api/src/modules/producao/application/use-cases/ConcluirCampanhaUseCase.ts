@@ -18,13 +18,10 @@ export class ConcluirCampanhaUseCase implements IConcluirCampanhaUseCase {
     if (campanha.status !== StatusCampanha.ATIVA)
       throw new BadRequestException('Apenas campanhas ATIVAS podem ser concluídas')
 
-    const ordensAtivas = await this.ordemRepo.findByCampanha(id, [
-      StatusOrdemProducao.PENDENTE,
-      StatusOrdemProducao.EM_EXECUCAO,
-    ])
-    if (ordensAtivas.length > 0)
+    const ordensRascunho = await this.ordemRepo.findByCampanha(id, [StatusOrdemProducao.RASCUNHO])
+    if (ordensRascunho.length > 0)
       throw new ConflictException(
-        `Existem ${ordensAtivas.length} ordem(ns) de produção não concluída(s). Execute ou remova antes de concluir a campanha.`,
+        `Existem ${ordensRascunho.length} ordem(ns) de produção em rascunho. Confirme ou remova antes de concluir a campanha.`,
       )
 
     return this.repository.update(campanha.concluir())

@@ -7,8 +7,13 @@ import {
   IEstoqueCampanhaRepository,
   IEstoqueMateriaPrimaRepository,
   ISafraRepository,
+  ITipoMateriaPrimaRepository,
+  TipoMateriaPrima,
 } from '@apa/core'
 import { UnidadeMedida } from '@apa/shared'
+
+const makeTipo = () =>
+  new TipoMateriaPrima({ id: 'tipo-1', nome: 'Mel', unidade: UnidadeMedida.KG })
 
 const makeEstoque = () =>
   new EstoqueMateriaPrima({ id: 'estoque-1', tipoMateriaPrimaId: 'tipo-1', quantidadeDisponivel: 5, unidade: UnidadeMedida.KG, atualizadoEm: new Date() })
@@ -62,6 +67,13 @@ const safraRepo: jest.Mocked<ISafraRepository> = {
   delete: jest.fn(),
 }
 
+const tipoMateriaPrimaRepo: jest.Mocked<ITipoMateriaPrimaRepository> = {
+  findById: jest.fn(),
+  findAll: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+}
+
 describe('CriarColheitaUseCase', () => {
   let useCase: CriarColheitaUseCase
 
@@ -69,13 +81,13 @@ describe('CriarColheitaUseCase', () => {
     associadoId: 'assoc-1',
     tipoMateriaPrimaId: 'tipo-1',
     volume: 10,
-    unidade: UnidadeMedida.KG,
     dataColheita: new Date(),
   }
 
   beforeEach(() => {
     jest.clearAllMocks()
-    useCase = new CriarColheitaUseCase(colheitaRepo, estoqueRepo, estoqueCampanhaRepo, contribuicaoRepo, safraRepo)
+    useCase = new CriarColheitaUseCase(colheitaRepo, estoqueRepo, estoqueCampanhaRepo, contribuicaoRepo, safraRepo, tipoMateriaPrimaRepo)
+    tipoMateriaPrimaRepo.findById.mockResolvedValue(makeTipo())
     estoqueRepo.update.mockImplementation(async (e) => e)
     estoqueRepo.salvarMovimentacao.mockImplementation(async (m) => m)
     estoqueCampanhaRepo.update.mockImplementation(async (e) => e)

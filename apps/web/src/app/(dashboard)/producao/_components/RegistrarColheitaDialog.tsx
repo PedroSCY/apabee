@@ -34,7 +34,6 @@ const schema = z.object({
   tipoMateriaPrimaId: z.string().uuid('Selecione o tipo.'),
   safraId: z.string().uuid().optional(),
   volume: z.number().positive('Volume deve ser positivo'),
-  unidade: z.string().min(1),
   dataColheita: z.string().min(1, 'Informe a data'),
   observacao: z.string().optional(),
 })
@@ -58,7 +57,7 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { unidade: 'KG', dataColheita: new Date().toISOString().slice(0, 10) },
+    defaultValues: { dataColheita: new Date().toISOString().slice(0, 10) },
   })
 
   const tipoSelecionadoId = watch('tipoMateriaPrimaId')
@@ -70,7 +69,6 @@ export function RegistrarColheitaDialog({ open, onOpenChange, campanhaId }: Prop
     try {
       await mutateAsync({
         ...data,
-        unidade: tipoSelecionado?.unidade ?? data.unidade,
         campanhaId,
         safraId: data.safraId || undefined,
       })

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Search, Package, X } from 'lucide-react'
+import { Plus, Search, Package, X, LayoutGrid, LayoutList } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -253,10 +253,21 @@ interface Props {
   isAdmin: boolean
 }
 
+const VIEW_KEY = 'produtos-view'
+
 export function ProdutosClient({ isAdmin }: Props) {
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [busca, setBusca] = React.useState('')
   const [filtro, setFiltro] = React.useState<Filtro>('TODOS')
+  const [view, setView] = React.useState<'grid' | 'lista'>(() => {
+    if (typeof window === 'undefined') return 'grid'
+    return (localStorage.getItem(VIEW_KEY) as 'grid' | 'lista') ?? 'grid'
+  })
+
+  function toggleView(v: 'grid' | 'lista') {
+    setView(v)
+    localStorage.setItem(VIEW_KEY, v)
+  }
 
   const { data: todos = [], isLoading } = useProdutos(false)
 
@@ -280,12 +291,32 @@ export function ProdutosClient({ isAdmin }: Props) {
             className="pl-8"
           />
         </div>
-        {isAdmin && (
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Novo Produto
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border border-input bg-background">
+            <button
+              type="button"
+              onClick={() => toggleView('grid')}
+              className={`flex items-center justify-center h-8 w-8 rounded-l-md transition-colors ${view === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              title="Visualização em grade"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleView('lista')}
+              className={`flex items-center justify-center h-8 w-8 rounded-r-md transition-colors ${view === 'lista' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              title="Visualização em lista"
+            >
+              <LayoutList className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Novo Produto
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filtros de status (apenas admin vê todos) */}
@@ -299,13 +330,21 @@ export function ProdutosClient({ isAdmin }: Props) {
         </Tabs>
       )}
 
-      {/* Grid */}
+      {/* Grid / Lista */}
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-xl border h-64 animate-pulse bg-muted/30" />
-          ))}
-        </div>
+        view === 'grid' ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-xl border h-64 animate-pulse bg-muted/30" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border h-16 animate-pulse bg-muted/30" />
+            ))}
+          </div>
+        )
       ) : produtos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Package className="h-10 w-10 text-muted-foreground/30 mb-3" />
@@ -318,10 +357,16 @@ export function ProdutosClient({ isAdmin }: Props) {
               : 'Não há produtos disponíveis no momento.'}
           </p>
         </div>
-      ) : (
+      ) : view === 'grid' ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (
             <ProdutoCard key={p.id} produto={p} isAdmin={isAdmin} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {produtos.map((p) => (
+            <ProdutoCard key={p.id} produto={p} isAdmin={isAdmin} compact />
           ))}
         </div>
       )}

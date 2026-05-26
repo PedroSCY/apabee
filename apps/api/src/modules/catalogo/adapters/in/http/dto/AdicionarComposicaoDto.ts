@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNumber, IsUUID, Min } from 'class-validator'
-import { UnidadeMedida } from '@apa/shared'
+import { IsNumber, IsUUID, Min } from 'class-validator'
 
 export class AdicionarComposicaoDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'ID do tipo de matéria-prima' })
@@ -11,8 +10,4 @@ export class AdicionarComposicaoDto {
   @IsNumber()
   @Min(0.001)
   quantidadeNecessaria!: number
-
-  @ApiProperty({ enum: UnidadeMedida, example: UnidadeMedida.KG })
-  @IsEnum(UnidadeMedida)
-  unidade!: UnidadeMedida
 }

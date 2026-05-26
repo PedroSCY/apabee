@@ -1,10 +1,8 @@
 import { StatusOrdemProducao } from '@apa/shared'
-import { UnidadeMedida } from '@apa/shared'
 
 export interface MaterialConsumido {
   tipoMateriaPrimaId: string
   quantidade: number
-  unidade: UnidadeMedida
 }
 
 interface OrdemProducaoProps {
@@ -13,15 +11,17 @@ interface OrdemProducaoProps {
   produtoId: string
   quantidade: number
   status: StatusOrdemProducao
-  /** Percentual de perda esperada no processamento (decantação, quebra). Consumo real = quantidade × (1 + perdaPercentual/100). */
   perdaPercentual: number
+  quantidadeReal?: number
+  sobrasRecuperadas?: number
+  observacao?: string
   produtosGerados?: number
   materiaisConsumidos: MaterialConsumido[]
   criadoEm: Date
-  executadoEm?: Date
+  confirmadoEm?: Date
 }
 
-/** Instrução de transformar matéria-prima em produto, consumindo o pool e gerando EstoqueProduto. */
+/** Instrução de transformar matéria-prima em produto. Criada como RASCUNHO (planejamento), confirmada para CONCLUIDA (execução real). */
 export class OrdemProducao {
   private readonly props: OrdemProducaoProps
 
@@ -35,33 +35,54 @@ export class OrdemProducao {
   get quantidade(): number { return this.props.quantidade }
   get status(): StatusOrdemProducao { return this.props.status }
   get perdaPercentual(): number { return this.props.perdaPercentual }
+  get quantidadeReal(): number | undefined { return this.props.quantidadeReal }
+  get sobrasRecuperadas(): number | undefined { return this.props.sobrasRecuperadas }
+  get observacao(): string | undefined { return this.props.observacao }
   get produtosGerados(): number | undefined { return this.props.produtosGerados }
   get materiaisConsumidos(): MaterialConsumido[] { return this.props.materiaisConsumidos }
   get criadoEm(): Date { return this.props.criadoEm }
-  get executadoEm(): Date | undefined { return this.props.executadoEm }
+  get confirmadoEm(): Date | undefined { return this.props.confirmadoEm }
 
-  estaPendente(): boolean { return this.props.status === StatusOrdemProducao.PENDENTE }
+  estaRascunho(): boolean { return this.props.status === StatusOrdemProducao.RASCUNHO }
 
-  /** Calcula o consumo real de uma matéria-prima incluindo a perda esperada. */
+  /** Calcula o consumo estimado de uma matéria-prima incluindo a perda esperada. */
   calcularConsumoReal(quantidadeBase: number): number {
     return quantidadeBase * (1 + this.props.perdaPercentual / 100)
   }
 
-  iniciarExecucao(): OrdemProducao {
-    if (this.props.status !== StatusOrdemProducao.PENDENTE)
-      throw new Error('Apenas ordens PENDENTES podem ser executadas')
-    return new OrdemProducao({ ...this.props, status: StatusOrdemProducao.EM_EXECUCAO })
-  }
-
-  concluir(produtosGerados: number, materiaisConsumidos: MaterialConsumido[]): OrdemProducao {
-    if (this.props.status !== StatusOrdemProducao.EM_EXECUCAO)
-      throw new Error('Apenas ordens EM_EXECUCAO podem ser concluídas')
+  confirmar(
+    quantidadeReal: number,
+    materiaisConsumidos: MaterialConsumido[],
+    sobrasRecuperadas?: number,
+    observacao?: string,
+  ): OrdemProducao {
+    if (this.props.status !== StatusOrdemProducao.RASCUNHO)
+      throw new Error('Apenas ordens em RASCUNHO podem ser confirmadas')
     return new OrdemProducao({
       ...this.props,
       status: StatusOrdemProducao.CONCLUIDA,
-      produtosGerados,
+      quantidadeReal,
+      produtosGerados: quantidadeReal,
       materiaisConsumidos,
-      executadoEm: new Date(),
+      sobrasRecuperadas,
+      observacao,
+      confirmadoEm: new Date(),
+    })
+  }
+
+  /** Reverte a ordem para RASCUNHO, limpando todos os dados de confirmação (imutável). */
+  estornar(): OrdemProducao {
+    if (this.props.status !== StatusOrdemProducao.CONCLUIDA)
+      throw new Error('Apenas ordens CONCLUIDAS podem ser estornadas')
+    return new OrdemProducao({
+      ...this.props,
+      status: StatusOrdemProducao.RASCUNHO,
+      quantidadeReal: undefined,
+      produtosGerados: undefined,
+      sobrasRecuperadas: undefined,
+      observacao: undefined,
+      confirmadoEm: undefined,
+      materiaisConsumidos: [],
     })
   }
 

@@ -151,7 +151,7 @@ export function AssociadoProducao() {
       render: (r) => format(new Date(r.dataColheita), 'dd/MM/yyyy', { locale: ptBR }),
     },
     { key: 'tipoMateriaPrimaId', label: 'Tipo', render: (r) => tipoNome(r.tipoMateriaPrimaId) },
-    { key: 'volume', label: 'Volume', render: (r) => `${r.volume} ${r.unidade}` },
+    { key: 'volume', label: 'Volume', render: (r) => `${r.volume} ${tipos.find((t) => t.id === r.tipoMateriaPrimaId)?.unidade ?? ''}` },
     {
       key: 'campanhaId',
       label: 'Campanha',

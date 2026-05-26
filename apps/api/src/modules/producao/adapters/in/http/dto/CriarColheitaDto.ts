@@ -1,6 +1,5 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator'
+import { IsDateString, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { UnidadeMedida } from '@apa/shared'
 
 export class CriarColheitaDto {
   @ApiProperty()
@@ -30,10 +29,6 @@ export class CriarColheitaDto {
   @IsNumber()
   @IsPositive()
   volume!: number
-
-  @ApiProperty({ enum: UnidadeMedida })
-  @IsEnum(UnidadeMedida)
-  unidade!: UnidadeMedida
 
   @ApiProperty({ example: '2025-06-01' })
   @IsDateString()

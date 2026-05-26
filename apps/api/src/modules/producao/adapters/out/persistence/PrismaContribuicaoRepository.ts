@@ -27,13 +27,13 @@ export class PrismaContribuicaoRepository implements IContribuicaoRepository {
     return rs.map(r => this.toDomain(r))
   }
 
-  async sumByCampanha(campanhaId: string): Promise<{ associadoId: string; total: number }[]> {
+  async sumByCampanha(campanhaId: string): Promise<{ associadoId: string | null; total: number }[]> {
     const groups = await this.prisma.contribuicao.groupBy({
       by: ['associadoId'],
       where: { campanhaId },
       _sum: { valorMonetario: true },
     })
-    return groups.map(g => ({ associadoId: g.associadoId, total: Number(g._sum.valorMonetario ?? 0) }))
+    return groups.map(g => ({ associadoId: g.associadoId ?? null, total: Number(g._sum.valorMonetario ?? 0) }))
   }
 
   async save(c: Contribuicao): Promise<Contribuicao> {

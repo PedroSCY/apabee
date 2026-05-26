@@ -75,10 +75,10 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     if (contribuicoes.length === 0)
       throw new BadRequestException('Campanha não possui contribuições registradas')
 
-    // 4. Calcula proporção por associado
+    // 4. Calcula proporção por associado (null = contribuição da associação — inclusa no total mas sem payout)
     // PRODUCAO → rateio por volume (kg/litro coletados — RN18)
     // AQUISICAO → rateio por valor monetário investido
-    const proporcaoPorAssociado = new Map<string, number>()
+    const proporcaoPorAssociado = new Map<string | null, number>()
     for (const c of contribuicoes) {
       const base = campanha.tipo === TipoLote.PRODUCAO
         ? (c.volume ?? 0)
@@ -108,6 +108,9 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     const movimentosParaSalvar: MovimentoFinanceiro[] = []
 
     for (const [associadoId, proporcao] of proporcaoPorAssociado) {
+      // Contribuições da associação (null) reduzem o total geral mas não geram payout
+      if (associadoId === null) continue
+
       const percentual = proporcao / somaTotal
       const valorBruto = percentual * faturamentoTotal
       const custosRateados = percentual * custoTotal

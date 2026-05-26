@@ -1,7 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'
 import { Colheita as PrismaColheita } from '@prisma/client'
 import { Colheita, IColheitaRepository } from '@apa/core'
-import { UnidadeMedida } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -108,7 +107,6 @@ export class PrismaColheitaRepository implements IColheitaRepository {
         campanhaId: colheita.campanhaId ?? null,
         safraId: colheita.safraId ?? null,
         volume: colheita.volume,
-        unidade: colheita.unidade,
         dataColheita: colheita.dataColheita,
         observacao: colheita.observacao ?? null,
         criadoEm: colheita.criadoEm,
@@ -126,7 +124,6 @@ export class PrismaColheitaRepository implements IColheitaRepository {
       campanhaId: record.campanhaId ?? undefined,
       safraId: record.safraId ?? undefined,
       volume: Number(record.volume),
-      unidade: record.unidade as UnidadeMedida,
       dataColheita: record.dataColheita,
       observacao: record.observacao ?? undefined,
       criadoEm: record.criadoEm,

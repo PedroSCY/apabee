@@ -7,10 +7,14 @@ import {
   type RegistrarContribuicaoInput,
   type RegistrarCustoInput,
   type CriarOrdemInput,
+  type ConfirmarOrdemInput,
   type RegistrarCotaInput,
   type CriarItemAquisicaoInput,
   type RegistrarPedidoInput,
+  type CriarMetaInput,
+  type AlocarPoolInput,
 } from '@/lib/api/campanhas'
+import { POOL_KEY } from './useProducao'
 
 export const CAMPANHAS_KEY = ['campanhas'] as const
 
@@ -109,7 +113,10 @@ export function useRemoverContribuicao(campanhaId: string) {
       campanhasApi.removerContribuicao(campanhaId, contribuicaoId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'contribuicoes'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] })
       void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId] })
+      void qc.invalidateQueries({ queryKey: POOL_KEY })
     },
   })
 }
@@ -163,12 +170,16 @@ export function useCriarOrdemProducao(campanhaId: string) {
   })
 }
 
-export function useExecutarOrdemProducao(campanhaId: string) {
+export function useConfirmarOrdemProducao(campanhaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (ordemId: string) => campanhasApi.executarOrdem(campanhaId, ordemId),
-    onSuccess: () =>
-      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'ordens'] }),
+    mutationFn: ({ ordemId, ...input }: { ordemId: string } & ConfirmarOrdemInput) =>
+      campanhasApi.confirmarOrdem(campanhaId, ordemId, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'ordens'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] })
+    },
   })
 }
 
@@ -178,6 +189,19 @@ export function useRemoverOrdemProducao(campanhaId: string) {
     mutationFn: (ordemId: string) => campanhasApi.removerOrdem(campanhaId, ordemId),
     onSuccess: () =>
       void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'ordens'] }),
+  })
+}
+
+export function useEstornarOrdem(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ordemId: string) => campanhasApi.estornarOrdem(campanhaId, ordemId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'ordens'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] })
+      void qc.invalidateQueries({ queryKey: POOL_KEY })
+    },
   })
 }
 
@@ -284,6 +308,18 @@ export function useEstoqueCampanha(campanhaId: string) {
   })
 }
 
+export function useAlocarPool(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: AlocarPoolInput) => campanhasApi.alocarPool(campanhaId, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'estoque'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'contribuicoes'] })
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] })
+    },
+  })
+}
+
 // --- Pedidos de Aquisição ---
 export function usePedidosAquisicao(campanhaId: string, associadoId?: string) {
   return useQuery({
@@ -314,5 +350,32 @@ export function useMarcarPedidoEntregue(campanhaId: string) {
   return useMutation({
     mutationFn: (pedidoId: string) => campanhasApi.marcarPedidoEntregue(pedidoId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'pedidos'] }),
+  })
+}
+
+// --- Metas de Produção ---
+export function useMetasProducao(campanhaId: string) {
+  return useQuery({
+    queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'],
+    queryFn: () => campanhasApi.listarMetas(campanhaId),
+    enabled: Boolean(campanhaId),
+  })
+}
+
+export function useCriarMeta(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CriarMetaInput) => campanhasApi.criarMeta(campanhaId, input),
+    onSuccess: () =>
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] }),
+  })
+}
+
+export function useRemoverMeta(campanhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (metaId: string) => campanhasApi.removerMeta(campanhaId, metaId),
+    onSuccess: () =>
+      void qc.invalidateQueries({ queryKey: [...CAMPANHAS_KEY, campanhaId, 'metas'] }),
   })
 }

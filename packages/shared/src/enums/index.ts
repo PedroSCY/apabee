@@ -176,8 +176,7 @@ export enum StatusCampanha {
 
 /** Estado de execução de uma ordem de produção. */
 export enum StatusOrdemProducao {
-  PENDENTE = 'PENDENTE',
-  EM_EXECUCAO = 'EM_EXECUCAO',
+  RASCUNHO = 'RASCUNHO',
   CONCLUIDA = 'CONCLUIDA',
 }
 

@@ -57,8 +57,7 @@ export function AssociadoDashboard() {
     (c) => new Date(c.dataColheita).getFullYear() === anoAtual,
   )
   const volumeTotal = colheitasAno.reduce((sum, c) => sum + c.volume, 0)
-  const unidadePrincipal = colheitasAno[0]?.unidade ?? 'kg'
-  const volumeLabel = volumeTotal > 0 ? `${volumeTotal.toLocaleString('pt-BR')} ${unidadePrincipal}` : '0 kg'
+  const volumeLabel = volumeTotal > 0 ? `${volumeTotal.toLocaleString('pt-BR')} kg` : '0 kg'
 
   const loading = loadingPerfil || loadingAtrib
 

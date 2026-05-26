@@ -77,7 +77,6 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
       await criarColheita({
         ...data,
         associadoId,
-        unidade: tipoSelecionado?.unidade ?? 'KG',
         safraId: data.safraId || undefined,
       })
       toast.success('Colheita registrada com sucesso.')
@@ -92,7 +91,10 @@ export function RegistrarColheitaDialog({ open, onOpenChange, associadoId }: Pro
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar Colheita</DialogTitle>
-          <DialogDescription>Registre uma nova colheita para este associado.</DialogDescription>
+          <DialogDescription>
+            Registre uma nova colheita. Se não houver campanha vinculada, o volume vai para o{' '}
+            <strong>pool geral</strong> e pode ser alocado a uma campanha depois.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

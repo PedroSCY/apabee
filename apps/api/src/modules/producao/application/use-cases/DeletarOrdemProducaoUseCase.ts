@@ -13,8 +13,8 @@ export class DeletarOrdemProducaoUseCase implements IDeletarOrdemProducaoUseCase
   async execute(id: string): Promise<void> {
     const ordem = await this.repository.findById(id)
     if (!ordem) throw new NotFoundException('Ordem de produção não encontrada')
-    if (ordem.status !== StatusOrdemProducao.PENDENTE)
-      throw new ConflictException('Apenas ordens PENDENTE podem ser removidas')
+    if (ordem.status !== StatusOrdemProducao.RASCUNHO)
+      throw new ConflictException('Apenas ordens em RASCUNHO podem ser removidas')
     await this.repository.delete(id)
   }
 }

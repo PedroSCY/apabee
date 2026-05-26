@@ -19,6 +19,7 @@ import {
   PrismaEstoqueMateriaPrimaRepository,
   PrismaFloradaRepository,
   PrismaItemAquisicaoRepository,
+  PrismaMetaProducaoRepository,
   PrismaMovimentoFinanceiroRepository,
   PrismaOrdemProducaoRepository,
   PrismaSafraRepository,
@@ -57,7 +58,6 @@ import {
   CriarTipoMateriaPrimaUseCase,
   DistribuirItensUseCase,
   EncerrarSafraUseCase,
-  ExecutarOrdemProducaoUseCase,
   IniciarCampanhaUseCase,
   IniciarSafraUseCase,
   ListarCampanhasUseCase,
@@ -91,6 +91,12 @@ import {
   ListarPedidosAquisicaoUseCase,
   ConfirmarPagamentoPedidoUseCase,
   MarcarPedidoEntregueUseCase,
+  CriarMetaProducaoUseCase,
+  ListarMetasProducaoUseCase,
+  RemoverMetaProducaoUseCase,
+  ConfirmarOrdemProducaoUseCase,
+  EstornarOrdemProducaoUseCase,
+  AlocarPoolParaCampanhaUseCase,
 } from './application/use-cases'
 import {
   ADICIONAR_ITEM_AQUISICAO_USE_CASE,
@@ -133,7 +139,6 @@ import {
   ESTOQUE_MATERIA_PRIMA_REPOSITORY,
   ESTOQUE_CAMPANHA_REPOSITORY,
   LISTAR_ESTOQUE_CAMPANHA_USE_CASE,
-  EXECUTAR_ORDEM_PRODUCAO_USE_CASE,
   INICIAR_CAMPANHA_USE_CASE,
   INICIAR_SAFRA_USE_CASE,
   ITEM_AQUISICAO_REPOSITORY,
@@ -174,6 +179,13 @@ import {
   LISTAR_PEDIDOS_AQUISICAO_USE_CASE,
   CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE,
   MARCAR_PEDIDO_ENTREGUE_USE_CASE,
+  CONFIRMAR_ORDEM_PRODUCAO_USE_CASE,
+  ESTORNAR_ORDEM_PRODUCAO_USE_CASE,
+  META_PRODUCAO_REPOSITORY,
+  CRIAR_META_PRODUCAO_USE_CASE,
+  LISTAR_METAS_PRODUCAO_USE_CASE,
+  REMOVER_META_PRODUCAO_USE_CASE,
+  ALOCAR_POOL_PARA_CAMPANHA_USE_CASE,
 } from './producao.tokens'
 
 /** Catalogo string tokens — same values as catalogo.tokens.ts, avoids circular import. */
@@ -203,6 +215,7 @@ const EQUIPAMENTO_REPOSITORY = 'EQUIPAMENTO_REPOSITORY'
     { provide: ITEM_AQUISICAO_REPOSITORY, useClass: PrismaItemAquisicaoRepository },
     { provide: ESTOQUE_CAMPANHA_REPOSITORY, useClass: PrismaEstoqueCampanhaRepository },
     { provide: PEDIDO_AQUISICAO_REPOSITORY, useClass: PrismaPedidoAquisicaoRepository },
+    { provide: META_PRODUCAO_REPOSITORY, useClass: PrismaMetaProducaoRepository },
     // Repositórios — cross-module (tokens locais, sem import circular)
     { provide: COMPOSICAO_PRODUTO_REPOSITORY, useClass: PrismaComposicaoProdutoRepository },
     { provide: ESTOQUE_PRODUTO_REPOSITORY, useClass: PrismaEstoqueProdutoRepository },
@@ -266,10 +279,11 @@ const EQUIPAMENTO_REPOSITORY = 'EQUIPAMENTO_REPOSITORY'
     { provide: CALCULAR_DISTRIBUICAO_PREVIEW_USE_CASE, useClass: CalcularDistribuicaoPreviewUseCase },
     // Use cases — ordem de produção
     { provide: CRIAR_ORDEM_PRODUCAO_USE_CASE, useClass: CriarOrdemProducaoUseCase },
-    { provide: EXECUTAR_ORDEM_PRODUCAO_USE_CASE, useClass: ExecutarOrdemProducaoUseCase },
     { provide: DELETAR_ORDEM_PRODUCAO_USE_CASE, useClass: DeletarOrdemProducaoUseCase },
     { provide: LISTAR_ORDENS_CAMPANHA_USE_CASE, useClass: ListarOrdensPorCampanhaUseCase },
     { provide: CALCULAR_CONSUMO_USE_CASE, useClass: CalcularConsumoUseCase },
+    { provide: CONFIRMAR_ORDEM_PRODUCAO_USE_CASE, useClass: ConfirmarOrdemProducaoUseCase },
+    { provide: ESTORNAR_ORDEM_PRODUCAO_USE_CASE, useClass: EstornarOrdemProducaoUseCase },
     // Use cases — custo de campanha
     { provide: REGISTRAR_CUSTO_USE_CASE, useClass: RegistrarCustoUseCase },
     { provide: LISTAR_CUSTOS_CAMPANHA_USE_CASE, useClass: ListarCustosPorCampanhaUseCase },
@@ -286,6 +300,12 @@ const EQUIPAMENTO_REPOSITORY = 'EQUIPAMENTO_REPOSITORY'
     { provide: LISTAR_PEDIDOS_AQUISICAO_USE_CASE, useClass: ListarPedidosAquisicaoUseCase },
     { provide: CONFIRMAR_PAGAMENTO_PEDIDO_USE_CASE, useClass: ConfirmarPagamentoPedidoUseCase },
     { provide: MARCAR_PEDIDO_ENTREGUE_USE_CASE, useClass: MarcarPedidoEntregueUseCase },
+    // Use cases — meta de produção
+    { provide: CRIAR_META_PRODUCAO_USE_CASE, useClass: CriarMetaProducaoUseCase },
+    { provide: LISTAR_METAS_PRODUCAO_USE_CASE, useClass: ListarMetasProducaoUseCase },
+    { provide: REMOVER_META_PRODUCAO_USE_CASE, useClass: RemoverMetaProducaoUseCase },
+    // Use cases — alocação de pool
+    { provide: ALOCAR_POOL_PARA_CAMPANHA_USE_CASE, useClass: AlocarPoolParaCampanhaUseCase },
   ],
   exports: [
     COLHEITA_REPOSITORY,

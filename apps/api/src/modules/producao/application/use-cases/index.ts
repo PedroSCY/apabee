@@ -44,7 +44,8 @@ export { MinhasCotasUseCase } from './MinhasCotasUseCase'
 export { ResumoCaptacaoUseCase } from './ResumoCaptacaoUseCase'
 // Ordem de produção
 export { CriarOrdemProducaoUseCase } from './CriarOrdemProducaoUseCase'
-export { ExecutarOrdemProducaoUseCase } from './ExecutarOrdemProducaoUseCase'
+export { ConfirmarOrdemProducaoUseCase } from './ConfirmarOrdemProducaoUseCase'
+export { EstornarOrdemProducaoUseCase } from './EstornarOrdemProducaoUseCase'
 export { DeletarOrdemProducaoUseCase } from './DeletarOrdemProducaoUseCase'
 export { AtualizarReceitaCampanhaUseCase } from './AtualizarReceitaCampanhaUseCase'
 export { PreviewRateioCampanhaUseCase } from './PreviewRateioCampanhaUseCase'
@@ -71,8 +72,13 @@ export { RastrearCampanhaUseCase } from './RastrearCampanhaUseCase'
 export { ConsultarApuracaoUseCase } from './ConsultarApuracaoUseCase'
 // Estoque campanha
 export { ListarEstoqueCampanhaUseCase } from './ListarEstoqueCampanhaUseCase'
+// Meta de produção
+export { CriarMetaProducaoUseCase } from './CriarMetaProducaoUseCase'
+export { ListarMetasProducaoUseCase } from './ListarMetasProducaoUseCase'
+export { RemoverMetaProducaoUseCase } from './RemoverMetaProducaoUseCase'
 // Pedido aquisição
 export { RegistrarPedidoAquisicaoUseCase } from './RegistrarPedidoAquisicaoUseCase'
 export { ListarPedidosAquisicaoUseCase } from './ListarPedidosAquisicaoUseCase'
 export { ConfirmarPagamentoPedidoUseCase } from './ConfirmarPagamentoPedidoUseCase'
 export { MarcarPedidoEntregueUseCase } from './MarcarPedidoEntregueUseCase'
+export { AlocarPoolParaCampanhaUseCase } from './AlocarPoolParaCampanhaUseCase'

@@ -72,7 +72,7 @@ export function ProducaoTab({ associadoId }: Props) {
                 {colheitas.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{getTipo(c.tipoMateriaPrimaId)?.nome ?? '—'}</TableCell>
-                    <TableCell>{c.volume} {c.unidade}</TableCell>
+                    <TableCell>{c.volume} {getTipo(c.tipoMateriaPrimaId)?.unidade ?? ''}</TableCell>
                     <TableCell>
                       {c.campanhaId ?? <span className="text-muted-foreground text-xs">Pool geral</span>}
                     </TableCell>

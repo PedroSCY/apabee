@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ComposicaoProduto as PrismaComposicaoProduto } from '@prisma/client'
 import { ComposicaoProduto, IComposicaoProdutoRepository } from '@apa/core'
-import { UnidadeMedida } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -20,7 +19,6 @@ export class PrismaComposicaoProdutoRepository implements IComposicaoProdutoRepo
         produtoId: composicao.produtoId,
         tipoMateriaPrimaId: composicao.tipoMateriaPrimaId,
         quantidadeNecessaria: composicao.quantidadeNecessaria,
-        unidade: composicao.unidade,
       },
     })
     return this.toDomain(r)
@@ -36,7 +34,6 @@ export class PrismaComposicaoProdutoRepository implements IComposicaoProdutoRepo
       produtoId: r.produtoId,
       tipoMateriaPrimaId: r.tipoMateriaPrimaId,
       quantidadeNecessaria: Number(r.quantidadeNecessaria),
-      unidade: r.unidade as UnidadeMedida,
     })
   }
 }
