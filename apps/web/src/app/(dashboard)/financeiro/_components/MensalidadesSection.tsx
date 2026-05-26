@@ -3,11 +3,17 @@
 import * as React from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Ban, CheckCircle, QrCode, RotateCcw, Sparkles, Trash2, Undo2, XCircle } from 'lucide-react'
+import { Ban, CheckCircle, Download, FileText, QrCode, RotateCcw, Sheet, Sparkles, Trash2, Undo2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -24,6 +30,7 @@ import {
   useQuitarMensalidade,
   useReativarMensalidade,
 } from '@/hooks/useFinanceiro'
+import { financeiroApi } from '@/lib/api/financeiro'
 import { QuitarMensalidadeDialog } from './QuitarMensalidadeDialog'
 import { IsentarMensalidadeDialog } from './IsentarMensalidadeDialog'
 import { CancelarCobrancaDialog } from './CancelarCobrancaDialog'
@@ -78,6 +85,19 @@ export function MensalidadesSection() {
     () => Object.fromEntries(associados.map((a) => [a.id, a.usuario.nome])),
     [associados],
   )
+
+  const [exportando, setExportando] = React.useState(false)
+
+  async function exportar(formato: 'csv' | 'pdf') {
+    setExportando(true)
+    try {
+      await financeiroApi.exportarMensalidades({ formato, ano, mes })
+    } catch {
+      toast.error('Erro ao exportar mensalidades.')
+    } finally {
+      setExportando(false)
+    }
+  }
 
   const [quitarId, setQuitarId] = React.useState<string | null>(null)
   const [isentarId, setIsentarId] = React.useState<string | null>(null)
@@ -200,6 +220,24 @@ export function MensalidadesSection() {
                   ))}
                 </SelectContent>
               </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={exportando}>
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    Exportar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => void exportar('csv')}>
+                    <Sheet className="h-4 w-4 mr-2" />
+                    Exportar CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => void exportar('pdf')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Exportar PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button size="sm" onClick={() => void handleGerar()} disabled={gerando}>
                 <Sparkles className="h-4 w-4 mr-1.5" />
                 {gerando ? 'Gerando...' : 'Gerar'}

@@ -8,8 +8,9 @@ import {
   IUsuarioRepository,
   Usuario,
 } from '@apa/core'
-import { RoleUsuario, StatusAssociado } from '@apa/shared'
+import { RoleUsuario, StatusAssociado, TipoNotificacao } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 /** Cria auto-cadastro de associado com status PENDENTE (sem acesso liberado) */
@@ -21,6 +22,7 @@ export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUse
     private readonly associadoRepository: IAssociadoRepository,
     @Inject(PROVEDOR_AUTH)
     private readonly provedorAuth: IProvedorAuth,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   /** Executa o cadastro pendente: cria credencial sem senha e bloqueia acesso */
@@ -62,6 +64,15 @@ export class CriarAssociadoPendenteUseCase implements ICriarAssociadoPendenteUse
       status: StatusAssociado.PENDENTE,
     })
 
-    return this.associadoRepository.save(associado)
+    const resultado = await this.associadoRepository.save(associado)
+
+    void this.notificacaoService.enviarParaAdmins(
+      TipoNotificacao.NOVO_ASSOCIADO_PENDENTE,
+      'Novo cadastro aguardando aprovação',
+      `${input.nome} solicitou associação e aguarda aprovação.`,
+      { associadoId: resultado.id },
+    )
+
+    return resultado
   }
 }

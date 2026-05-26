@@ -13,6 +13,12 @@ export class PrismaMovimentoFinanceiroRepository implements IMovimentoFinanceiro
       where: {
         ...(params?.associadoId ? { associadoId: params.associadoId } : {}),
         ...(params?.campanhaId ? { campanhaId: params.campanhaId } : {}),
+        ...(params?.dataInicio || params?.dataFim ? {
+          data: {
+            ...(params.dataInicio ? { gte: params.dataInicio } : {}),
+            ...(params.dataFim ? { lte: params.dataFim } : {}),
+          },
+        } : {}),
       },
       orderBy: { data: 'desc' },
       take: params?.limit,

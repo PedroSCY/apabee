@@ -65,7 +65,7 @@ describe('LiquidarCampanhaUseCase', () => {
     jest.clearAllMocks()
     useCase = new LiquidarCampanhaUseCase(
       campanhaRepo, contribuicaoRepo, custoRepo, apuracaoRepo, movimentoRepo,
-      estoqueCampanhaRepo, estoquePoolRepo,
+      estoqueCampanhaRepo, estoquePoolRepo, { enviarParaAssociado: jest.fn() } as any,
     )
     estoqueCampanhaRepo.findByCampanha.mockResolvedValue([])
     campanhaRepo.update.mockImplementation(async c => c)

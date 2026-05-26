@@ -5,10 +5,13 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   Req,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { FastifyReply } from 'fastify'
 import { Roles } from '../../../../../shared/guards'
 import { RoleUsuario } from '@apa/shared'
 import {
@@ -27,6 +30,7 @@ import {
   LISTAR_MOVIMENTOS_USE_CASE,
   MENSALIDADE_REPOSITORY,
 } from '../../../financeiro.tokens'
+import { RelatorioFinanceiroService } from '../../../adapters/out/RelatorioFinanceiroService'
 
 type JwtUser = { sub: string; role: string }
 
@@ -46,6 +50,7 @@ export class MeuFinanceiroController {
     private readonly listarMovimentos: IListarMovimentosUseCase,
     @Inject(EMITIR_COBRANCA_USE_CASE)
     private readonly emitirCobranca: IEmitirCobrancaMensalidadeUseCase,
+    private readonly relatorioService: RelatorioFinanceiroService,
   ) {}
 
   @ApiOperation({ summary: 'Minhas mensalidades', description: 'Lista todas as mensalidades do associado logado.' })
@@ -89,6 +94,28 @@ export class MeuFinanceiroController {
     const associadoId = await this.resolverAssociadoId(req.user.sub)
     const movimentos = await this.listarMovimentos.execute({ associadoId })
     return movimentos.map((m) => this.toMovimentoResponse(m))
+  }
+
+  @ApiOperation({ summary: 'Meu extrato PDF', description: 'Gera extrato completo (mensalidades + movimentos) do associado logado em PDF.' })
+  @ApiQuery({ name: 'ano', required: false, type: Number, description: 'Ano (padrão: atual)' })
+  @ApiResponse({ status: 200, description: 'PDF do extrato.' })
+  @Get('extrato')
+  async meuExtrato(@Req() req: { user: JwtUser }, @Query('ano') ano?: string, @Res() res: FastifyReply) {
+    const associadoId = await this.resolverAssociadoId(req.user.sub)
+    const anoNum = ano ? Number(ano) : new Date().getFullYear()
+
+    const [mensalidades, movimentos] = await Promise.all([
+      this.listarMensalidades.execute(associadoId),
+      this.listarMovimentos.execute({ associadoId }),
+    ])
+
+    const mensalidadesAno = mensalidades.filter(m => m.competenciaAno === anoNum)
+    const movimentosAno = movimentos.filter(m => m.data.getFullYear() === anoNum)
+
+    const buf = await this.relatorioService.gerarPdfExtratoAssociado(associadoId, mensalidadesAno, movimentosAno, anoNum)
+    res.header('Content-Type', 'application/pdf')
+    res.header('Content-Disposition', `attachment; filename="meu-extrato-${anoNum}.pdf"`)
+    return res.send(buf)
   }
 
   private async resolverAssociadoId(usuarioId: string): Promise<string> {

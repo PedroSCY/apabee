@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch, downloadArquivo } from './client'
 
 export type TipoMovimento = 'ANTECIPACAO' | 'RATEIO_FINAL' | 'CUSTO' | 'MENSALIDADE'
 
@@ -40,6 +40,31 @@ export interface EmitirCobrancaResponse {
   pixQrCodeBase64?: string
   valorCobrado?: number
 }
+
+export interface DashboardGraficoMes {
+  mes: number
+  receita: number
+  despesa: number
+}
+
+export interface DashboardFinanceiro {
+  receitaYTD: number
+  despesasYTD: number
+  saldoLiquido: number
+  inadimplentes: number
+  graficoMensal: DashboardGraficoMes[]
+}
+
+export interface RegistrarMovimentoInput {
+  associadoId: string
+  campanhaId?: string
+  tipo: 'ANTECIPACAO' | 'CUSTO'
+  valor: number
+  descricao?: string
+  data?: string
+}
+
+export type FormatoRelatorio = 'pdf' | 'csv'
 
 export interface GerarMensalidadesInput {
   competenciaAno: number
@@ -148,4 +173,58 @@ export const financeiroApi = {
   /** Exclui uma mensalidade PENDENTE sem cobrança ativa (permite regerar no mesmo mês). */
   excluirMensalidade: (id: string) =>
     apiFetch<void>(`/financeiro/mensalidades/${id}`, { method: 'DELETE' }),
+
+  /** Retorna KPIs e gráfico mensal do ano para o dashboard financeiro. */
+  obterDashboard: (ano?: number) => {
+    const qs = ano ? `?ano=${ano}` : ''
+    return apiFetch<DashboardFinanceiro>(`/financeiro/movimentos/dashboard${qs}`)
+  },
+
+  /** Registra um movimento manual (ANTECIPACAO ou CUSTO) pelo admin. */
+  registrarMovimento: (input: RegistrarMovimentoInput) =>
+    apiFetch<MovimentoFinanceiroResponse>('/financeiro/movimentos', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  /** Exporta mensalidades em CSV ou PDF. */
+  exportarMensalidades: (params: { formato: FormatoRelatorio; ano?: number; mes?: number; status?: StatusMensalidade }) => {
+    const qs = new URLSearchParams({ formato: params.formato })
+    if (params.ano) qs.set('ano', String(params.ano))
+    if (params.mes) qs.set('mes', String(params.mes))
+    if (params.status) qs.set('status', params.status)
+    const ano = params.ano ?? new Date().getFullYear()
+    const filename = `mensalidades-${ano}${params.mes ? '-' + String(params.mes).padStart(2, '0') : ''}.${params.formato}`
+    return downloadArquivo(`/financeiro/mensalidades/exportar?${qs.toString()}`, filename)
+  },
+
+  /** Exporta movimentos financeiros em CSV ou PDF. */
+  exportarMovimentos: (params: { formato: FormatoRelatorio; associadoId?: string; tipo?: TipoMovimento; dataInicio?: string; dataFim?: string }) => {
+    const qs = new URLSearchParams({ formato: params.formato })
+    if (params.associadoId) qs.set('associadoId', params.associadoId)
+    if (params.tipo) qs.set('tipo', params.tipo)
+    if (params.dataInicio) qs.set('dataInicio', params.dataInicio)
+    if (params.dataFim) qs.set('dataFim', params.dataFim)
+    const filename = `movimentos${params.dataInicio ? '-' + params.dataInicio.slice(0, 7) : ''}.${params.formato}`
+    return downloadArquivo(`/financeiro/movimentos/exportar?${qs.toString()}`, filename)
+  },
+
+  /** Baixa extrato PDF de um associado (admin). */
+  exportarExtratoAssociado: (associadoId: string, ano?: number) => {
+    const qs = ano ? `?ano=${ano}` : ''
+    return downloadArquivo(`/financeiro/mensalidades/associado/${associadoId}/extrato${qs}`, `extrato-${ano ?? new Date().getFullYear()}.pdf`)
+  },
+
+  /** Baixa o extrato PDF do associado logado. */
+  exportarMeuExtrato: (ano?: number) => {
+    const qs = ano ? `?ano=${ano}` : ''
+    return downloadArquivo(`/financeiro/me/extrato${qs}`, `meu-extrato-${ano ?? new Date().getFullYear()}.pdf`)
+  },
+
+  /** Exporta relatório completo de uma campanha (contribuições, custos, produção, vendas, rateio). */
+  exportarRelatorioCampanha: (campanhaId: string, formato: FormatoRelatorio) =>
+    downloadArquivo(
+      `/financeiro/movimentos/campanha/${campanhaId}/relatorio?formato=${formato}`,
+      `relatorio-campanha.${formato}`,
+    ),
 }

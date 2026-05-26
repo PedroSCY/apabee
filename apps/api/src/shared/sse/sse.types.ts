@@ -46,6 +46,8 @@ export type SseEventTipo =
   | 'patrimonio:solicitacao-criada'
   | 'patrimonio:solicitacao-aprovada'
   | 'patrimonio:solicitacao-rejeitada'
+  // Notificação
+  | 'notificacao:nova'
 
 export interface SseEvent {
   tipo: SseEventTipo

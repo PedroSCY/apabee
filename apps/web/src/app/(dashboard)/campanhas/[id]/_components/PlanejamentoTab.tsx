@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -136,6 +136,7 @@ export function PlanejamentoTab({ campanhaId }: Props) {
                   }
                   <Button
                     size="icon" variant="ghost"
+                    aria-label="Remover meta"
                     className="size-7 text-destructive hover:bg-destructive/10"
                     onClick={() => setConfirmMeta(m)}
                   >
@@ -148,10 +149,10 @@ export function PlanejamentoTab({ campanhaId }: Props) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">Material</TableHead>
-                      <TableHead className="text-xs text-right">Necessário</TableHead>
-                      <TableHead className="text-xs text-right">Disponível</TableHead>
-                      <TableHead className="text-xs text-right">Déficit</TableHead>
+                      <TableHead className="text-xs uppercase tracking-wide">Material</TableHead>
+                      <TableHead className="text-xs uppercase tracking-wide text-right">Necessário</TableHead>
+                      <TableHead className="text-xs uppercase tracking-wide text-right">Disponível</TableHead>
+                      <TableHead className="text-xs uppercase tracking-wide text-right">Déficit</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -181,6 +182,7 @@ export function PlanejamentoTab({ campanhaId }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar meta de produção</DialogTitle>
+            <DialogDescription>Defina o produto e a quantidade planejada para esta campanha.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">

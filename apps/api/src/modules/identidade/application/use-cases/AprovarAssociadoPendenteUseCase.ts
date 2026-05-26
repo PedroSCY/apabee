@@ -7,8 +7,9 @@ import {
   IProvedorAuth,
   IUsuarioRepository,
 } from '@apa/core'
-import { StatusAssociado } from '@apa/shared'
+import { StatusAssociado, TipoNotificacao } from '@apa/shared'
 import { ASSOCIADO_REPOSITORY, PROVEDOR_AUTH, USUARIO_REPOSITORY } from '../../identidade.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 /** Aprova um associado pendente: define senha, libera acesso e ativa o registro */
@@ -20,6 +21,7 @@ export class AprovarAssociadoPendenteUseCase implements IAprovarAssociadoPendent
     private readonly usuarioRepository: IUsuarioRepository,
     @Inject(PROVEDOR_AUTH)
     private readonly provedorAuth: IProvedorAuth,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   /** Executa a aprovação: define senha, ativa no Supabase e atualiza o banco */
@@ -50,6 +52,15 @@ export class AprovarAssociadoPendenteUseCase implements IAprovarAssociadoPendent
       dataIngresso: input.dataIngresso ?? associado.dataIngresso,
     })
 
-    return this.associadoRepository.update(atualizado)
+    const resultado = await this.associadoRepository.update(atualizado)
+
+    void this.notificacaoService.enviar({
+      userId: usuarioId,
+      tipo: TipoNotificacao.APROVACAO_CADASTRO,
+      titulo: 'Cadastro aprovado!',
+      corpo: 'Seu cadastro foi aprovado. Bem-vindo à APA!',
+    })
+
+    return resultado
   }
 }

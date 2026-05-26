@@ -15,7 +15,7 @@ import {
   RateioCampanha,
 } from '@apa/core'
 import { IMovimentoFinanceiroRepository } from '@apa/core'
-import { StatusCampanha, TipoLote, TipoMovimentacao, TipoMovimentoFinanceiro } from '@apa/shared'
+import { StatusCampanha, TipoLote, TipoMovimentacao, TipoMovimentoFinanceiro, TipoNotificacao } from '@apa/shared'
 import { randomUUID } from 'crypto'
 import {
   APURACAO_CAMPANHA_REPOSITORY,
@@ -26,6 +26,7 @@ import {
   ESTOQUE_MATERIA_PRIMA_REPOSITORY,
   MOVIMENTO_FINANCEIRO_REPOSITORY,
 } from '../../producao.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 /** Orquestra a liquidação de uma campanha (CONCLUIDA → LIQUIDADA): calcula rateio, gera movimentos financeiros, salva ApuracaoCampanha (RN26). */
@@ -45,6 +46,7 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     private readonly estoqueCampanhaRepo: IEstoqueCampanhaRepository,
     @Inject(ESTOQUE_MATERIA_PRIMA_REPOSITORY)
     private readonly estoquePoolRepo: IEstoqueMateriaPrimaRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(id: string): Promise<Campanha> {
@@ -156,7 +158,22 @@ export class LiquidarCampanhaUseCase implements ILiquidarCampanhaUseCase {
     await this.transferirResidualParaPool(id)
 
     const campanhaLiquidada = campanha.liquidar(faturamentoTotal, custoTotal)
-    return this.campanhaRepo.update(campanhaLiquidada)
+    const resultado = await this.campanhaRepo.update(campanhaLiquidada)
+
+    // 9. Notifica cada participante com rateio positivo
+    for (const rateio of rateios) {
+      if (rateio.valorFinal > 0) {
+        void this.notificacaoService.enviarParaAssociado(
+          rateio.associadoId,
+          TipoNotificacao.RATEIO_DISPONIVEL,
+          'Rateio disponível',
+          `Campanha ${campanha.codigo}: R$ ${rateio.valorFinal.toFixed(2).replace('.', ',')} creditados.`,
+          { campanhaId: id, campanhaCode: campanha.codigo },
+        )
+      }
+    }
+
+    return resultado
   }
 
   /** Move saldo restante do EstoqueCampanha para o pool global após liquidação. */

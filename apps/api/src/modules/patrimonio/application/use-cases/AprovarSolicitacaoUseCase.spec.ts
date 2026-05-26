@@ -71,7 +71,7 @@ describe('AprovarSolicitacaoUseCase', () => {
     solicitacaoRepo = makeSolicitacaoRepo()
     insumoRepo = makeInsumoRepo()
     atribuirUseCase = makeAtribuirUseCase()
-    useCase = new AprovarSolicitacaoUseCase(solicitacaoRepo, atribuirUseCase, insumoRepo)
+    useCase = new AprovarSolicitacaoUseCase(solicitacaoRepo, atribuirUseCase, insumoRepo, { enviarParaAssociado: jest.fn() } as any)
   })
 
   describe('EQUIPAMENTO', () => {

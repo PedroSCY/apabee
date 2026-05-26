@@ -117,12 +117,11 @@ export class ConfirmarOrdemProducaoUseCase implements IConfirmarOrdemProducaoUse
       quantidadeNova: (estoqueAtual?.quantidadeDisponivel ?? 0) + input.quantidadeReal,
     }
 
-    // RN24: vincula Produto à campanha para rastreabilidade
+    // RN24: sempre atualiza vínculo Produto→Campanha (rastreabilidade da campanha mais recente)
     const produto = await this.produtoRepo.findById(ordem.produtoId)
-    const vincularProdutoCampanha =
-      produto && !produto.campanhaId
-        ? { produtoId: ordem.produtoId, campanhaId: ordem.campanhaId }
-        : undefined
+    const vincularProdutoCampanha = produto
+      ? { produtoId: ordem.produtoId, campanhaId: ordem.campanhaId }
+      : undefined
 
     return this.ordemRepo.salvarConfirmacaoAtomico({
       ordemConfirmada: ordem.confirmar(

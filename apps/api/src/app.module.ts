@@ -14,6 +14,7 @@ import { CatalogoModule } from './modules/catalogo/catalogo.module'
 import { ComercialModule } from './modules/comercial/comercial.module'
 import { ComunicacaoModule } from './modules/comunicacao/comunicacao.module'
 import { FinanceiroModule } from './modules/financeiro/financeiro.module'
+import { NotificacaoModule } from './modules/notificacao/notificacao.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -31,6 +32,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     ComercialModule,
     ComunicacaoModule,
     FinanceiroModule,
+    NotificacaoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

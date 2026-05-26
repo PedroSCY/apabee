@@ -27,7 +27,7 @@ describe('RejeitarSolicitacaoUseCase', () => {
 
   beforeEach(() => {
     repo = makeRepo()
-    useCase = new RejeitarSolicitacaoUseCase(repo)
+    useCase = new RejeitarSolicitacaoUseCase(repo, { enviarParaAssociado: jest.fn() } as any)
   })
 
   it('rejeita solicitação PENDENTE com sucesso', async () => {

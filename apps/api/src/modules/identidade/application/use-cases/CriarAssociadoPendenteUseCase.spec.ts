@@ -47,7 +47,7 @@ describe('CriarAssociadoPendenteUseCase', () => {
     usuarioRepo = makeUsuarioRepo()
     associadoRepo = makeAssociadoRepo()
     provedorAuth = makeProvedorAuth()
-    useCase = new CriarAssociadoPendenteUseCase(usuarioRepo, associadoRepo, provedorAuth)
+    useCase = new CriarAssociadoPendenteUseCase(usuarioRepo, associadoRepo, provedorAuth, { enviarParaAdmins: jest.fn() } as any)
   })
 
   it('cria associado com status PENDENTE', async () => {

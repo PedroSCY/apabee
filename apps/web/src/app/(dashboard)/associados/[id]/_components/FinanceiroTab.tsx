@@ -1,11 +1,15 @@
 'use client'
 
+import * as React from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { TrendingDown, TrendingUp, Wallet } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Download, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -16,6 +20,7 @@ import {
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/shared'
 import { useMovimentosPorAssociado } from '@/hooks/useFinanceiro'
+import { financeiroApi } from '@/lib/api/financeiro'
 import { MensalidadesAssociadoSection } from './MensalidadesAssociadoSection'
 
 interface Props {
@@ -71,8 +76,25 @@ function KpiCard({ title, value, icon: Icon, valueClass }: KpiCardProps) {
   )
 }
 
+const ANO_ATUAL = new Date().getFullYear()
+const ANOS_EXTRATO = Array.from({ length: 4 }, (_, i) => ANO_ATUAL - i)
+
 export function FinanceiroTab({ associadoId }: Props) {
+  const [anoExtrato, setAnoExtrato] = React.useState(ANO_ATUAL)
+  const [baixando, setBaixando] = React.useState(false)
+
   const { data: movimentos = [], isLoading } = useMovimentosPorAssociado(associadoId)
+
+  async function baixarExtrato() {
+    setBaixando(true)
+    try {
+      await financeiroApi.exportarExtratoAssociado(associadoId, anoExtrato)
+    } catch {
+      toast.error('Erro ao baixar extrato.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   const totalAntecipacoes = movimentos
     .filter((m) => m.tipo === 'ANTECIPACAO')
@@ -121,7 +143,25 @@ export function FinanceiroTab({ associadoId }: Props) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Histórico de Movimentos</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Histórico de Movimentos</CardTitle>
+            <div className="flex items-center gap-2">
+              <Select value={String(anoExtrato)} onValueChange={(v) => setAnoExtrato(Number(v))}>
+                <SelectTrigger className="w-22.5 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANOS_EXTRATO.map((a) => (
+                    <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="outline" onClick={() => void baixarExtrato()} disabled={baixando}>
+                <Download className="h-3.5 w-3.5 mr-1" />
+                {baixando ? 'Baixando…' : 'Extrato PDF'}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {movimentos.length === 0 ? (

@@ -80,3 +80,34 @@ export interface ListarMovimentosInput {
 export interface IListarMovimentosUseCase {
   execute(input?: ListarMovimentosInput): Promise<import('../../entities/MovimentoFinanceiro').MovimentoFinanceiro[]>
 }
+
+export interface DashboardGraficoMes {
+  mes: number
+  receita: number
+  despesa: number
+}
+
+export interface DashboardFinanceiro {
+  receitaYTD: number
+  despesasYTD: number
+  saldoLiquido: number
+  inadimplentes: number
+  graficoMensal: DashboardGraficoMes[]
+}
+
+export interface IObterDashboardFinanceiroUseCase {
+  execute(ano: number): Promise<DashboardFinanceiro>
+}
+
+export interface RegistrarMovimentoInput {
+  associadoId: string
+  campanhaId?: string
+  tipo: 'ANTECIPACAO' | 'CUSTO'
+  valor: number
+  descricao?: string
+  data?: Date
+}
+
+export interface IRegistrarMovimentoUseCase {
+  execute(input: RegistrarMovimentoInput): Promise<import('../../entities/MovimentoFinanceiro').MovimentoFinanceiro>
+}

@@ -1,0 +1,6 @@
+/** Tokens de injeção de dependência do módulo de notificações. */
+export const NOTIFICACAO_REPOSITORY      = 'NOTIFICACAO_REPOSITORY'
+export const LISTAR_NOTIFICACOES_USE_CASE = 'LISTAR_NOTIFICACOES_USE_CASE'
+export const CONTAR_NAO_LIDAS_USE_CASE   = 'CONTAR_NAO_LIDAS_USE_CASE'
+export const MARCAR_LIDA_USE_CASE        = 'MARCAR_LIDA_USE_CASE'
+export const MARCAR_TODAS_LIDAS_USE_CASE = 'MARCAR_TODAS_LIDAS_USE_CASE'

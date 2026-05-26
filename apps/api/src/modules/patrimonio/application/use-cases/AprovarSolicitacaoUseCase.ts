@@ -6,12 +6,13 @@ import {
   ISolicitacaoPatrimonioRepository,
   SolicitacaoPatrimonio,
 } from '@apa/core'
-import { TipoPatrimonio } from '@apa/shared'
+import { TipoPatrimonio, TipoNotificacao } from '@apa/shared'
 import {
   ATRIBUIR_PATRIMONIO_USE_CASE,
   INSUMO_REPOSITORY,
   SOLICITACAO_PATRIMONIO_REPOSITORY,
 } from '../../patrimonio.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 export class AprovarSolicitacaoUseCase implements IAprovarSolicitacaoUseCase {
@@ -22,6 +23,7 @@ export class AprovarSolicitacaoUseCase implements IAprovarSolicitacaoUseCase {
     private readonly atribuirPatrimonio: IAtribuirPatrimonioUseCase,
     @Inject(INSUMO_REPOSITORY)
     private readonly insumoRepository: IInsumoRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(solicitacaoId: string): Promise<SolicitacaoPatrimonio> {
@@ -59,6 +61,16 @@ export class AprovarSolicitacaoUseCase implements IAprovarSolicitacaoUseCase {
       }
     }
 
-    return this.solicitacaoRepository.update(solicitacao.aprovar())
+    const resultado = await this.solicitacaoRepository.update(solicitacao.aprovar())
+
+    void this.notificacaoService.enviarParaAssociado(
+      solicitacao.associadoId,
+      TipoNotificacao.SOLICITACAO_APROVADA,
+      'Solicitação de patrimônio aprovada',
+      'Sua solicitação foi aprovada e o item foi atribuído a você.',
+      { solicitacaoId: solicitacao.id },
+    )
+
+    return resultado
   }
 }

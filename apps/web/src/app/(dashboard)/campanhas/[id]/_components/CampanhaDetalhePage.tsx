@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ArrowLeft, Play, CheckCheck, X, Banknote, Trash2 } from 'lucide-react'
+import { ArrowLeft, Play, CheckCheck, X, Banknote, Trash2, Download, FileText, Sheet } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -11,7 +11,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { ConfirmDialog, PageHeader } from '@/components/shared'
+import { ConfirmDialog, EmptyState, PageHeader } from '@/components/shared'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { financeiroApi } from '@/lib/api/financeiro'
 import {
   useCampanha,
   useIniciarCampanha,
@@ -79,31 +81,9 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
   const { mutateAsync: deletar, isPending: deletando } = useDeletarCampanha()
 
   const isPending = iniciando || concluindo || cancelando || liquidando || deletando
+  const [exportando, setExportando] = React.useState(false)
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
-
-  if (!campanha) {
-    return (
-      <div className="p-6">
-        <p className="text-sm text-muted-foreground">Campanha não encontrada.</p>
-      </div>
-    )
-  }
-
-  const statusCfg = STATUS_CONFIG[campanha.status]
-  const tipoCfg = TIPO_CONFIG[campanha.tipo]
-  const resultado = campanha.receitaTotal - campanha.custoTotal
-  const safraNome = campanha.safraId ? (safras.find(s => s.id === campanha.safraId)?.nome ?? campanha.safraId.slice(0, 8)) : null
-
-  // Progresso de coleta: baseado em contribuições COLHEITA (nunca regride com produções)
+  // useMemo ANTES dos early returns — hooks não podem ficar após retornos condicionais
   const coletaProgresso = React.useMemo(() => {
     const map = new Map<string, { nome: string; unidade: string; coletado: number; necessario: number }>()
     for (const meta of metas) {
@@ -122,7 +102,6 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
     return Array.from(map.values())
   }, [metas, contribuicoes])
 
-  // Progresso de produção: baseado em ordens CONCLUIDAS (só sobe)
   const producaoProgresso = React.useMemo(() => {
     const map = new Map<string, { nome: string; planejado: number; produzido: number }>()
     for (const meta of metas) {
@@ -136,6 +115,49 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
     }
     return Array.from(map.values())
   }, [metas, ordensPage])
+
+  async function exportarRelatorio(formato: 'pdf' | 'csv') {
+    setExportando(true)
+    try {
+      await financeiroApi.exportarRelatorioCampanha(campanha!.id, formato)
+    } catch {
+      toast.error('Erro ao exportar relatório.')
+    } finally {
+      setExportando(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
+
+  if (!campanha) {
+    return (
+      <div className="p-6">
+        <Link
+          href="/campanhas"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="size-3.5" /> Voltar às Campanhas
+        </Link>
+        <EmptyState
+          title="Campanha não encontrada"
+          description="Esta campanha não existe ou foi removida."
+        />
+      </div>
+    )
+  }
+
+  const statusCfg = STATUS_CONFIG[campanha.status]
+  const tipoCfg = TIPO_CONFIG[campanha.tipo]
+  const resultado = campanha.receitaTotal - campanha.custoTotal
+  const safraNome = campanha.safraId ? (safras.find(s => s.id === campanha.safraId)?.nome ?? campanha.safraId.slice(0, 8)) : null
 
   async function handleIniciar() {
     try { await iniciar(campanha!.id); toast.success('Campanha iniciada.') }
@@ -268,12 +290,12 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
           <div className="border-t border-border/60 pt-3 flex flex-wrap gap-2">
             {campanha.status === 'PLANEJADA' && (
               <Button size="sm" onClick={handleIniciar} disabled={isPending}>
-                <Play className="h-3.5 w-3.5" /> Iniciar
+                <Play className="h-3.5 w-3.5" /> {iniciando ? 'Iniciando…' : 'Iniciar'}
               </Button>
             )}
             {campanha.status === 'ATIVA' && (
               <Button size="sm" variant="outline" onClick={handleConcluir} disabled={isPending}>
-                <CheckCheck className="h-3.5 w-3.5" /> Concluir
+                <CheckCheck className="h-3.5 w-3.5" /> {concluindo ? 'Concluindo…' : 'Concluir'}
               </Button>
             )}
             {campanha.status === 'CONCLUIDA' && (
@@ -301,6 +323,22 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
                 <Trash2 className="h-3.5 w-3.5" /> Excluir
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" disabled={exportando} className="ml-auto">
+                  <Download className="h-3.5 w-3.5" />
+                  {exportando ? 'Exportando…' : 'Relatório'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void exportarRelatorio('pdf')}>
+                  <FileText className="h-3.5 w-3.5 mr-2" /> Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void exportarRelatorio('csv')}>
+                  <Sheet className="h-3.5 w-3.5 mr-2" /> Exportar CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

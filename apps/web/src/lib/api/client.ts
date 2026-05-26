@@ -20,6 +20,23 @@ async function getToken(): Promise<string | null> {
   return data.session?.access_token ?? null
 }
 
+/** Faz download autenticado de um arquivo e aciona o browser para salvar. */
+export async function downloadArquivo(path: string, filename: string): Promise<void> {
+  const token = await getToken()
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+  const res = await fetch(`${API_URL}${path}`, { headers })
+  if (!res.ok) throw new ApiError(res.status, `Erro ao baixar arquivo (HTTP ${res.status})`)
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 /** Faz requisição à API interna com autenticação e tratamento de erro. */
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await getToken()

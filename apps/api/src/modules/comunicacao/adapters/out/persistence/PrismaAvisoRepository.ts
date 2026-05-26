@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Aviso as PrismaAviso } from '@prisma/client'
 import { Aviso, IAvisoRepository } from '@apa/core'
-import { CategoriaAviso } from '@apa/shared'
+import { CategoriaAviso, DestinatariosAviso } from '@apa/shared'
 import { PrismaService } from '../../../../../shared/database/prisma.service'
 
 @Injectable()
@@ -30,6 +30,13 @@ export class PrismaAvisoRepository implements IAvisoRepository {
         categoria: aviso.categoria,
         publicado: aviso.publicado,
         fixado: aviso.fixado,
+        destinatarios: aviso.destinatarios,
+        enviarEmail: aviso.enviarEmail,
+        emailEnviado: aviso.emailEnviado,
+        selectedMemberIds: aviso.selectedMemberIds,
+        dataReuniao: aviso.dataReuniao ?? null,
+        horarioReuniao: aviso.horarioReuniao ?? null,
+        localReuniao: aviso.localReuniao ?? null,
         criadoEm: aviso.criadoEm,
       },
     })
@@ -45,6 +52,13 @@ export class PrismaAvisoRepository implements IAvisoRepository {
         categoria: aviso.categoria,
         publicado: aviso.publicado,
         fixado: aviso.fixado,
+        destinatarios: aviso.destinatarios,
+        enviarEmail: aviso.enviarEmail,
+        emailEnviado: aviso.emailEnviado,
+        selectedMemberIds: aviso.selectedMemberIds,
+        dataReuniao: aviso.dataReuniao ?? null,
+        horarioReuniao: aviso.horarioReuniao ?? null,
+        localReuniao: aviso.localReuniao ?? null,
       },
     })
     return this.toDomain(r)
@@ -62,6 +76,13 @@ export class PrismaAvisoRepository implements IAvisoRepository {
       categoria: r.categoria as CategoriaAviso,
       publicado: r.publicado,
       fixado: r.fixado,
+      destinatarios: r.destinatarios as DestinatariosAviso,
+      enviarEmail: r.enviarEmail,
+      emailEnviado: r.emailEnviado,
+      selectedMemberIds: r.selectedMemberIds,
+      dataReuniao: r.dataReuniao ?? undefined,
+      horarioReuniao: r.horarioReuniao ?? undefined,
+      localReuniao: r.localReuniao ?? undefined,
       criadoEm: r.criadoEm,
     })
   }

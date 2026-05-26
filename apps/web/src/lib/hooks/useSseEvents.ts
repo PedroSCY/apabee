@@ -62,6 +62,8 @@ const INVALIDATION_MAP: Record<string, string[][]> = {
   'patrimonio:solicitacao-criada':    [['solicitacoes']],
   'patrimonio:solicitacao-aprovada':  [['solicitacoes']],
   'patrimonio:solicitacao-rejeitada': [['solicitacoes']],
+  // Notificações — atualiza sino e lista em tempo real
+  'notificacao:nova': [['notificacoes'], ['notificacoes-count']],
 }
 
 /** Subscreve ao stream SSE da API e invalida queries React Query ao receber eventos. */

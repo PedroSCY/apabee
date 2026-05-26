@@ -6,8 +6,10 @@ import {
   IMensalidadeRepository,
   IPaymentGateway,
 } from '@apa/core'
+import { TipoNotificacao } from '@apa/shared'
 import { BUSCAR_ASSOCIADO_USE_CASE } from '../../../identidade/identidade.tokens'
 import { MENSALIDADE_REPOSITORY, PAYMENT_GATEWAY } from '../../financeiro.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 export class EmitirCobrancaMensalidadeUseCase implements IEmitirCobrancaMensalidadeUseCase {
@@ -18,6 +20,7 @@ export class EmitirCobrancaMensalidadeUseCase implements IEmitirCobrancaMensalid
     private readonly gateway: IPaymentGateway,
     @Inject(BUSCAR_ASSOCIADO_USE_CASE)
     private readonly buscarAssociado: IBuscarAssociadoUseCase,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(mensalidadeId: string): Promise<EmitirCobrancaResult> {
@@ -54,6 +57,14 @@ export class EmitirCobrancaMensalidadeUseCase implements IEmitirCobrancaMensalid
     const atualizada = await this.mensalidadeRepo.update(
       mensalidade.comCobranca(resultado.gatewayId, resultado.linkPagamento, resultado.status, resultado.pixCopiaECola, resultado.valorCobrado),
     )
+
+    void this.notificacaoService.enviar({
+      userId: associado.usuario.id,
+      tipo: TipoNotificacao.COBRANCA_PIX_EMITIDA,
+      titulo: 'Cobrança PIX disponível',
+      corpo: `Mensalidade ${atualizada.competenciaLabel} — use o link ou copie o código PIX.`,
+      dadosExtras: { mensalidadeId: atualizada.id, linkPagamento: resultado.linkPagamento },
+    })
 
     return {
       mensalidade: atualizada,

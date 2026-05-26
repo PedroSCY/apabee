@@ -23,6 +23,9 @@ import { CancelarCobrancaUseCase } from './application/use-cases/CancelarCobranc
 import { EstornarMensalidadeUseCase } from './application/use-cases/EstornarMensalidadeUseCase'
 import { ExcluirMensalidadeUseCase } from './application/use-cases/ExcluirMensalidadeUseCase'
 import { ListarMovimentosUseCase } from './application/use-cases/ListarMovimentosUseCase'
+import { ObterDashboardFinanceiroUseCase } from './application/use-cases/ObterDashboardFinanceiroUseCase'
+import { RegistrarMovimentoUseCase } from './application/use-cases/RegistrarMovimentoUseCase'
+import { RelatorioFinanceiroService } from './adapters/out/RelatorioFinanceiroService'
 import { ReconciliacaoWebhookJob } from './application/jobs/ReconciliacaoWebhookJob'
 import {
   MENSALIDADE_REPOSITORY,
@@ -39,6 +42,8 @@ import {
   ESTORNAR_MENSALIDADE_USE_CASE,
   EXCLUIR_MENSALIDADE_USE_CASE,
   LISTAR_MOVIMENTOS_USE_CASE,
+  OBTER_DASHBOARD_FINANCEIRO_USE_CASE,
+  REGISTRAR_MOVIMENTO_USE_CASE,
 } from './financeiro.tokens'
 
 @Module({
@@ -74,7 +79,10 @@ import {
     { provide: ESTORNAR_MENSALIDADE_USE_CASE, useClass: EstornarMensalidadeUseCase },
     { provide: EXCLUIR_MENSALIDADE_USE_CASE, useClass: ExcluirMensalidadeUseCase },
     { provide: LISTAR_MOVIMENTOS_USE_CASE, useClass: ListarMovimentosUseCase },
+    { provide: OBTER_DASHBOARD_FINANCEIRO_USE_CASE, useClass: ObterDashboardFinanceiroUseCase },
+    { provide: REGISTRAR_MOVIMENTO_USE_CASE, useClass: RegistrarMovimentoUseCase },
 
+    RelatorioFinanceiroService,
     ReconciliacaoWebhookJob,
   ],
 })

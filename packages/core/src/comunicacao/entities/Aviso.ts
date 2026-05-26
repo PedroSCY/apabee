@@ -1,4 +1,4 @@
-import { CategoriaAviso } from '@apa/shared'
+import { CategoriaAviso, DestinatariosAviso } from '@apa/shared'
 
 /** Propriedades da entidade Aviso. */
 interface AvisoProps {
@@ -8,6 +8,13 @@ interface AvisoProps {
   categoria: CategoriaAviso
   publicado: boolean
   fixado: boolean
+  destinatarios: DestinatariosAviso
+  enviarEmail: boolean
+  emailEnviado: boolean
+  selectedMemberIds: string[]
+  dataReuniao?: Date
+  horarioReuniao?: string
+  localReuniao?: string
   criadoEm: Date
 }
 
@@ -25,16 +32,25 @@ export class Aviso {
   get categoria(): CategoriaAviso { return this.props.categoria }
   get publicado(): boolean { return this.props.publicado }
   get fixado(): boolean { return this.props.fixado }
+  get destinatarios(): DestinatariosAviso { return this.props.destinatarios }
+  get enviarEmail(): boolean { return this.props.enviarEmail }
+  get emailEnviado(): boolean { return this.props.emailEnviado }
+  get selectedMemberIds(): string[] { return this.props.selectedMemberIds }
+  get dataReuniao(): Date | undefined { return this.props.dataReuniao }
+  get horarioReuniao(): string | undefined { return this.props.horarioReuniao }
+  get localReuniao(): string | undefined { return this.props.localReuniao }
   get criadoEm(): Date { return this.props.criadoEm }
 
-  /** Marca o aviso como publicado. */
   publicar(): Aviso {
     return new Aviso({ ...this.props, publicado: true })
   }
 
-  /** Marca o aviso como não publicado. */
   despublicar(): Aviso {
     return new Aviso({ ...this.props, publicado: false })
+  }
+
+  marcarEmailEnviado(): Aviso {
+    return new Aviso({ ...this.props, emailEnviado: true })
   }
 
   toJSON() { return { ...this.props } }

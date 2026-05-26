@@ -128,6 +128,13 @@ export enum CategoriaAviso {
   FINANCEIRO = 'FINANCEIRO',
 }
 
+/** Segmentação de destinatários de um aviso. */
+export enum DestinatariosAviso {
+  TODOS         = 'TODOS',
+  APENAS_ATIVOS = 'APENAS_ATIVOS',
+  SELECIONADOS  = 'SELECIONADOS',
+}
+
 /** Status da solicitação de uso de patrimônio. Aprovada gera AtribuicaoPatrimonio automaticamente. */
 export enum StatusSolicitacaoPatrimonio {
   PENDENTE = 'PENDENTE',
@@ -216,4 +223,19 @@ export enum DestinatarioCampanha {
 export enum OrigemContribuicao {
   ASSOCIADO       = 'ASSOCIADO',
   RECURSO_PROPRIO = 'RECURSO_PROPRIO',
+}
+
+/** Tipo de notificação in-app. Define o template de mensagem e o deep-link associado. */
+export enum TipoNotificacao {
+  APROVACAO_CADASTRO          = 'APROVACAO_CADASTRO',
+  MENSALIDADE_GERADA          = 'MENSALIDADE_GERADA',
+  COBRANCA_PIX_EMITIDA        = 'COBRANCA_PIX_EMITIDA',
+  RATEIO_DISPONIVEL           = 'RATEIO_DISPONIVEL',
+  NOVO_ASSOCIADO_PENDENTE     = 'NOVO_ASSOCIADO_PENDENTE',
+  SOLICITACAO_APROVADA        = 'SOLICITACAO_APROVADA',
+  SOLICITACAO_REJEITADA       = 'SOLICITACAO_REJEITADA',
+  NOVA_SOLICITACAO_PATRIMONIO = 'NOVA_SOLICITACAO_PATRIMONIO',
+  NOVA_SOLICITACAO_CONTATO    = 'NOVA_SOLICITACAO_CONTATO',
+  NOVO_AVISO                  = 'NOVO_AVISO',
+  ATA_PUBLICADA               = 'ATA_PUBLICADA',
 }

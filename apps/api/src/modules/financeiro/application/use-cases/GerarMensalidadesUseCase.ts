@@ -8,10 +8,12 @@ import {
   IAssociadoRepository,
   Mensalidade,
 } from '@apa/core'
-import { StatusMensalidade, StatusAssociado } from '@apa/shared'
+import { StatusMensalidade, StatusAssociado, TipoNotificacao } from '@apa/shared'
 import { MENSALIDADE_REPOSITORY } from '../../financeiro.tokens'
 import { CONFIGURACAO_REPOSITORY } from '../../../gestao/gestao.tokens'
 import { ASSOCIADO_REPOSITORY } from '../../../identidade/identidade.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
+import { CriarNotificacaoInput } from '@apa/core'
 
 @Injectable()
 export class GerarMensalidadesUseCase implements IGerarMensalidadesUseCase {
@@ -22,6 +24,7 @@ export class GerarMensalidadesUseCase implements IGerarMensalidadesUseCase {
     private readonly configuracaoRepo: IConfiguracaoAssociacaoRepository,
     @Inject(ASSOCIADO_REPOSITORY)
     private readonly associadoRepo: IAssociadoRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(input: GerarMensalidadesInput): Promise<Mensalidade[]> {
@@ -68,6 +71,24 @@ export class GerarMensalidadesUseCase implements IGerarMensalidadesUseCase {
       )
     }
 
-    return this.mensalidadeRepo.saveMany(geradas)
+    const salvas = await this.mensalidadeRepo.saveMany(geradas)
+
+    if (salvas.length > 0) {
+      const mesLabel = `${String(competenciaMes).padStart(2, '0')}/${competenciaAno}`
+      // Busca usuarioId para cada associado que recebeu mensalidade
+      const assocMap = new Map(associadosAtivos.map(a => [a.id, a.usuario.id]))
+      const notifs: CriarNotificacaoInput[] = salvas
+        .map(m => ({
+          userId: assocMap.get(m.associadoId) ?? '',
+          tipo: TipoNotificacao.MENSALIDADE_GERADA,
+          titulo: `Mensalidade de ${mesLabel} gerada`,
+          corpo: `Valor: R$ ${Number(m.valor).toFixed(2).replace('.', ',')}`,
+          dadosExtras: { mensalidadeId: m.id },
+        }))
+        .filter(n => n.userId !== '')
+      void this.notificacaoService.enviarParaVarios(notifs)
+    }
+
+    return salvas
   }
 }

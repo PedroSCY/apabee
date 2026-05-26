@@ -1,4 +1,4 @@
-import { CategoriaAviso } from '@apa/shared'
+import { CategoriaAviso, DestinatariosAviso } from '@apa/shared'
 import { Aviso } from '../../entities/Aviso'
 
 /** Dados para criação de um aviso. */
@@ -8,6 +8,12 @@ export interface CriarAvisoInput {
   categoria: CategoriaAviso
   fixado?: boolean
   publicado?: boolean
+  destinatarios?: DestinatariosAviso
+  enviarEmail?: boolean
+  selectedMemberIds?: string[]
+  dataReuniao?: Date
+  horarioReuniao?: string
+  localReuniao?: string
 }
 
 /** Caso de uso: criar um novo aviso. */

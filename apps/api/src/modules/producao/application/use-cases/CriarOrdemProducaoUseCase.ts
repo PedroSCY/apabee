@@ -40,10 +40,6 @@ export class CriarOrdemProducaoUseCase implements ICriarOrdemProducaoUseCase {
 
     const produto = await this.produtoRepo.findById(input.produtoId)
     if (!produto) throw new NotFoundException('Produto não encontrado')
-    if (produto.campanhaId && produto.campanhaId !== input.campanhaId)
-      throw new ConflictException(
-        `Produto já vinculado à campanha "${produto.campanhaId}" — não é possível produzi-lo em campanhas distintas`,
-      )
 
     const composicoes = await this.composicaoRepo.findByProduto(input.produtoId)
     if (composicoes.length === 0)

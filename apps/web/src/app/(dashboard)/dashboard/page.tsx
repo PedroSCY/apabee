@@ -17,15 +17,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader
-        title={isAdmin ? 'Visão Geral' : 'Meu Painel'}
-        description={
-          isAdmin
-            ? 'Resumo financeiro e operacional da associação'
-            : 'Seu histórico e situação atual na APA'
-        }
-      />
-      {isAdmin ? <AdminDashboard /> : <AssociadoDashboard />}
+      {isAdmin
+        ? <AdminDashboard />
+        : <>
+            <PageHeader
+              title="Meu Painel"
+              description="Seu histórico e situação atual na APA"
+            />
+            <AssociadoDashboard />
+          </>
+      }
     </div>
   )
 }

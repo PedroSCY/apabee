@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {
   Plus, Eye, EyeOff, Megaphone, Bell, Pin, Trash2,
-  MessageSquare, Droplets, Users, CheckCircle2, Circle,
+  MessageSquare, Droplets, Users, CheckCircle2, Circle, Calendar, Mail,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -42,8 +42,8 @@ import {
   useAtualizarStatusSolicitacaoContato,
   useExcluirSolicitacaoContato,
 } from '@/hooks/useComunicacao'
-import { useCriarAssociadoPendente } from '@/hooks/useAssociados'
-import type { AvisoResponse, SolicitacaoContatoResponse, StatusSolicitacaoContato } from '@/lib/api/comunicacao'
+import { useAssociados, useCriarAssociadoPendente } from '@/hooks/useAssociados'
+import type { AvisoResponse, DestinatariosAviso, SolicitacaoContatoResponse, StatusSolicitacaoContato } from '@/lib/api/comunicacao'
 
 // ─── Estilos ─────────────────────────────────────────────────────────────────
 
@@ -52,6 +52,12 @@ const CAT_STYLE: Record<string, { label: string; className: string }> = {
   URGENTE:    { label: 'Urgente',    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
   REUNIAO:    { label: 'Reunião',    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   FINANCEIRO: { label: 'Financeiro', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+}
+
+const DEST_STYLE: Record<DestinatariosAviso, { label: string; className: string }> = {
+  TODOS:         { label: 'Todos os associados', className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  APENAS_ATIVOS: { label: 'Apenas ativos',       className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  SELECIONADOS:  { label: 'Selecionados',         className: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' },
 }
 
 const TIPO_SOL: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }> }> = {
@@ -68,9 +74,33 @@ const STATUS_SOL: Record<StatusSolicitacaoContato, { label: string; Icon: React.
 
 // ─── Dialog de criação de aviso ───────────────────────────────────────────────
 
+const FORM_INICIAL = {
+  titulo: '', conteudo: '', categoria: 'GERAL', fixado: false,
+  destinatarios: 'TODOS' as DestinatariosAviso, enviarEmail: false,
+  selectedMemberIds: [] as string[], busca: '',
+  dataReuniao: '', horarioReuniao: '', localReuniao: '',
+}
+
 function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [form, setForm] = React.useState({ titulo: '', conteudo: '', categoria: 'GERAL', fixado: false })
+  const [form, setForm] = React.useState(FORM_INICIAL)
   const { mutateAsync: criar, isPending } = useCriarAviso()
+  const { data: associados = [] } = useAssociados()
+
+  const associadosFiltrados = React.useMemo(() => {
+    const q = form.busca.toLowerCase()
+    return associados.filter(
+      (a) => !q || a.usuario.nome.toLowerCase().includes(q) || a.usuario.email.toLowerCase().includes(q),
+    )
+  }, [associados, form.busca])
+
+  function toggleMembro(id: string) {
+    setForm((p) => ({
+      ...p,
+      selectedMemberIds: p.selectedMemberIds.includes(id)
+        ? p.selectedMemberIds.filter((x) => x !== id)
+        : [...p.selectedMemberIds, id],
+    }))
+  }
 
   function handleOpenChange(v: boolean) {
     if (isPending) return
@@ -79,10 +109,26 @@ function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (form.destinatarios === 'SELECIONADOS' && form.selectedMemberIds.length === 0) {
+      toast.error('Selecione ao menos um membro.')
+      return
+    }
     try {
-      await criar({ titulo: form.titulo, conteudo: form.conteudo, categoria: form.categoria, fixado: form.fixado })
+      const isReuniao = form.categoria === 'REUNIAO'
+      await criar({
+        titulo: form.titulo,
+        conteudo: form.conteudo,
+        categoria: form.categoria,
+        fixado: form.fixado,
+        destinatarios: form.destinatarios,
+        enviarEmail: form.enviarEmail,
+        selectedMemberIds: form.destinatarios === 'SELECIONADOS' ? form.selectedMemberIds : [],
+        dataReuniao: isReuniao && form.dataReuniao ? form.dataReuniao : undefined,
+        horarioReuniao: isReuniao && form.horarioReuniao ? form.horarioReuniao : undefined,
+        localReuniao: isReuniao && form.localReuniao ? form.localReuniao : undefined,
+      })
       toast.success('Aviso criado com sucesso.')
-      setForm({ titulo: '', conteudo: '', categoria: 'GERAL', fixado: false })
+      setForm(FORM_INICIAL)
       onOpenChange(false)
     } catch {
       toast.error('Erro ao criar aviso.')
@@ -91,7 +137,7 @@ function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo Aviso</DialogTitle>
         </DialogHeader>
@@ -106,22 +152,138 @@ function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="categoria">Categoria</Label>
-            <Select
-              value={form.categoria}
-              onValueChange={(v) => setForm((p) => ({ ...p, categoria: v }))}
-              disabled={isPending}
-            >
-              <SelectTrigger id="categoria"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="GERAL">Geral</SelectItem>
-                <SelectItem value="URGENTE">Urgente</SelectItem>
-                <SelectItem value="REUNIAO">Reunião</SelectItem>
-                <SelectItem value="FINANCEIRO">Financeiro</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select
+                value={form.categoria}
+                onValueChange={(v) => setForm((p) => ({ ...p, categoria: v, dataReuniao: v !== 'REUNIAO' ? '' : p.dataReuniao }))}
+                disabled={isPending}
+              >
+                <SelectTrigger id="categoria"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GERAL">Geral</SelectItem>
+                  <SelectItem value="URGENTE">Urgente</SelectItem>
+                  <SelectItem value="REUNIAO">Reunião</SelectItem>
+                  <SelectItem value="FINANCEIRO">Financeiro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="destinatarios">Destinatários</Label>
+              <Select
+                value={form.destinatarios}
+                onValueChange={(v) => setForm((p) => ({ ...p, destinatarios: v as DestinatariosAviso, selectedMemberIds: [], busca: '' }))}
+                disabled={isPending}
+              >
+                <SelectTrigger id="destinatarios"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TODOS">Todos os associados</SelectItem>
+                  <SelectItem value="APENAS_ATIVOS">Apenas ativos</SelectItem>
+                  <SelectItem value="SELECIONADOS">Selecionar membros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {form.destinatarios === 'SELECIONADOS' && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50/50 dark:border-violet-900/40 dark:bg-violet-950/20 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-violet-700 dark:text-violet-400">
+                  Membros selecionados
+                </p>
+                {form.selectedMemberIds.length > 0 && (
+                  <span className="text-xs text-violet-600 dark:text-violet-400 font-medium">
+                    {form.selectedMemberIds.length} selecionado{form.selectedMemberIds.length > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <Input
+                placeholder="Buscar por nome ou e-mail..."
+                value={form.busca}
+                onChange={(e) => setForm((p) => ({ ...p, busca: e.target.value }))}
+                disabled={isPending}
+                className="h-8 text-sm"
+              />
+              <div className="max-h-44 overflow-y-auto space-y-1 pr-1">
+                {associadosFiltrados.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2 text-center">Nenhum associado encontrado</p>
+                ) : (
+                  associadosFiltrados.map((a) => {
+                    const checked = form.selectedMemberIds.includes(a.id)
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => toggleMembro(a.id)}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left transition-colors',
+                          checked
+                            ? 'bg-violet-100 dark:bg-violet-900/40'
+                            : 'hover:bg-muted/60',
+                        )}
+                      >
+                        <div className={cn(
+                          'h-4 w-4 rounded border shrink-0 flex items-center justify-center',
+                          checked ? 'border-violet-600 bg-violet-600' : 'border-input bg-background',
+                        )}>
+                          {checked && (
+                            <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium leading-none truncate">{a.usuario.nome}</p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{a.usuario.email}</p>
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {form.categoria === 'REUNIAO' && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 p-3 space-y-3">
+              <p className="text-xs font-medium text-blue-700 dark:text-blue-400">Detalhes da reunião</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="dataReuniao">Data</Label>
+                  <Input
+                    id="dataReuniao"
+                    type="date"
+                    value={form.dataReuniao}
+                    onChange={(e) => setForm((p) => ({ ...p, dataReuniao: e.target.value }))}
+                    disabled={isPending}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="horarioReuniao">Horário</Label>
+                  <Input
+                    id="horarioReuniao"
+                    placeholder="ex: 19h"
+                    value={form.horarioReuniao}
+                    onChange={(e) => setForm((p) => ({ ...p, horarioReuniao: e.target.value }))}
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="localReuniao">Local</Label>
+                <Input
+                  id="localReuniao"
+                  placeholder="ex: Sede da associação"
+                  value={form.localReuniao}
+                  onChange={(e) => setForm((p) => ({ ...p, localReuniao: e.target.value }))}
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="conteudo">Conteúdo *</Label>
@@ -133,13 +295,26 @@ function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              id="fixado" checked={form.fixado}
-              onCheckedChange={(v) => setForm((p) => ({ ...p, fixado: v }))}
-              disabled={isPending}
-            />
-            <Label htmlFor="fixado" className="cursor-pointer">Fixar aviso no topo</Label>
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="fixado" checked={form.fixado}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, fixado: v }))}
+                disabled={isPending}
+              />
+              <Label htmlFor="fixado" className="cursor-pointer">Fixar aviso no topo</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="enviarEmail" checked={form.enviarEmail}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, enviarEmail: v }))}
+                disabled={isPending}
+              />
+              <Label htmlFor="enviarEmail" className="cursor-pointer flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                Enviar e-mail ao publicar
+              </Label>
+            </div>
           </div>
 
           <DialogFooter>
@@ -160,6 +335,7 @@ function NovoAvisoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
 function AvisoCard({ aviso }: { aviso: AvisoResponse }) {
   const cat = CAT_STYLE[aviso.categoria] ?? CAT_STYLE.GERAL
+  const dest = DEST_STYLE[aviso.destinatarios] ?? DEST_STYLE.TODOS
   const dataFormatada = format(new Date(aviso.criadoEm), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
   const { mutateAsync: publicar, isPending: publicando } = usePublicarAviso()
   const { mutateAsync: despublicar, isPending: despublicando } = useDespublicarAviso()
@@ -199,6 +375,21 @@ function AvisoCard({ aviso }: { aviso: AvisoResponse }) {
               {cat.label}
             </span>
             <StatusBadge status={aviso.publicado ? 'PUBLICADO' : 'RASCUNHO'} />
+            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', dest.className)}>
+              {aviso.destinatarios === 'SELECIONADOS'
+                ? `${aviso.selectedMemberIds.length} membro${aviso.selectedMemberIds.length !== 1 ? 's' : ''}`
+                : dest.label}
+            </span>
+            {aviso.emailEnviado && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+                <Mail className="h-3 w-3" />E-mail enviado
+              </span>
+            )}
+            {aviso.enviarEmail && !aviso.emailEnviado && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <Mail className="h-3 w-3" />E-mail ao publicar
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground"
@@ -219,7 +410,17 @@ function AvisoCard({ aviso }: { aviso: AvisoResponse }) {
           <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-3">{aviso.conteudo}</p>
         </div>
 
-        <p className="text-xs text-muted-foreground">{dataFormatada}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <p className="text-xs text-muted-foreground">{dataFormatada}</p>
+          {aviso.dataReuniao && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {format(new Date(aviso.dataReuniao), "dd/MM/yyyy", { locale: ptBR })}
+              {aviso.horarioReuniao && ` · ${aviso.horarioReuniao}`}
+              {aviso.localReuniao && ` · ${aviso.localReuniao}`}
+            </p>
+          )}
+        </div>
       </div>
 
       <ConfirmDialog

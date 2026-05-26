@@ -4,6 +4,8 @@ export interface FindMovimentosParams {
   associadoId?: string
   campanhaId?: string
   limit?: number
+  dataInicio?: Date
+  dataFim?: Date
 }
 
 /** Repositório de movimentos financeiros. */

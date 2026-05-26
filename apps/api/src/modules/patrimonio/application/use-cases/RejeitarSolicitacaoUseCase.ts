@@ -4,13 +4,16 @@ import {
   ISolicitacaoPatrimonioRepository,
   SolicitacaoPatrimonio,
 } from '@apa/core'
+import { TipoNotificacao } from '@apa/shared'
 import { SOLICITACAO_PATRIMONIO_REPOSITORY } from '../../patrimonio.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 export class RejeitarSolicitacaoUseCase implements IRejeitarSolicitacaoUseCase {
   constructor(
     @Inject(SOLICITACAO_PATRIMONIO_REPOSITORY)
     private readonly solicitacaoRepository: ISolicitacaoPatrimonioRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(solicitacaoId: string): Promise<SolicitacaoPatrimonio> {
@@ -19,6 +22,16 @@ export class RejeitarSolicitacaoUseCase implements IRejeitarSolicitacaoUseCase {
     if (!solicitacao.isPendente())
       throw new BadRequestException('Apenas solicitações pendentes podem ser rejeitadas.')
 
-    return this.solicitacaoRepository.update(solicitacao.rejeitar())
+    const resultado = await this.solicitacaoRepository.update(solicitacao.rejeitar())
+
+    void this.notificacaoService.enviarParaAssociado(
+      solicitacao.associadoId,
+      TipoNotificacao.SOLICITACAO_REJEITADA,
+      'Solicitação de patrimônio rejeitada',
+      'Sua solicitação foi analisada e não pôde ser atendida desta vez.',
+      { solicitacaoId: solicitacao.id },
+    )
+
+    return resultado
   }
 }

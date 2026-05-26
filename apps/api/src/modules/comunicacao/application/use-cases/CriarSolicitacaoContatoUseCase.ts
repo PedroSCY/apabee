@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { randomUUID } from 'crypto'
-import { StatusSolicitacaoContato } from '@apa/shared'
+import { StatusSolicitacaoContato, TipoNotificacao } from '@apa/shared'
 import {
   CriarSolicitacaoContatoInput,
   ICriarSolicitacaoContatoUseCase,
@@ -8,11 +8,13 @@ import {
   SolicitacaoContato,
 } from '@apa/core'
 import { SOLICITACAO_CONTATO_REPOSITORY } from '../../comunicacao.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 export class CriarSolicitacaoContatoUseCase implements ICriarSolicitacaoContatoUseCase {
   constructor(
     @Inject(SOLICITACAO_CONTATO_REPOSITORY) private readonly repo: ISolicitacaoContatoRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(input: CriarSolicitacaoContatoInput): Promise<SolicitacaoContato> {
@@ -28,6 +30,15 @@ export class CriarSolicitacaoContatoUseCase implements ICriarSolicitacaoContatoU
       municipio: input.municipio?.trim() || undefined,
       criadoEm: new Date(),
     })
-    return this.repo.save(s)
+    const resultado = await this.repo.save(s)
+
+    void this.notificacaoService.enviarParaAdmins(
+      TipoNotificacao.NOVA_SOLICITACAO_CONTATO,
+      'Nova solicitação de contato',
+      `${input.nome} enviou uma solicitação de ${input.tipo.toLowerCase()}.`,
+      { solicitacaoId: resultado.id },
+    )
+
+    return resultado
   }
 }

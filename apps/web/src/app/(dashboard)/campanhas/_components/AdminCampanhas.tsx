@@ -116,12 +116,12 @@ export function AdminCampanhas() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-32">Código</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="w-28">Tipo</TableHead>
-                  <TableHead className="w-28">Status</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead className="text-right w-36">Receita / Meta</TableHead>
+                  <TableHead className="w-32 text-xs uppercase tracking-wide">Código</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide">Nome</TableHead>
+                  <TableHead className="w-28 text-xs uppercase tracking-wide">Tipo</TableHead>
+                  <TableHead className="w-28 text-xs uppercase tracking-wide">Status</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide">Período</TableHead>
+                  <TableHead className="text-right w-36 text-xs uppercase tracking-wide">Receita / Meta</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -154,6 +154,7 @@ export function AdminCampanhas() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label="Excluir campanha"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
                             disabled={deletando}
                             onClick={(e) => { e.stopPropagation(); setConfirmDeletar(c) }}

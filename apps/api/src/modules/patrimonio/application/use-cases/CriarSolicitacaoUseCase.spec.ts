@@ -74,7 +74,7 @@ describe('CriarSolicitacaoUseCase', () => {
     tipoInsumoRepo = makeTipoInsumoRepo()
     insumoRepo = makeInsumoRepo()
     solicitacaoRepo = makeSolicitacaoRepo()
-    useCase = new CriarSolicitacaoUseCase(equipamentoRepo, tipoInsumoRepo, insumoRepo, solicitacaoRepo)
+    useCase = new CriarSolicitacaoUseCase(equipamentoRepo, tipoInsumoRepo, insumoRepo, solicitacaoRepo, { enviarParaAdmins: jest.fn() } as any)
   })
 
   describe('EQUIPAMENTO', () => {

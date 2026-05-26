@@ -120,6 +120,12 @@ enum CategoriaAviso {
   FINANCEIRO
 }
 
+enum DestinatariosAviso {
+  TODOS
+  APENAS_ATIVOS
+  SELECIONADOS
+}
+
 enum StatusSolicitacaoPatrimonio {
   PENDENTE
   APROVADA
@@ -192,6 +198,20 @@ enum OrigemContribuicao {
   RECURSO_PROPRIO
 }
 
+enum TipoNotificacao {
+  APROVACAO_CADASTRO
+  MENSALIDADE_GERADA
+  COBRANCA_PIX_EMITIDA
+  RATEIO_DISPONIVEL
+  NOVO_ASSOCIADO_PENDENTE
+  SOLICITACAO_APROVADA
+  SOLICITACAO_REJEITADA
+  NOVA_SOLICITACAO_PATRIMONIO
+  NOVA_SOLICITACAO_CONTATO
+  NOVO_AVISO
+  ATA_PUBLICADA
+}
+
 // ─── Modelos ─────────────────────────────────────────────────────────────────
 
 model Usuario {
@@ -204,10 +224,11 @@ model Usuario {
   criadoEm  DateTime    @default(now()) @map("criado_em")
   deletadoEm DateTime?   @map("deletado_em")
 
-  associado  Associado?
-  atas       Ata[]
-  documentos Documento[]
-  auditLogs  AuditLog[]
+  associado      Associado?
+  atas           Ata[]
+  documentos     Documento[]
+  auditLogs      AuditLog[]
+  notificacoes   Notificacao[]
 
   @@map("usuarios")
 }
@@ -853,13 +874,20 @@ model RelatorioProducao {
 }
 
 model Aviso {
-  id        String         @id @default(uuid())
-  titulo    String
-  conteudo  String
-  categoria CategoriaAviso @default(GERAL)
-  publicado Boolean        @default(false)
-  fixado    Boolean        @default(false)
-  criadoEm DateTime       @default(now()) @map("criado_em")
+  id             String             @id @default(uuid())
+  titulo         String
+  conteudo       String
+  categoria      CategoriaAviso     @default(GERAL)
+  publicado      Boolean            @default(false)
+  fixado         Boolean            @default(false)
+  destinatarios     DestinatariosAviso @default(TODOS)
+  enviarEmail       Boolean            @default(false) @map("enviar_email")
+  emailEnviado      Boolean            @default(false) @map("email_enviado")
+  selectedMemberIds String[]           @default([]) @map("selected_member_ids")
+  dataReuniao       DateTime?          @map("data_reuniao")
+  horarioReuniao String?            @map("horario_reuniao")
+  localReuniao   String?            @map("local_reuniao")
+  criadoEm      DateTime            @default(now()) @map("criado_em")
 
   @@map("avisos")
 }
@@ -891,4 +919,21 @@ model AuditLog {
   usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+model Notificacao {
+  id          String          @id @default(uuid())
+  userId      String          @map("user_id")
+  tipo        TipoNotificacao
+  titulo      String
+  corpo       String?
+  dadosExtras Json?           @map("dados_extras")
+  lida        Boolean         @default(false)
+  criadoEm   DateTime        @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lida])
+  @@index([userId, criadoEm(sort: Desc)])
+  @@map("notificacoes")
 }

@@ -26,6 +26,8 @@ export interface CriarSolicitacaoContatoInput {
   municipio?: string
 }
 
+export type DestinatariosAviso = 'TODOS' | 'APENAS_ATIVOS' | 'SELECIONADOS'
+
 export interface AvisoResponse {
   id: string
   titulo: string
@@ -33,6 +35,13 @@ export interface AvisoResponse {
   categoria: 'GERAL' | 'URGENTE' | 'REUNIAO' | 'FINANCEIRO'
   publicado: boolean
   fixado: boolean
+  destinatarios: DestinatariosAviso
+  enviarEmail: boolean
+  emailEnviado: boolean
+  selectedMemberIds: string[]
+  dataReuniao?: string | null
+  horarioReuniao?: string | null
+  localReuniao?: string | null
   criadoEm: string
 }
 
@@ -42,6 +51,12 @@ export interface CriarAvisoInput {
   categoria: string
   fixado?: boolean
   publicado?: boolean
+  destinatarios?: DestinatariosAviso
+  enviarEmail?: boolean
+  selectedMemberIds?: string[]
+  dataReuniao?: string
+  horarioReuniao?: string
+  localReuniao?: string
 }
 
 export const comunicacaoApi = {

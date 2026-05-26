@@ -7,10 +7,32 @@ import {
   type QuitarMensalidadeInput,
   type MarcarIsentoInput,
   type StatusMensalidade,
+  type RegistrarMovimentoInput,
 } from '@/lib/api/financeiro'
 
 export const MOVIMENTOS_KEY = ['movimentos-financeiros'] as const
 export const MENSALIDADES_KEY = ['mensalidades'] as const
+export const DASHBOARD_KEY = ['financeiro-dashboard'] as const
+
+/** KPIs e gráfico mensal do dashboard financeiro. */
+export function useDashboardFinanceiro(ano?: number) {
+  return useQuery({
+    queryKey: [...DASHBOARD_KEY, ano],
+    queryFn: () => financeiroApi.obterDashboard(ano),
+  })
+}
+
+/** Registra um movimento manual (ANTECIPACAO ou CUSTO) pelo admin. */
+export function useRegistrarMovimento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: RegistrarMovimentoInput) => financeiroApi.registrarMovimento(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: MOVIMENTOS_KEY })
+      void queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY })
+    },
+  })
+}
 
 /** Lista todos os movimentos financeiros (admin). */
 export function useMovimentos(params?: { associadoId?: string; campanhaId?: string; limit?: number }) {

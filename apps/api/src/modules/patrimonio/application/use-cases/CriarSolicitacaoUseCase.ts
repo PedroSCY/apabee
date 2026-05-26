@@ -9,13 +9,14 @@ import {
   ISolicitacaoPatrimonioRepository,
   SolicitacaoPatrimonio,
 } from '@apa/core'
-import { StatusSolicitacaoPatrimonio, TipoPatrimonio } from '@apa/shared'
+import { StatusSolicitacaoPatrimonio, TipoNotificacao, TipoPatrimonio } from '@apa/shared'
 import {
   EQUIPAMENTO_REPOSITORY,
   INSUMO_REPOSITORY,
   SOLICITACAO_PATRIMONIO_REPOSITORY,
   TIPO_INSUMO_REPOSITORY,
 } from '../../patrimonio.tokens'
+import { NotificacaoService } from '../../../notificacao/NotificacaoService'
 
 @Injectable()
 export class CriarSolicitacaoUseCase implements ICriarSolicitacaoUseCase {
@@ -25,6 +26,7 @@ export class CriarSolicitacaoUseCase implements ICriarSolicitacaoUseCase {
     @Inject(INSUMO_REPOSITORY) private readonly insumoRepository: IInsumoRepository,
     @Inject(SOLICITACAO_PATRIMONIO_REPOSITORY)
     private readonly solicitacaoRepository: ISolicitacaoPatrimonioRepository,
+    private readonly notificacaoService: NotificacaoService,
   ) {}
 
   async execute(input: CriarSolicitacaoInput): Promise<SolicitacaoPatrimonio> {
@@ -43,7 +45,16 @@ export class CriarSolicitacaoUseCase implements ICriarSolicitacaoUseCase {
         status: StatusSolicitacaoPatrimonio.PENDENTE,
         criadoEm: new Date(),
       })
-      return this.solicitacaoRepository.save(solicitacao)
+      const salva = await this.solicitacaoRepository.save(solicitacao)
+
+      void this.notificacaoService.enviarParaAdmins(
+        TipoNotificacao.NOVA_SOLICITACAO_PATRIMONIO,
+        'Nova solicitação de patrimônio',
+        `Associado solicitou o equipamento "${equipamento.nome}".`,
+        { solicitacaoId: salva.id },
+      )
+
+      return salva
     }
 
     // INSUMO: solicita por tipo + quantidade
@@ -67,6 +78,15 @@ export class CriarSolicitacaoUseCase implements ICriarSolicitacaoUseCase {
       status: StatusSolicitacaoPatrimonio.PENDENTE,
       criadoEm: new Date(),
     })
-    return this.solicitacaoRepository.save(solicitacao)
+    const resultado = await this.solicitacaoRepository.save(solicitacao)
+
+    void this.notificacaoService.enviarParaAdmins(
+      TipoNotificacao.NOVA_SOLICITACAO_PATRIMONIO,
+      'Nova solicitação de patrimônio',
+      `Associado solicitou ${input.quantidade ?? 1}× "${tipo.nome}".`,
+      { solicitacaoId: resultado.id },
+    )
+
+    return resultado
   }
 }

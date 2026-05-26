@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  Download,
   ExternalLink,
   QrCode,
   Undo2,
@@ -26,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -35,7 +37,7 @@ import {
   useMinhasMensalidades,
   useSolicitarPix,
 } from '@/hooks/useFinanceiro'
-import type { MensalidadeResponse, TipoMovimento } from '@/lib/api/financeiro'
+import { financeiroApi, type MensalidadeResponse, type TipoMovimento } from '@/lib/api/financeiro'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -353,11 +355,28 @@ function MensalidadesTab() {
 
 // ── Tab: Movimentos ──────────────────────────────────────────────────────────
 
+const ANO_ATUAL = new Date().getFullYear()
+const ANOS_EXTRATO = Array.from({ length: 4 }, (_, i) => ANO_ATUAL - i)
+
 function MovimentosTab() {
+  const [anoExtrato, setAnoExtrato] = React.useState(ANO_ATUAL)
+  const [baixando, setBaixando] = React.useState(false)
+
   const { data: movimentos = [], isLoading } = useMeusMovimentos()
 
   const totalEntradas = movimentos.filter((m) => m.valor > 0).reduce((s, m) => s + m.valor, 0)
   const totalSaidas = movimentos.filter((m) => m.valor < 0).reduce((s, m) => s + Math.abs(m.valor), 0)
+
+  async function baixarExtrato() {
+    setBaixando(true)
+    try {
+      await financeiroApi.exportarMeuExtrato(anoExtrato)
+    } catch {
+      toast.error('Erro ao baixar extrato.')
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -396,7 +415,25 @@ function MovimentosTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Extrato</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-sm font-medium">Extrato</CardTitle>
+            <div className="flex items-center gap-2">
+              <Select value={String(anoExtrato)} onValueChange={(v) => setAnoExtrato(Number(v))}>
+                <SelectTrigger className="w-22.5 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANOS_EXTRATO.map((a) => (
+                    <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="outline" onClick={() => void baixarExtrato()} disabled={baixando}>
+                <Download className="h-3.5 w-3.5 mr-1" />
+                {baixando ? 'Baixando…' : 'Baixar PDF'}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {movimentos.length === 0 ? (

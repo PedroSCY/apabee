@@ -47,7 +47,7 @@ describe('AprovarAssociadoPendenteUseCase', () => {
     associadoRepo = makeAssociadoRepo()
     usuarioRepo = makeUsuarioRepo()
     provedorAuth = makeProvedorAuth()
-    useCase = new AprovarAssociadoPendenteUseCase(associadoRepo, usuarioRepo, provedorAuth)
+    useCase = new AprovarAssociadoPendenteUseCase(associadoRepo, usuarioRepo, provedorAuth, { enviar: jest.fn() } as any)
   })
 
   it('aprova associado PENDENTE: define senha, ativa acesso e atualiza metadata', async () => {

@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AlterarSenhaDialog } from './AlterarSenhaDialog'
+import { NotificationBell } from './NotificationBell'
 
 interface HeaderProps {
   role: 'ADMIN' | 'ASSOCIADO'
@@ -60,6 +61,7 @@ export function Header({ role, userName, userEmail }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">

@@ -59,7 +59,15 @@ export class AvisosController {
   @Post()
   @Roles(RoleUsuario.ADMIN)
   async criarHandler(@Body() dto: CriarAvisoDto) {
-    return this.toResponse(await this.criar.execute(dto))
+    return this.toResponse(await this.criar.execute({
+      ...dto,
+      dataReuniao: dto.dataReuniao ? new Date(dto.dataReuniao) : undefined,
+      horarioReuniao: dto.horarioReuniao,
+      localReuniao: dto.localReuniao,
+      destinatarios: dto.destinatarios,
+      enviarEmail: dto.enviarEmail,
+      selectedMemberIds: dto.selectedMemberIds,
+    }))
   }
 
   @ApiOperation({ summary: 'Listar avisos' })
@@ -113,6 +121,13 @@ export class AvisosController {
       categoria: a.categoria,
       publicado: a.publicado,
       fixado: a.fixado,
+      destinatarios: a.destinatarios,
+      enviarEmail: a.enviarEmail,
+      emailEnviado: a.emailEnviado,
+      selectedMemberIds: a.selectedMemberIds,
+      dataReuniao: a.dataReuniao ?? null,
+      horarioReuniao: a.horarioReuniao ?? null,
+      localReuniao: a.localReuniao ?? null,
       criadoEm: a.criadoEm,
     }
   }

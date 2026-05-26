@@ -18,7 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -101,6 +101,7 @@ function AlocarPoolDialog({ campanhaId, open, onOpenChange }: {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Alocar Matéria-Prima do Pool</DialogTitle>
+          <DialogDescription>Transfira matéria-prima do estoque geral para esta campanha.</DialogDescription>
         </DialogHeader>
         {poolComSaldo.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
@@ -213,7 +214,10 @@ function CriarOrdemDialog({ campanhaId, open, onOpenChange }: {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Nova Ordem de Produção</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Nova Ordem de Produção</DialogTitle>
+          <DialogDescription>Defina o produto, a quantidade planejada e a perda estimada.</DialogDescription>
+        </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label>Produto *</Label>
@@ -324,7 +328,10 @@ function ConfirmarOrdemDialog({ campanhaId, ordem, open, onOpenChange }: {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Confirmar Ordem de Produção</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Confirmar Ordem de Produção</DialogTitle>
+          <DialogDescription>Informe as quantidades reais produzidas. O estoque da campanha será consumido.</DialogDescription>
+        </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {calculando && <Skeleton className="h-24 w-full" />}
           {consumoData && consumoData.materiais.length > 0 && (
@@ -461,9 +468,9 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Disponível</TableHead>
-                <TableHead>Unidade</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Tipo</TableHead>
+                <TableHead className="text-right text-xs uppercase tracking-wide">Disponível</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Unidade</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -488,13 +495,13 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead className="text-right">Qtd planejada</TableHead>
-                <TableHead className="text-right">Qtd real</TableHead>
-                <TableHead className="text-right">Perda %</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                {podeEditar && <TableHead />}
+                <TableHead className="text-xs uppercase tracking-wide">Produto</TableHead>
+                <TableHead className="text-right text-xs uppercase tracking-wide">Qtd planejada</TableHead>
+                <TableHead className="text-right text-xs uppercase tracking-wide">Qtd real</TableHead>
+                <TableHead className="text-right text-xs uppercase tracking-wide">Perda %</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Data</TableHead>
+                {podeEditar && <TableHead className="w-20" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -527,8 +534,8 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
                             <Button
                               size="icon"
                               variant="ghost"
+                              aria-label="Confirmar ordem"
                               className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
-                              title="Confirmar ordem"
                               onClick={() => setConfirmarOrdem(o)}
                             >
                               <CheckCheck className="h-3.5 w-3.5" />
@@ -536,8 +543,8 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
                             <Button
                               size="icon"
                               variant="ghost"
+                              aria-label="Remover ordem"
                               className="h-7 w-7 text-destructive hover:text-destructive"
-                              title="Remover ordem"
                               onClick={() => setRemoverOrdemId(o.id)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -548,8 +555,8 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
                           <Button
                             size="icon"
                             variant="ghost"
+                            aria-label="Estornar ordem"
                             className="h-7 w-7 text-amber-600 hover:text-amber-600"
-                            title="Estornar ordem"
                             onClick={() => setEstornarOrdemId(o.id)}
                           >
                             <Undo2 className="h-3.5 w-3.5" />

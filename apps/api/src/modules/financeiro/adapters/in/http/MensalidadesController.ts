@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post, Query, Res } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { FastifyReply } from 'fastify'
 import { Roles } from '../../../../../shared/guards'
 import { RoleUsuario, StatusMensalidade } from '@apa/shared'
 import {
@@ -11,6 +12,7 @@ import {
   IListarMensalidadesPorAssociadoUseCase,
   IListarMensalidadesUseCase,
   IMarcarIsentoMensalidadeUseCase,
+  IMovimentoFinanceiroRepository,
   IQuitarMensalidadeUseCase,
   IReativarMensalidadeUseCase,
   Mensalidade,
@@ -24,13 +26,16 @@ import {
   LISTAR_MENSALIDADES_POR_ASSOCIADO_USE_CASE,
   LISTAR_MENSALIDADES_USE_CASE,
   MARCAR_ISENTO_MENSALIDADE_USE_CASE,
+  MOVIMENTO_FINANCEIRO_REPOSITORY,
   QUITAR_MENSALIDADE_USE_CASE,
   REATIVAR_MENSALIDADE_USE_CASE,
 } from '../../../financeiro.tokens'
 import { GerarMensalidadesDto } from './dto/GerarMensalidadesDto'
 import { QuitarMensalidadeDto } from './dto/QuitarMensalidadeDto'
 import { MarcarIsentoDto } from './dto/MarcarIsentoDto'
+import { ExportarMensalidadesDto } from './dto/ExportarMensalidadesDto'
 import { SseService } from '../../../../../shared/sse/sse.service'
+import { RelatorioFinanceiroService } from '../../../adapters/out/RelatorioFinanceiroService'
 
 @ApiTags('Financeiro — Mensalidades')
 @ApiBearerAuth('JWT')
@@ -48,7 +53,9 @@ export class MensalidadesController {
     @Inject(CANCELAR_COBRANCA_USE_CASE) private readonly cancelarCobranca: ICancelarCobrancaUseCase,
     @Inject(ESTORNAR_MENSALIDADE_USE_CASE) private readonly estornar: IEstornarMensalidadeUseCase,
     @Inject(EXCLUIR_MENSALIDADE_USE_CASE) private readonly excluir: IExcluirMensalidadeUseCase,
+    @Inject(MOVIMENTO_FINANCEIRO_REPOSITORY) private readonly movimentoRepo: IMovimentoFinanceiroRepository,
     private readonly sse: SseService,
+    private readonly relatorioService: RelatorioFinanceiroService,
   ) {}
 
   @ApiOperation({ summary: 'Gerar mensalidades em lote (ADMIN)', description: 'Cria mensalidades para todos os associados ativos da competência informada. Ignora isentos estruturais (isentoMensalidade=true). Idempotente — não duplica se já existirem.' })
@@ -182,6 +189,54 @@ export class MensalidadesController {
   async excluir_(@Param('id') id: string) {
     await this.excluir.execute(id)
     this.sse.emit('financeiro:mensalidade-excluida', id)
+  }
+
+  @ApiOperation({ summary: 'Exportar mensalidades (ADMIN)', description: 'Gera CSV ou PDF das mensalidades com os filtros aplicados.' })
+  @ApiQuery({ name: 'formato', required: true, enum: ['pdf', 'csv'] })
+  @ApiQuery({ name: 'ano', required: false, type: Number })
+  @ApiQuery({ name: 'mes', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, enum: StatusMensalidade })
+  @Get('exportar')
+  async exportar(@Query() q: ExportarMensalidadesDto, @Res() res: FastifyReply) {
+    const mensalidades = await this.listar.execute({
+      competenciaAno: q.ano,
+      competenciaMes: q.mes,
+      status: q.status,
+    })
+    const ano = q.ano ?? new Date().getFullYear()
+    const filename = `mensalidades-${ano}${q.mes ? '-' + String(q.mes).padStart(2, '0') : ''}`
+
+    if (q.formato === 'csv') {
+      const buf = await this.relatorioService.gerarCsvMensalidades(mensalidades, { ano, mes: q.mes })
+      res.header('Content-Type', 'text/csv; charset=utf-8')
+      res.header('Content-Disposition', `attachment; filename="${filename}.csv"`)
+      return res.send(buf)
+    }
+
+    const buf = await this.relatorioService.gerarPdfMensalidades(mensalidades, { ano, mes: q.mes })
+    res.header('Content-Type', 'application/pdf')
+    res.header('Content-Disposition', `attachment; filename="${filename}.pdf"`)
+    return res.send(buf)
+  }
+
+  @ApiOperation({ summary: 'Extrato PDF do associado (ADMIN)', description: 'Gera extrato completo do associado (mensalidades + movimentos) em PDF.' })
+  @ApiParam({ name: 'associadoId', description: 'UUID do associado' })
+  @ApiQuery({ name: 'ano', required: false, type: Number })
+  @Get('associado/:associadoId/extrato')
+  async extrato(@Param('associadoId') associadoId: string, @Query('ano') ano?: string, @Res() res: FastifyReply) {
+    const anoNum = ano ? Number(ano) : new Date().getFullYear()
+    const [mensalidades, movimentos] = await Promise.all([
+      this.listarPorAssociado.execute(associadoId),
+      this.movimentoRepo.findByAssociado(associadoId),
+    ])
+
+    const mensalidadesAno = mensalidades.filter(m => m.competenciaAno === anoNum)
+    const movimentosAno = movimentos.filter(m => m.data.getFullYear() === anoNum)
+
+    const buf = await this.relatorioService.gerarPdfExtratoAssociado(associadoId, mensalidadesAno, movimentosAno, anoNum)
+    res.header('Content-Type', 'application/pdf')
+    res.header('Content-Disposition', `attachment; filename="extrato-${associadoId.slice(0, 8)}-${anoNum}.pdf"`)
+    return res.send(buf)
   }
 
   private toMensalidadeResponse(m: Mensalidade) {
