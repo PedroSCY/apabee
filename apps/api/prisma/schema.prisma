@@ -11,6 +11,7 @@ datasource db {
 enum RoleUsuario {
   ADMIN
   ASSOCIADO
+  CLIENTE
 }
 
 enum StatusAtribuicao {
@@ -210,6 +211,34 @@ enum TipoNotificacao {
   NOVA_SOLICITACAO_CONTATO
   NOVO_AVISO
   ATA_PUBLICADA
+  PEDIDO_LOJA_AGUARDANDO_PAGAMENTO
+  PEDIDO_LOJA_CONFIRMADO
+  PEDIDO_LOJA_EM_PREPARACAO
+  PEDIDO_LOJA_SAIU_ENTREGA
+  PEDIDO_LOJA_ENTREGUE
+  PEDIDO_LOJA_CARTAO_EM_ANALISE
+}
+
+enum OpcaoEntrega {
+  PRATA_GRATIS
+  RETIRADA_LOCAL
+  A_COMBINAR
+  CORREIOS
+}
+
+enum StatusPedidoLoja {
+  AGUARDANDO_PAGAMENTO
+  PAGO
+  EM_PREPARACAO
+  SAIU_ENTREGA
+  ENTREGUE
+  CANCELADO
+  CANCELAMENTO_SOLICITADO
+}
+
+enum MetodoPagamentoPedidoLoja {
+  PIX
+  CARTAO
 }
 
 // ─── Modelos ─────────────────────────────────────────────────────────────────
@@ -673,6 +702,7 @@ model Produto {
   estoque        EstoqueProduto?
   composicoes    ComposicaoProduto[]
   itensPedido    ItemPedido[]
+  itensPedidoLoja ItemPedidoLoja[]
   ordensProducao OrdemProducao[]
   metasProducao  MetaProducao[]
 
@@ -936,4 +966,105 @@ model Notificacao {
   @@index([userId, lida])
   @@index([userId, criadoEm(sort: Desc)])
   @@map("notificacoes")
+}
+
+// ─── Módulo Loja ─────────────────────────────────────────────────────────────
+
+model Cliente {
+  id           String   @id // = Supabase auth.users.id
+  nome         String
+  email        String   @unique
+  telefone     String?
+  fotoUrl      String?  @map("foto_url")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  enderecos EnderecoEntrega[]
+  pedidos   PedidoLoja[]
+
+  @@map("clientes")
+}
+
+model EnderecoEntrega {
+  id          String  @id @default(uuid())
+  clienteId   String  @map("cliente_id")
+  apelido     String
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  estado      String  @db.Char(2)
+  cep         String  @db.Char(9)
+  principal   Boolean @default(false)
+
+  cliente Cliente    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  pedidos PedidoLoja[]
+
+  @@index([clienteId])
+  @@map("enderecos_entrega")
+}
+
+model PedidoLoja {
+  id                      String                     @id @default(uuid())
+  clienteId               String                     @map("cliente_id")
+  status                  StatusPedidoLoja           @default(AGUARDANDO_PAGAMENTO)
+  opcaoEntrega            OpcaoEntrega               @map("opcao_entrega")
+  enderecoEntregaId       String?                    @map("endereco_entrega_id")
+  valorTotal              Decimal                    @db.Decimal(10, 2) @map("valor_total")
+  observacoes             String?
+  metodoPagamento         MetodoPagamentoPedidoLoja? @map("metodo_pagamento")
+  cobrancaGatewayId       String?                    @map("cobranca_gateway_id")
+  cobrancaPixCopiaECola   String?                    @map("cobranca_pix_copia_e_cola")
+  cobrancaPixQrCodeBase64 String?                    @map("cobranca_pix_qr_code_base64")
+  cobrancaExpiracaoEm     DateTime?                  @map("cobranca_expiracao_em")
+  cardInstallments        Int?                       @map("card_installments")
+  cardPaymentMethodId     String?                    @map("card_payment_method_id")
+  cobrancaValorCobrado    Decimal?                   @db.Decimal(10, 2) @map("cobranca_valor_cobrado")
+  criadoEm               DateTime                   @default(now()) @map("criado_em")
+  atualizadoEm           DateTime                   @updatedAt @map("atualizado_em")
+
+  cliente  Cliente          @relation(fields: [clienteId], references: [id])
+  endereco EnderecoEntrega? @relation(fields: [enderecoEntregaId], references: [id], onDelete: SetNull)
+  itens    ItemPedidoLoja[]
+
+  @@index([clienteId])
+  @@index([status])
+  @@index([cobrancaGatewayId])
+  @@map("pedidos_loja")
+}
+
+model ItemPedidoLoja {
+  id             String  @id @default(uuid())
+  pedidoLojaId   String  @map("pedido_loja_id")
+  produtoId      String  @map("produto_id")
+  nomeProduto    String  @map("nome_produto")
+  precoUnitario  Decimal @db.Decimal(10, 2) @map("preco_unitario")
+  quantidade     Int
+  campanhaCodigo String? @map("campanha_codigo")
+
+  pedido  PedidoLoja @relation(fields: [pedidoLojaId], references: [id], onDelete: Cascade)
+  produto Produto    @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_pedido_loja")
+}
+
+model ConfiguracaoLoja {
+  id                  String   @id @default("singleton")
+  ativaEntregaPrata   Boolean  @default(true) @map("ativa_entrega_prata")
+  ativaRetiradaLocal  Boolean  @default(true) @map("ativa_retirada_local")
+  ativaACombinar      Boolean  @default(true) @map("ativa_a_combinar")
+  ativaCorreios       Boolean  @default(false) @map("ativa_correios")
+  enderecoRetirada    String?  @map("endereco_retirada")
+  horarioAtendimento  String?  @map("horario_atendimento")
+  contatoEntrega      String?  @map("contato_entrega")
+  pixExpiracaoMinutos Int      @default(30) @map("pix_expiracao_minutos")
+  mensagemConfirmacao String?  @map("mensagem_confirmacao")
+  aceitaPix           Boolean  @default(true) @map("aceita_pix")
+  aceitaCartao        Boolean  @default(true) @map("aceita_cartao")
+  maxParcelas         Int      @default(3) @map("max_parcelas")
+  minValorParcela     Decimal  @default(10.00) @db.Decimal(10, 2) @map("min_valor_parcela")
+  emailResponsavel    String?  @map("email_responsavel")
+
+  @@map("configuracao_loja")
 }

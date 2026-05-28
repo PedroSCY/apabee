@@ -10,6 +10,7 @@ import { RoleUsuario } from '@apa/shared'
 import { IListarVendasUseCase, IRegistrarVendaUseCase, Venda } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { RegistrarVendaDto } from './dto'
+import { VendaResponse } from './dto/response.types'
 import { LISTAR_VENDAS_USE_CASE, REGISTRAR_VENDA_USE_CASE } from '../../../comercial.tokens'
 
 @ApiTags('Comercial - Vendas')
@@ -25,7 +26,7 @@ export class VendasController {
   @ApiResponse({ status: 201, description: 'Venda registrada.' })
   @Post()
   @Roles(RoleUsuario.ADMIN)
-  async registrarHandler(@Body() dto: RegistrarVendaDto) {
+  async registrarHandler(@Body() dto: RegistrarVendaDto): Promise<VendaResponse> {
     const venda = await this.registrar.execute({
       ...dto,
       data: new Date(dto.data),
@@ -41,12 +42,12 @@ export class VendasController {
   async listarHandler(
     @Query('campanhaId') campanhaId?: string,
     @Query('associadoId') associadoId?: string,
-  ) {
+  ): Promise<VendaResponse[]> {
     const lista = await this.listar.execute({ campanhaId, associadoId })
     return lista.map((v) => this.toResponse(v))
   }
 
-  private toResponse(v: Venda) {
+  private toResponse(v: Venda): VendaResponse {
     return {
       id: v.id,
       campanhaId: v.campanhaId,

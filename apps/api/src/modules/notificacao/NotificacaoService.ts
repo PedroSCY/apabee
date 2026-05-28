@@ -6,7 +6,7 @@ import { SseService } from '../../shared/sse/sse.service'
 import { PrismaService } from '../../shared/database/prisma.service'
 import { EmailService } from './adapters/out/external/EmailService'
 
-/** Tipos de notificação que também disparam e-mail. */
+/** Tipos de notificação que também disparam e-mail (fluxo de usuários internos). */
 const TIPOS_COM_EMAIL = new Set<TipoNotificacao>([
   TipoNotificacao.MENSALIDADE_GERADA,
   TipoNotificacao.RATEIO_DISPONIVEL,
@@ -149,6 +149,11 @@ export class NotificacaoService {
       userId: a.usuarioId, tipo, titulo, corpo, dadosExtras,
     }))
     await this.enviarParaVarios(inputs)
+  }
+
+  /** Envia e-mail direto sem criar notificação in-app. Usado para CLIENTEs (não estão na tabela usuarios). */
+  async enviarEmailDireto(para: string, assunto: string, corpo: string): Promise<void> {
+    await this.email.send(para, assunto, assunto, corpo)
   }
 
   /** Envia e-mail diretamente para associados sem criar notificação in-app. Usado pelo disparo de avisos. */

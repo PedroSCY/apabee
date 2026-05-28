@@ -379,7 +379,7 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
         </TabsList>
         {campanha.tipo === 'PRODUCAO' && campanha.status === 'PLANEJADA' && (
           <TabsContent value="planejamento" className="mt-4">
-            <PlanejamentoTab campanhaId={campanha.id} />
+            <PlanejamentoTab campanhaId={campanha.id} isAdmin={isAdmin} />
           </TabsContent>
         )}
         {campanha.tipo === 'PRODUCAO' && campanha.status !== 'PLANEJADA' && (
@@ -388,6 +388,7 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
               campanhaId={campanha.id}
               statusCampanha={campanha.status}
               onConcluir={() => void handleConcluir()}
+              isAdmin={isAdmin}
             />
           </TabsContent>
         )}
@@ -425,11 +426,11 @@ export function CampanhaDetalhePage({ campanhaId, isAdmin }: Props) {
         )}
         {campanha.status !== 'PLANEJADA' && (
           <TabsContent value="contribuicoes" className="mt-4">
-            <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} tipoCampanha={campanha.tipo} />
+            <ContribuicoesTab campanhaId={campanha.id} statusCampanha={campanha.status} tipoCampanha={campanha.tipo} isAdmin={isAdmin} />
           </TabsContent>
         )}
         <TabsContent value="custos" className="mt-4">
-          <CustosTab campanhaId={campanha.id} statusCampanha={campanha.status} />
+          <CustosTab campanhaId={campanha.id} statusCampanha={campanha.status} isAdmin={isAdmin} />
         </TabsContent>
         <TabsContent value="apuracao" className="mt-4">
           <ApuracaoTab campanhaId={campanha.id} statusCampanha={campanha.status} campanha={campanha} />

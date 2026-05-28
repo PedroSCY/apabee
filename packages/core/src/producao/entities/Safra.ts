@@ -1,4 +1,4 @@
-import { StatusSafra } from '@apa/shared'
+﻿import { StatusSafra } from '@apa/shared'
 
 interface SafraProps {
   id: string
@@ -46,5 +46,4 @@ export class Safra {
     return new Safra({ ...this.props, status: StatusSafra.ENCERRADA, dataFim: new Date() })
   }
 
-  toJSON() { return { ...this.props } }
 }

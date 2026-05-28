@@ -1,4 +1,4 @@
-import { UnidadeMedida } from '@apa/shared'
+﻿import { UnidadeMedida } from '@apa/shared'
 
 interface TipoMateriaPrimaProps {
   id: string
@@ -19,5 +19,4 @@ export class TipoMateriaPrima {
   get unidade(): UnidadeMedida { return this.props.unidade }
   get descricao(): string | undefined { return this.props.descricao }
 
-  toJSON() { return { ...this.props } }
 }

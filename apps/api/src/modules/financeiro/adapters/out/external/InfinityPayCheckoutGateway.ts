@@ -85,6 +85,14 @@ export class InfinityPayCheckoutGateway implements IPaymentGateway {
     )
   }
 
+  async estornarCobranca(gatewayId: string): Promise<void> {
+    // InfinityPay não suporta estorno via API.
+    this.logger.warn(
+      `estornarCobranca: InfinityPay não suporta estorno via API (order_nsu=${gatewayId}). ` +
+        `Realize o estorno manualmente no app InfinityPay ou pelo banco.`,
+    )
+  }
+
   async processarWebhook(payload: unknown, _token: string): Promise<WebhookEvent> {
     const data = payload as Partial<InfinityPayWebhookPayload>
 

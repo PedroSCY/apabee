@@ -15,6 +15,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { CriarTipoMateriaPrimaDto, MigrarInsumosDto, RegistrarEntradaConsumivelDto } from './dto'
+import { ConsumivelComSaldoResponse, PoolMateriaPrimaResponse, TipoMateriaPrimaResponse } from './dto/response.types'
 import {
   BUSCAR_TIPO_MATERIA_PRIMA_USE_CASE,
   CONSULTAR_ESTOQUE_USE_CASE,
@@ -56,14 +57,14 @@ export class TiposMateriaPrimaController {
   @ApiResponse({ status: 201, description: 'Tipo criado.' })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criarTipo(@Body() dto: CriarTipoMateriaPrimaDto) {
+  async criarTipo(@Body() dto: CriarTipoMateriaPrimaDto): Promise<TipoMateriaPrimaResponse> {
     return this.toResponse(await this.criar.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar tipos de matéria-prima' })
   @ApiResponse({ status: 200, description: 'Lista de tipos.' })
   @Get()
-  async listarTipos() {
+  async listarTipos(): Promise<TipoMateriaPrimaResponse[]> {
     const lista = await this.listar.execute()
     return lista.map((t) => this.toResponse(t))
   }
@@ -73,7 +74,7 @@ export class TiposMateriaPrimaController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 404, description: 'Não encontrado.' })
   @Get(':id')
-  async buscarTipo(@Param('id') id: string) {
+  async buscarTipo(@Param('id') id: string): Promise<TipoMateriaPrimaResponse> {
     return this.toResponse(await this.buscar.execute(id))
   }
 
@@ -93,7 +94,7 @@ export class TiposMateriaPrimaController {
 
   @ApiOperation({ summary: 'Listar consumíveis (unidade=UNIDADE) com saldo de estoque' })
   @Get('consumiveis')
-  async listarConsumiveis_() {
+  async listarConsumiveis_(): Promise<ConsumivelComSaldoResponse[]> {
     const lista = await this.listarConsumiveis.execute()
     return lista.map(({ tipo, estoque }) => ({
       tipo: this.toResponse(tipo),
@@ -132,9 +133,9 @@ export class TiposMateriaPrimaController {
   @ApiOperation({ summary: 'Consultar saldo do pool de matéria-prima (estoque compartilhado)' })
   @ApiResponse({ status: 200, description: 'Saldo por tipo de matéria-prima.' })
   @Get('pool')
-  async consultarPool_() {
+  async consultarPool_(): Promise<PoolMateriaPrimaResponse[]> {
     const estoques = await this.consultarEstoque.execute()
-    return estoques.map(e => ({
+    return estoques.map((e): PoolMateriaPrimaResponse => ({
       tipoMateriaPrimaId: e.tipoMateriaPrimaId,
       quantidadeDisponivel: Number(e.quantidadeDisponivel),
       unidade: e.unidade,
@@ -142,7 +143,7 @@ export class TiposMateriaPrimaController {
     }))
   }
 
-  private toResponse(t: TipoMateriaPrima) {
+  private toResponse(t: TipoMateriaPrima): TipoMateriaPrimaResponse {
     return {
       id: t.id,
       nome: t.nome,

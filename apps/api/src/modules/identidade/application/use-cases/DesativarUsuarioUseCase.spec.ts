@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+﻿import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { RoleUsuario } from '@apa/shared'
 import { IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { DesativarUsuarioUseCase } from './DesativarUsuarioUseCase'
@@ -6,7 +6,7 @@ import { DesativarUsuarioUseCase } from './DesativarUsuarioUseCase'
 const makeUsuario = (role: RoleUsuario, ativo = true): Usuario =>
   new Usuario({
     id: 'usr-1',
-    nome: 'João',
+    nome: 'JoÃ£o',
     email: 'joao@email.com',
     role,
     ativo,
@@ -30,6 +30,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('DesativarUsuarioUseCase', () => {
@@ -53,7 +54,7 @@ describe('DesativarUsuarioUseCase', () => {
     expect(provedorAuth.revogarAcesso).toHaveBeenCalledWith('usr-1')
   })
 
-  it('lança NotFoundException quando usuário não existe', async () => {
+  it('lanÃ§a NotFoundException quando usuÃ¡rio nÃ£o existe', async () => {
     repo.findById.mockResolvedValue(null)
 
     await expect(useCase.execute({ usuarioId: 'nao-existe' })).rejects.toThrow(NotFoundException)
@@ -61,7 +62,7 @@ describe('DesativarUsuarioUseCase', () => {
     expect(provedorAuth.revogarAcesso).not.toHaveBeenCalled()
   })
 
-  it('lança BadRequestException ao tentar desativar admin', async () => {
+  it('lanÃ§a BadRequestException ao tentar desativar admin', async () => {
     repo.findById.mockResolvedValue(makeUsuario(RoleUsuario.ADMIN))
 
     await expect(useCase.execute({ usuarioId: 'usr-1' })).rejects.toThrow(BadRequestException)
@@ -69,3 +70,4 @@ describe('DesativarUsuarioUseCase', () => {
     expect(provedorAuth.revogarAcesso).not.toHaveBeenCalled()
   })
 })
+

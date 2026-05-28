@@ -1,4 +1,4 @@
-import { TipoMovimentacao } from '@apa/shared'
+﻿import { TipoMovimentacao } from '@apa/shared'
 
 interface MovimentacaoEstoqueCampanhaProps {
   id: string
@@ -28,5 +28,4 @@ export class MovimentacaoEstoqueCampanha {
     return this.props.tipo === TipoMovimentacao.ENTRADA
   }
 
-  toJSON() { return { ...this.props } }
 }

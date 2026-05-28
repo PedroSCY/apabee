@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+﻿import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { AprovarAssociadoPendenteUseCase } from './AprovarAssociadoPendenteUseCase'
@@ -35,6 +35,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('AprovarAssociadoPendenteUseCase', () => {
@@ -66,7 +67,7 @@ describe('AprovarAssociadoPendenteUseCase', () => {
     expect(result.status).toBe(StatusAssociado.ATIVO)
   })
 
-  it('ativa o usuário no banco ao aprovar', async () => {
+  it('ativa o usuÃ¡rio no banco ao aprovar', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.PENDENTE))
     provedorAuth.definirSenha.mockResolvedValue(undefined)
     provedorAuth.ativarAcesso.mockResolvedValue(undefined)
@@ -93,14 +94,14 @@ describe('AprovarAssociadoPendenteUseCase', () => {
     expect(result.dataIngresso).toEqual(dataIngresso)
   })
 
-  it('lança NotFoundException quando associado não existe', async () => {
+  it('lanÃ§a NotFoundException quando associado nÃ£o existe', async () => {
     associadoRepo.findById.mockResolvedValue(null)
 
     await expect(useCase.execute({ associadoId: 'nao-existe', senha: 'abc' })).rejects.toThrow(NotFoundException)
     expect(provedorAuth.definirSenha).not.toHaveBeenCalled()
   })
 
-  it('lança BadRequestException quando associado não está PENDENTE', async () => {
+  it('lanÃ§a BadRequestException quando associado nÃ£o estÃ¡ PENDENTE', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.ATIVO))
 
     await expect(useCase.execute({ associadoId: 'assoc-1', senha: 'SenhaForte123!' })).rejects.toThrow(BadRequestException)
@@ -108,3 +109,4 @@ describe('AprovarAssociadoPendenteUseCase', () => {
     expect(provedorAuth.ativarAcesso).not.toHaveBeenCalled()
   })
 })
+

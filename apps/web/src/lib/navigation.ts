@@ -10,6 +10,7 @@ import {
   Settings,
   Megaphone,
   Sprout,
+  Store,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -41,6 +42,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: 'Campanhas', href: '/campanhas', icon: Target },
       { label: 'Safras', href: '/safras', icon: Sprout },
       { label: 'Produtos & Loja', href: '/produtos', icon: ShoppingBag },
+      { label: 'Gerenciar Loja', href: '/gerenciar-loja', icon: Store },
     ],
   },
   {

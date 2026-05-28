@@ -1,4 +1,4 @@
-import { StatusOrdemProducao } from '@apa/shared'
+﻿import { StatusOrdemProducao } from '@apa/shared'
 
 export interface MaterialConsumido {
   tipoMateriaPrimaId: string
@@ -86,5 +86,4 @@ export class OrdemProducao {
     })
   }
 
-  toJSON() { return { ...this.props } }
 }

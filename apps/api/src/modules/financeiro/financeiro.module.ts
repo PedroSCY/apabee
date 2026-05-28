@@ -85,6 +85,7 @@ import {
     RelatorioFinanceiroService,
     ReconciliacaoWebhookJob,
   ],
+  exports: [PAYMENT_GATEWAY],
 })
 /** Módulo financeiro — mensalidades, movimentos e pagamentos online via Asaas. */
 export class FinanceiroModule {}

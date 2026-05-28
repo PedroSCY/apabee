@@ -15,6 +15,7 @@ import { ComercialModule } from './modules/comercial/comercial.module'
 import { ComunicacaoModule } from './modules/comunicacao/comunicacao.module'
 import { FinanceiroModule } from './modules/financeiro/financeiro.module'
 import { NotificacaoModule } from './modules/notificacao/notificacao.module'
+import { LojaModule } from './modules/loja/loja.module'
 import { JwtAuthGuard, RolesGuard } from './shared/guards'
 
 @Module({
@@ -33,6 +34,7 @@ import { JwtAuthGuard, RolesGuard } from './shared/guards'
     ComunicacaoModule,
     FinanceiroModule,
     NotificacaoModule,
+    LojaModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

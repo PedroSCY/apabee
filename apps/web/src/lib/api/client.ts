@@ -1,6 +1,6 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 /** Erro HTTP da API com código de status. */
 export class ApiError extends Error {

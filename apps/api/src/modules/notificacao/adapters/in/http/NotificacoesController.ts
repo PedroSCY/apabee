@@ -15,6 +15,7 @@ import {
   MARCAR_LIDA_USE_CASE,
   MARCAR_TODAS_LIDAS_USE_CASE,
 } from '../../../notificacao.tokens'
+import { ContarNaoLidasResponse, NotificacaoResponse } from './dto/response.types'
 
 type JwtUser = { sub: string; role: string }
 
@@ -38,7 +39,7 @@ export class NotificacoesController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200 })
   @Get()
-  async listar_(@Req() req: { user: JwtUser }, @Query('limit') limit?: string) {
+  async listar_(@Req() req: { user: JwtUser }, @Query('limit') limit?: string): Promise<NotificacaoResponse[]> {
     const notificacoes = await this.listar.execute(req.user.sub, limit ? Number(limit) : 50)
     return notificacoes.map(n => this.toResponse(n))
   }
@@ -46,7 +47,7 @@ export class NotificacoesController {
   @ApiOperation({ summary: 'Contagem de notificações não lidas' })
   @ApiResponse({ status: 200 })
   @Get('nao-lidas/count')
-  async contarNaoLidas(@Req() req: { user: JwtUser }) {
+  async contarNaoLidas(@Req() req: { user: JwtUser }): Promise<ContarNaoLidasResponse> {
     const count = await this.contar.execute(req.user.sub)
     return { count }
   }
@@ -64,13 +65,13 @@ export class NotificacoesController {
   @ApiResponse({ status: 404, description: 'Notificação não encontrada.' })
   @Patch(':id/lida')
   @HttpCode(200)
-  async marcarLida_(@Req() req: { user: JwtUser }, @Param('id') id: string) {
+  async marcarLida_(@Req() req: { user: JwtUser }, @Param('id') id: string): Promise<NotificacaoResponse | null> {
     const notificacao = await this.marcarLida.execute(id, req.user.sub)
     if (!notificacao) return null
     return this.toResponse(notificacao)
   }
 
-  private toResponse(n: Notificacao) {
+  private toResponse(n: Notificacao): NotificacaoResponse {
     return {
       id: n.id,
       tipo: n.tipo,

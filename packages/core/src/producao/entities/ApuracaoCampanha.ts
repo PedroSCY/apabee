@@ -1,4 +1,4 @@
-export interface RateioCampanha {
+﻿export interface RateioCampanha {
   associadoId: string
   contribuicaoTotal: number
   percentual: number
@@ -38,5 +38,4 @@ export class ApuracaoCampanha {
     return this.props.rateios.find(r => r.associadoId === associadoId)
   }
 
-  toJSON() { return { ...this.props } }
 }

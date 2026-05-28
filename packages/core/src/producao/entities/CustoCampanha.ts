@@ -1,4 +1,4 @@
-import { CategoriaCusto } from '@apa/shared'
+﻿import { CategoriaCusto } from '@apa/shared'
 
 interface CustoCampanhaProps {
   id: string
@@ -31,5 +31,4 @@ export class CustoCampanha {
 
   foiAdiantadoPorAssociado(): boolean { return !!this.props.pagoPorId }
 
-  toJSON() { return { ...this.props } }
 }

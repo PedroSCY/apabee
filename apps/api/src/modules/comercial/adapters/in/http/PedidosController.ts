@@ -30,6 +30,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { CriarPedidoDto } from './dto'
+import { PedidoResponse } from './dto/response.types'
 import {
   BUSCAR_PEDIDO_USE_CASE,
   CANCELAR_PEDIDO_USE_CASE,
@@ -52,10 +53,11 @@ export class PedidosController {
     @Inject(MARCAR_ENVIADO_USE_CASE) private readonly marcarEnviado: IMarcarEnviadoUseCase,
   ) {}
 
-  @ApiOperation({ summary: 'Criar pedido (público — loja)' })
+  @ApiOperation({ summary: 'Criar pedido (ADMIN)' })
   @ApiResponse({ status: 201, description: 'Pedido criado.' })
+  @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criarHandler(@Body() dto: CriarPedidoDto) {
+  async criarHandler(@Body() dto: CriarPedidoDto): Promise<PedidoResponse> {
     const pedido = await this.criar.execute(dto)
     return this.toResponse(pedido)
   }
@@ -63,7 +65,7 @@ export class PedidosController {
   @ApiOperation({ summary: 'Listar pedidos (ADMIN)' })
   @Get()
   @Roles(RoleUsuario.ADMIN)
-  async listarHandler() {
+  async listarHandler(): Promise<PedidoResponse[]> {
     const lista = await this.listar.execute()
     return lista.map((p) => this.toResponse(p))
   }
@@ -72,7 +74,7 @@ export class PedidosController {
   @ApiParam({ name: 'id', description: 'UUID do pedido' })
   @Get(':id')
   @Roles(RoleUsuario.ADMIN)
-  async buscarHandler(@Param('id') id: string) {
+  async buscarHandler(@Param('id') id: string): Promise<PedidoResponse> {
     const pedido = await this.buscar.execute(id)
     return this.toResponse(pedido)
   }
@@ -81,7 +83,7 @@ export class PedidosController {
   @ApiParam({ name: 'id', description: 'UUID do pedido' })
   @Patch(':id/confirmar')
   @Roles(RoleUsuario.ADMIN)
-  async confirmarHandler(@Param('id') id: string) {
+  async confirmarHandler(@Param('id') id: string): Promise<PedidoResponse> {
     const pedido = await this.confirmar.execute(id)
     return this.toResponse(pedido)
   }
@@ -100,12 +102,12 @@ export class PedidosController {
   @ApiParam({ name: 'id', description: 'UUID do pedido' })
   @Patch(':id/marcar-enviado')
   @Roles(RoleUsuario.ADMIN)
-  async marcarEnviadoHandler(@Param('id') id: string) {
+  async marcarEnviadoHandler(@Param('id') id: string): Promise<PedidoResponse> {
     const pedido = await this.marcarEnviado.execute(id)
     return this.toResponse(pedido)
   }
 
-  private toResponse(p: Pedido) {
+  private toResponse(p: Pedido): PedidoResponse {
     return {
       id: p.id,
       clienteNome: p.clienteNome,

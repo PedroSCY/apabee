@@ -1,0 +1,7 @@
+export { Cliente } from './entities/Cliente'
+export { EnderecoEntrega } from './entities/EnderecoEntrega'
+export { PedidoLoja } from './entities/PedidoLoja'
+export type { ItemPedidoLoja, EnderecoEntregaSnapshot } from './entities/PedidoLoja'
+export type { IClienteRepository } from './ports/out/IClienteRepository'
+export type { IPedidoLojaRepository, FindPedidosLojaParams } from './ports/out/IPedidoLojaRepository'
+export type { IConfiguracaoLojaRepository, ConfiguracaoLoja, AtualizarConfiguracaoLojaInput } from './ports/out/IConfiguracaoLojaRepository'

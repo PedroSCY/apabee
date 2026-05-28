@@ -47,16 +47,17 @@ const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 interface Props {
   campanhaId: string
   statusCampanha: StatusCampanha
+  isAdmin?: boolean
 }
 
-export function CustosTab({ campanhaId, statusCampanha }: Props) {
+export function CustosTab({ campanhaId, statusCampanha, isAdmin = false }: Props) {
   const [formAberto, setFormAberto] = React.useState(false)
   const { data: custos = [], isLoading } = useCustos(campanhaId)
   const { data: associados = [] } = useAssociados()
   const { mutateAsync: registrar, isPending: registrando } = useRegistrarCusto(campanhaId)
   const { mutateAsync: remover } = useRemoverCusto(campanhaId)
 
-  const podeEditar = statusCampanha === 'ATIVA' || statusCampanha === 'PLANEJADA'
+  const podeEditar = isAdmin && (statusCampanha === 'ATIVA' || statusCampanha === 'PLANEJADA')
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),

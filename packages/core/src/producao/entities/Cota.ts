@@ -1,4 +1,4 @@
-import { OrigemContribuicao } from '@apa/shared'
+﻿import { OrigemContribuicao } from '@apa/shared'
 
 interface CotaProps {
   id: string
@@ -40,5 +40,4 @@ export class Cota {
     return new Cota({ ...this.props })
   }
 
-  toJSON() { return { ...this.props } }
 }

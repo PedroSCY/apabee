@@ -13,6 +13,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { AtualizarSafraDto, CriarSafraDto } from './dto'
+import { SafraResponse } from './dto/response.types'
 import {
   ATUALIZAR_SAFRA_USE_CASE,
   BUSCAR_SAFRA_USE_CASE,
@@ -41,7 +42,7 @@ export class SafrasController {
   @ApiResponse({ status: 201 })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criar_(@Body() dto: CriarSafraDto) {
+  async criar_(@Body() dto: CriarSafraDto): Promise<SafraResponse> {
     return this.toResponse(
       await this.criar.execute({
         nome: dto.nome,
@@ -54,7 +55,7 @@ export class SafrasController {
 
   @ApiOperation({ summary: 'Listar safras' })
   @Get()
-  async listar_() {
+  async listar_(): Promise<SafraResponse[]> {
     const lista = await this.listar.execute()
     return lista.map(s => this.toResponse(s))
   }
@@ -62,7 +63,7 @@ export class SafrasController {
   @ApiOperation({ summary: 'Buscar safra por ID' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id')
-  async buscar_(@Param('id') id: string) {
+  async buscar_(@Param('id') id: string): Promise<SafraResponse> {
     return this.toResponse(await this.buscar.execute(id))
   }
 
@@ -71,7 +72,7 @@ export class SafrasController {
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
   @Patch(':id')
-  async atualizar_(@Param('id') id: string, @Body() dto: AtualizarSafraDto) {
+  async atualizar_(@Param('id') id: string, @Body() dto: AtualizarSafraDto): Promise<SafraResponse> {
     return this.toResponse(
       await this.atualizar.execute(id, {
         nome: dto.nome,
@@ -85,7 +86,7 @@ export class SafrasController {
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
   @Patch(':id/iniciar')
-  async iniciar_(@Param('id') id: string) {
+  async iniciar_(@Param('id') id: string): Promise<SafraResponse> {
     return this.toResponse(await this.iniciar.execute(id))
   }
 
@@ -94,7 +95,7 @@ export class SafrasController {
   @Roles(RoleUsuario.ADMIN)
   @HttpCode(HttpStatus.OK)
   @Patch(':id/encerrar')
-  async encerrar_(@Param('id') id: string) {
+  async encerrar_(@Param('id') id: string): Promise<SafraResponse> {
     return this.toResponse(await this.encerrar.execute(id))
   }
 
@@ -108,7 +109,7 @@ export class SafrasController {
     await this.deletar.execute(id)
   }
 
-  private toResponse(s: Safra) {
+  private toResponse(s: Safra): SafraResponse {
     return { id: s.id, nome: s.nome, floradaId: s.floradaId, floradaNome: s.floradaNome, dataInicio: s.dataInicio, dataFim: s.dataFim, status: s.status }
   }
 }

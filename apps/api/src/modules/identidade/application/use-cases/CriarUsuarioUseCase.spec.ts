@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common'
+﻿import { ConflictException } from '@nestjs/common'
 import { RoleUsuario } from '@apa/shared'
 import { IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { CriarUsuarioUseCase } from './CriarUsuarioUseCase'
@@ -6,7 +6,7 @@ import { CriarUsuarioUseCase } from './CriarUsuarioUseCase'
 const makeUsuario = (overrides = {}): Usuario =>
   new Usuario({
     id: 'supabase-uuid',
-    nome: 'João Silva',
+    nome: 'JoÃ£o Silva',
     email: 'joao@email.com',
     role: RoleUsuario.ASSOCIADO,
     ativo: true,
@@ -31,6 +31,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('CriarUsuarioUseCase', () => {
@@ -44,13 +45,13 @@ describe('CriarUsuarioUseCase', () => {
     useCase = new CriarUsuarioUseCase(repo, provedorAuth)
   })
 
-  it('cria usuário quando e-mail ainda não existe', async () => {
+  it('cria usuÃ¡rio quando e-mail ainda nÃ£o existe', async () => {
     repo.findByEmail.mockResolvedValue(null)
     const saved = makeUsuario()
     repo.save.mockResolvedValue(saved)
 
     const result = await useCase.execute({
-      nome: 'João Silva',
+      nome: 'JoÃ£o Silva',
       email: 'joao@email.com',
       role: RoleUsuario.ASSOCIADO,
     })
@@ -69,7 +70,7 @@ describe('CriarUsuarioUseCase', () => {
     repo.save.mockImplementation(async (u) => u)
 
     const result = await useCase.execute({
-      nome: 'João',
+      nome: 'JoÃ£o',
       email: 'joao@email.com',
       role: RoleUsuario.ASSOCIADO,
     })
@@ -77,12 +78,12 @@ describe('CriarUsuarioUseCase', () => {
     expect(result.id).toBe('id-do-provedor')
   })
 
-  it('normaliza o e-mail para minúsculas', async () => {
+  it('normaliza o e-mail para minÃºsculas', async () => {
     repo.findByEmail.mockResolvedValue(null)
     repo.save.mockImplementation(async (u) => u)
 
     await useCase.execute({
-      nome: 'João',
+      nome: 'JoÃ£o',
       email: '  JOAO@EMAIL.COM  ',
       role: RoleUsuario.ASSOCIADO,
     })
@@ -90,14 +91,15 @@ describe('CriarUsuarioUseCase', () => {
     expect(repo.findByEmail).toHaveBeenCalledWith('joao@email.com')
   })
 
-  it('lança ConflictException quando e-mail já existe', async () => {
+  it('lanÃ§a ConflictException quando e-mail jÃ¡ existe', async () => {
     repo.findByEmail.mockResolvedValue(makeUsuario())
 
     await expect(
-      useCase.execute({ nome: 'João', email: 'joao@email.com', role: RoleUsuario.ASSOCIADO }),
+      useCase.execute({ nome: 'JoÃ£o', email: 'joao@email.com', role: RoleUsuario.ASSOCIADO }),
     ).rejects.toThrow(ConflictException)
 
     expect(provedorAuth.criarCredencial).not.toHaveBeenCalled()
     expect(repo.save).not.toHaveBeenCalled()
   })
 })
+

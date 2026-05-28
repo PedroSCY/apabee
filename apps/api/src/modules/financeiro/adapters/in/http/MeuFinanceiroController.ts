@@ -31,6 +31,7 @@ import {
   MENSALIDADE_REPOSITORY,
 } from '../../../financeiro.tokens'
 import { RelatorioFinanceiroService } from '../../../adapters/out/RelatorioFinanceiroService'
+import { EmitirCobrancaResponse, MensalidadeResponse, MovimentoFinanceiroResponse } from './dto/response.types'
 
 type JwtUser = { sub: string; role: string }
 
@@ -56,7 +57,7 @@ export class MeuFinanceiroController {
   @ApiOperation({ summary: 'Minhas mensalidades', description: 'Lista todas as mensalidades do associado logado.' })
   @ApiResponse({ status: 200, description: 'Lista de mensalidades.' })
   @Get('mensalidades')
-  async minhasMensalidades(@Req() req: { user: JwtUser }) {
+  async minhasMensalidades(@Req() req: { user: JwtUser }): Promise<MensalidadeResponse[]> {
     const associadoId = await this.resolverAssociadoId(req.user.sub)
     const mensalidades = await this.listarMensalidades.execute(associadoId)
     return mensalidades.map((m) => this.toMensalidadeResponse(m))
@@ -68,7 +69,7 @@ export class MeuFinanceiroController {
   @ApiResponse({ status: 400, description: 'Mensalidade não PENDENTE ou já tem cobrança.' })
   @ApiResponse({ status: 403, description: 'Mensalidade não pertence ao associado logado.' })
   @Post('mensalidades/:id/solicitar-pix')
-  async solicitarPix(@Param('id') id: string, @Req() req: { user: JwtUser }) {
+  async solicitarPix(@Param('id') id: string, @Req() req: { user: JwtUser }): Promise<EmitirCobrancaResponse> {
     const associadoId = await this.resolverAssociadoId(req.user.sub)
 
     // Valida a propriedade antes de qualquer interação com o gateway
@@ -90,7 +91,7 @@ export class MeuFinanceiroController {
   @ApiOperation({ summary: 'Meus movimentos financeiros', description: 'Extrato de movimentos do associado logado — mensalidades, antecipações, rateios.' })
   @ApiResponse({ status: 200, description: 'Lista de movimentos.' })
   @Get('movimentos')
-  async meusMovimentos(@Req() req: { user: JwtUser }) {
+  async meusMovimentos(@Req() req: { user: JwtUser }): Promise<MovimentoFinanceiroResponse[]> {
     const associadoId = await this.resolverAssociadoId(req.user.sub)
     const movimentos = await this.listarMovimentos.execute({ associadoId })
     return movimentos.map((m) => this.toMovimentoResponse(m))
@@ -100,7 +101,7 @@ export class MeuFinanceiroController {
   @ApiQuery({ name: 'ano', required: false, type: Number, description: 'Ano (padrão: atual)' })
   @ApiResponse({ status: 200, description: 'PDF do extrato.' })
   @Get('extrato')
-  async meuExtrato(@Req() req: { user: JwtUser }, @Query('ano') ano?: string, @Res() res: FastifyReply) {
+  async meuExtrato(@Req() req: { user: JwtUser }, @Query('ano') ano: string | undefined, @Res() res: FastifyReply) {
     const associadoId = await this.resolverAssociadoId(req.user.sub)
     const anoNum = ano ? Number(ano) : new Date().getFullYear()
 
@@ -124,7 +125,7 @@ export class MeuFinanceiroController {
     return associado.id
   }
 
-  private toMensalidadeResponse(m: Mensalidade) {
+  private toMensalidadeResponse(m: Mensalidade): MensalidadeResponse {
     return {
       id: m.id,
       associadoId: m.associadoId,
@@ -144,7 +145,7 @@ export class MeuFinanceiroController {
     }
   }
 
-  private toMovimentoResponse(m: MovimentoFinanceiro) {
+  private toMovimentoResponse(m: MovimentoFinanceiro): MovimentoFinanceiroResponse {
     return {
       id: m.id,
       associadoId: m.associadoId,

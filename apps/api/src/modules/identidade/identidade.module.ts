@@ -68,7 +68,7 @@ import {
     { provide: MARCAR_ISENTO_ASSOCIADO_USE_CASE, useClass: MarcarIsentoAssociadoUseCase },
     { provide: REMOVER_ISENCAO_ASSOCIADO_USE_CASE, useClass: RemoverIsencaoAssociadoUseCase },
   ],
-  exports: [BUSCAR_ASSOCIADO_POR_USUARIO_USE_CASE, ASSOCIADO_REPOSITORY, BUSCAR_ASSOCIADO_USE_CASE],
+  exports: [BUSCAR_ASSOCIADO_POR_USUARIO_USE_CASE, ASSOCIADO_REPOSITORY, BUSCAR_ASSOCIADO_USE_CASE, USUARIO_REPOSITORY, PROVEDOR_AUTH],
 })
 /** Módulo NestJS de identidade: usuários, associados e autenticação */
 export class IdentidadeModule {}

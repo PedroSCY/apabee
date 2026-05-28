@@ -40,6 +40,7 @@ import {
   PUBLICAR_DOCUMENTO_USE_CASE,
 } from '../../../gestao.tokens'
 import { CriarDocumentoDto } from './dto/CriarDocumentoDto'
+import { DocumentoResponse } from './dto/response.types'
 
 @ApiTags('Gestão — Documentos')
 @ApiBearerAuth('JWT')
@@ -60,7 +61,7 @@ export class DocumentosController {
   @ApiResponse({ status: 403, description: 'Sem permissão (requer ADMIN).' })
   @Post()
   @Roles(RoleUsuario.ADMIN)
-  async criar(@Body() dto: CriarDocumentoDto, @Request() req: { user: { sub: string } }) {
+  async criar(@Body() dto: CriarDocumentoDto, @Request() req: { user: { sub: string } }): Promise<DocumentoResponse> {
     const doc = await this.criarDoc.execute({
       titulo: dto.titulo,
       categoria: dto.categoria,
@@ -79,7 +80,7 @@ export class DocumentosController {
   async listar(
     @Query('categoria') categoria?: string,
     @Request() req?: { user: { role: string } },
-  ) {
+  ): Promise<DocumentoResponse[]> {
     const cat = categoria as CategoriaDocumento | undefined
     const apenasPublicados = req?.user?.role !== RoleUsuario.ADMIN
     const lista = await this.listarDocs.execute(cat, apenasPublicados)
@@ -92,7 +93,7 @@ export class DocumentosController {
   @ApiResponse({ status: 404, description: 'Documento não encontrado.' })
   @Patch(':id/publicar')
   @Roles(RoleUsuario.ADMIN)
-  async publicar(@Param('id') id: string) {
+  async publicar(@Param('id') id: string): Promise<DocumentoResponse> {
     const doc = await this.publicarDoc.execute(id)
     this.sse.emit('gestao:documento-publicado', id)
     return this.toResponse(doc)
@@ -104,7 +105,7 @@ export class DocumentosController {
   @ApiResponse({ status: 404, description: 'Documento não encontrado.' })
   @Patch(':id/despublicar')
   @Roles(RoleUsuario.ADMIN)
-  async despublicar(@Param('id') id: string) {
+  async despublicar(@Param('id') id: string): Promise<DocumentoResponse> {
     const doc = await this.despublicarDoc.execute(id)
     this.sse.emit('gestao:documento-despublicado', id)
     return this.toResponse(doc)
@@ -121,7 +122,7 @@ export class DocumentosController {
     await this.excluirDoc.execute(id)
   }
 
-  private toResponse(d: Documento) {
+  private toResponse(d: Documento): DocumentoResponse {
     return {
       id: d.id,
       titulo: d.titulo,

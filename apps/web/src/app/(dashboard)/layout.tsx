@@ -16,7 +16,15 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
-  const role = (user.app_metadata?.role as 'ADMIN' | 'ASSOCIADO') ?? 'ASSOCIADO'
+  const role = user.app_metadata?.role as string | undefined
+
+  // Segunda linha de defesa: apenas ADMIN e ASSOCIADO renderizam o dashboard.
+  // O middleware já bloqueia na borda, mas layouts server-side confirmam.
+  if (role !== 'ADMIN' && role !== 'ASSOCIADO') {
+    if (role === 'CLIENTE') redirect('/minha-conta')
+    redirect('/loja')
+  }
+
   const userName = (user.user_metadata?.nome as string | undefined) ?? ''
   const userEmail = user.email ?? ''
 
@@ -27,7 +35,7 @@ export default async function DashboardLayout({
     <>
       <ThemeBootstrap />
       <DashboardShell
-        role={role}
+        role={role as 'ADMIN' | 'ASSOCIADO'}
         userName={userName}
         userEmail={userEmail}
         defaultOpen={defaultOpen}

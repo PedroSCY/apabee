@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+﻿import { NotFoundException } from '@nestjs/common'
 import { RoleUsuario } from '@apa/shared'
 import { IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { AtivarUsuarioUseCase } from './AtivarUsuarioUseCase'
@@ -6,7 +6,7 @@ import { AtivarUsuarioUseCase } from './AtivarUsuarioUseCase'
 const makeUsuario = (ativo: boolean): Usuario =>
   new Usuario({
     id: 'usr-1',
-    nome: 'João',
+    nome: 'JoÃ£o',
     email: 'joao@email.com',
     role: RoleUsuario.ASSOCIADO,
     ativo,
@@ -30,6 +30,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('AtivarUsuarioUseCase', () => {
@@ -43,7 +44,7 @@ describe('AtivarUsuarioUseCase', () => {
     useCase = new AtivarUsuarioUseCase(repo, provedorAuth)
   })
 
-  it('ativa usuário inativo e persiste', async () => {
+  it('ativa usuÃ¡rio inativo e persiste', async () => {
     repo.findById.mockResolvedValue(makeUsuario(false))
     repo.update.mockResolvedValue(makeUsuario(true))
 
@@ -53,7 +54,7 @@ describe('AtivarUsuarioUseCase', () => {
     expect(provedorAuth.ativarAcesso).toHaveBeenCalledWith('usr-1')
   })
 
-  it('lança NotFoundException quando usuário não existe', async () => {
+  it('lanÃ§a NotFoundException quando usuÃ¡rio nÃ£o existe', async () => {
     repo.findById.mockResolvedValue(null)
 
     await expect(useCase.execute({ usuarioId: 'nao-existe' })).rejects.toThrow(NotFoundException)
@@ -61,3 +62,4 @@ describe('AtivarUsuarioUseCase', () => {
     expect(provedorAuth.ativarAcesso).not.toHaveBeenCalled()
   })
 })
+

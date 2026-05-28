@@ -17,7 +17,7 @@ const makeProduto = (campanhaId?: string) =>
   new Produto({ id: 'prod-1', nome: 'Mel', slug: 'mel', descricao: 'Mel puro', preco: 10, status: StatusProduto.PUBLICADO, campanhaId, criadoEm: new Date() })
 
 const campanhaRepo = { findById: jest.fn(), findByCodigo: jest.fn(), findAll: jest.fn(), findVencidas: jest.fn(), save: jest.fn(), update: jest.fn(), delete: jest.fn() } as jest.Mocked<ICampanhaRepository>
-const ordemRepo = { findById: jest.fn(), findByCampanha: jest.fn(), save: jest.fn(), update: jest.fn(), delete: jest.fn() } as jest.Mocked<IOrdemProducaoRepository>
+const ordemRepo = { findById: jest.fn(), findByCampanha: jest.fn(), save: jest.fn(), update: jest.fn(), delete: jest.fn(), salvarConfirmacaoAtomico: jest.fn() } as jest.Mocked<IOrdemProducaoRepository>
 const composicaoRepo = { findByProduto: jest.fn(), save: jest.fn(), delete: jest.fn() } as jest.Mocked<IComposicaoProdutoRepository>
 const produtoRepo = { findById: jest.fn(), findBySlug: jest.fn(), findAtivos: jest.fn(), findAll: jest.fn(), save: jest.fn(), update: jest.fn(), delete: jest.fn() } as jest.Mocked<IProdutoRepository>
 

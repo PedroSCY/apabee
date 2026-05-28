@@ -5,6 +5,7 @@ import { Florada, ICriarFloradaUseCase, IListarFlораdasUseCase } from '@apa/c
 import { Roles } from '../../../../../shared/guards'
 import { CriarFloradaDto } from './dto'
 import { CRIAR_FLORADA_USE_CASE, LISTAR_FLORADAS_USE_CASE } from '../../../producao.tokens'
+import { FloradaResponse } from './dto/response.types'
 
 @ApiTags('Produção — Floradas')
 @ApiBearerAuth('JWT')
@@ -19,18 +20,18 @@ export class FloradasController {
   @ApiResponse({ status: 201 })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criar_(@Body() dto: CriarFloradaDto) {
+  async criar_(@Body() dto: CriarFloradaDto): Promise<FloradaResponse> {
     return this.toResponse(await this.criar.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar floradas' })
   @Get()
-  async listar_() {
+  async listar_(): Promise<FloradaResponse[]> {
     const lista = await this.listar.execute()
     return lista.map(f => this.toResponse(f))
   }
 
-  private toResponse(f: Florada) {
+  private toResponse(f: Florada): FloradaResponse {
     return { id: f.id, nome: f.nome, descricao: f.descricao, ativa: f.ativa, criadoEm: f.criadoEm }
   }
 }

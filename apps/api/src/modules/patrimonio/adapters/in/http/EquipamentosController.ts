@@ -31,6 +31,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { CriarEquipamentoDto, AtualizarEquipamentoDto } from './dto'
+import { EquipamentoResponse } from './dto/response.types'
 import {
   ATUALIZAR_EQUIPAMENTO_USE_CASE,
   BUSCAR_EQUIPAMENTO_USE_CASE,
@@ -66,7 +67,7 @@ export class EquipamentosController {
   @ApiOperation({ summary: 'Criar equipamento' })
   @ApiResponse({ status: 201, description: 'Equipamento criado.' })
   @Post()
-  async criar(@Body() dto: CriarEquipamentoDto) {
+  async criar(@Body() dto: CriarEquipamentoDto): Promise<EquipamentoResponse> {
     return this.toResponse(await this.criarEquipamento.execute(dto))
   }
 
@@ -74,7 +75,7 @@ export class EquipamentosController {
   @ApiResponse({ status: 200, description: 'Lista de equipamentos.' })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get()
-  async listar() {
+  async listar(): Promise<EquipamentoResponse[]> {
     const lista = await this.listarEquipamentos.execute()
     return lista.map((e) => this.toResponse(e))
   }
@@ -84,7 +85,7 @@ export class EquipamentosController {
   @ApiResponse({ status: 200, description: 'Equipamento encontrado.' })
   @ApiResponse({ status: 404, description: 'Equipamento não encontrado.' })
   @Get(':id')
-  async buscar(@Param('id') id: string) {
+  async buscar(@Param('id') id: string): Promise<EquipamentoResponse> {
     return this.toResponse(await this.buscarEquipamento.execute(id))
   }
 
@@ -92,7 +93,7 @@ export class EquipamentosController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Equipamento atualizado.' })
   @Patch(':id')
-  async atualizar(@Param('id') id: string, @Body() dto: AtualizarEquipamentoDto) {
+  async atualizar(@Param('id') id: string, @Body() dto: AtualizarEquipamentoDto): Promise<EquipamentoResponse> {
     return this.toResponse(await this.atualizarEquipamento.execute(id, dto))
   }
 
@@ -109,7 +110,7 @@ export class EquipamentosController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Equipamento liberado para DISPONIVEL.' })
   @Patch(':id/liberar-manutencao')
-  async liberarManutencaoHandler(@Param('id') id: string) {
+  async liberarManutencaoHandler(@Param('id') id: string): Promise<EquipamentoResponse> {
     return this.toResponse(await this.liberarManutencao.execute(id))
   }
 
@@ -123,7 +124,7 @@ export class EquipamentosController {
     await this.excluirEquipamento.execute(id)
   }
 
-  private toResponse(e: Equipamento) {
+  private toResponse(e: Equipamento): EquipamentoResponse {
     return {
       id: e.id,
       nome: e.nome,

@@ -45,9 +45,10 @@ interface Props {
   campanhaId: string
   statusCampanha: StatusCampanha
   tipoCampanha: TipoCampanha
+  isAdmin?: boolean
 }
 
-export function ContribuicoesTab({ campanhaId, statusCampanha, tipoCampanha }: Props) {
+export function ContribuicoesTab({ campanhaId, statusCampanha, tipoCampanha, isAdmin = false }: Props) {
   const [formAberto, setFormAberto] = React.useState(false)
   const { data: contribuicoes = [], isLoading } = useContribuicoes(campanhaId)
   const { data: associados = [] } = useAssociados()
@@ -57,7 +58,7 @@ export function ContribuicoesTab({ campanhaId, statusCampanha, tipoCampanha }: P
   const { mutateAsync: remover } = useRemoverContribuicao(campanhaId)
 
   const isPending = registrando || registrandoColheita
-  const podeEditar = statusCampanha === 'ATIVA'
+  const podeEditar = isAdmin && statusCampanha === 'ATIVA'
   const isProducao = tipoCampanha === 'PRODUCAO'
 
   const nomeAssociado = (id: string | null) => id ? (associados.find(a => a.id === id)?.usuario.nome ?? id.slice(0, 8)) : 'Associação'

@@ -53,6 +53,18 @@ import {
   RegistrarPedidoAquisicaoDto,
 } from './dto'
 import {
+  ApuracaoCampanhaResponse,
+  CampanhaResponse,
+  ContribuicaoResponse,
+  CotaResponse,
+  CustoCampanhaResponse,
+  EstoqueCampanhaResponse,
+  ItemAquisicaoResponse,
+  MetaProducaoResponse,
+  OrdemProducaoResponse,
+  PedidoAquisicaoResponse,
+} from './dto/response.types'
+import {
   ADICIONAR_ITEM_AQUISICAO_USE_CASE,
   ATUALIZAR_CONTRIBUICAO_USE_CASE,
   ATUALIZAR_ITEM_AQUISICAO_USE_CASE,
@@ -185,7 +197,7 @@ export class CampanhasController {
   @ApiResponse({ status: 201 })
   @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criarCampanha(@Body() dto: CriarCampanhaDto) {
+  async criarCampanha(@Body() dto: CriarCampanhaDto): Promise<CampanhaResponse> {
     const campanha = await this.criar.execute({
       ...dto,
       dataInicio: new Date(dto.dataInicio),
@@ -198,7 +210,7 @@ export class CampanhasController {
 
   @ApiOperation({ summary: 'Listar campanhas' })
   @Get()
-  async listarCampanhas() {
+  async listarCampanhas(): Promise<CampanhaResponse[]> {
     const lista = await this.listar.execute()
     return lista.map(c => this.toCampanhaResponse(c))
   }
@@ -206,7 +218,7 @@ export class CampanhasController {
   @ApiOperation({ summary: 'Buscar campanha por ID' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id')
-  async buscarCampanha(@Param('id') id: string) {
+  async buscarCampanha(@Param('id') id: string): Promise<CampanhaResponse> {
     return this.toCampanhaResponse(await this.buscar.execute(id))
   }
 
@@ -292,6 +304,7 @@ export class CampanhasController {
 
   @ApiOperation({ summary: 'Registrar contribuição em campanha' })
   @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
   @Post(':id/contribuicoes')
   async registrarContribuicao_(@Param('id') campanhaId: string, @Body() dto: RegistrarContribuicaoDto) {
     const contribuicao = await this.registrarContribuicao.execute({ ...dto, campanhaId })
@@ -337,6 +350,7 @@ export class CampanhasController {
 
   @ApiOperation({ summary: 'Registrar cota em campanha de aquisição' })
   @ApiParam({ name: 'id', type: String })
+  @Roles(RoleUsuario.ADMIN)
   @Post(':id/cotas')
   async registrarCota_(@Param('id') campanhaId: string, @Body() dto: RegistrarCotaDto) {
     const cota = await this.registrarCota.execute({ ...dto, campanhaId })
@@ -448,6 +462,7 @@ export class CampanhasController {
   @ApiResponse({ status: 201, description: 'Pedido registrado.' })
   @ApiResponse({ status: 400, description: 'Campanha inativa, não é individual, ou associadoId ausente.' })
   @ApiResponse({ status: 404, description: 'Campanha ou item não encontrado.' })
+  @Roles(RoleUsuario.ADMIN)
   @Post(':id/pedidos-aquisicao')
   async registrarPedido_(@Param('id') campanhaId: string, @Body() dto: RegistrarPedidoAquisicaoDto) {
     return this.toPedidoAquisicaoResponse(await this.registrarPedido.execute({ ...dto, campanhaId }))
@@ -588,11 +603,16 @@ export class CampanhasController {
   @ApiParam({ name: 'id', type: String })
   @Roles(RoleUsuario.ADMIN)
   @Post(':id/metas')
-  async criarMeta_(@Param('id') campanhaId: string, @Body() dto: CriarMetaProducaoDto) {
+  async criarMeta_(@Param('id') campanhaId: string, @Body() dto: CriarMetaProducaoDto): Promise<MetaProducaoResponse> {
     const meta = await this.criarMeta.execute({ ...dto, campanhaId })
-    return { id: meta.id, campanhaId: meta.campanhaId, produtoId: meta.produtoId,
+    return {
+      id: meta.id,
+      campanhaId: meta.campanhaId,
+      produtoId: meta.produtoId,
       quantidadePlanejada: meta.quantidadePlanejada,
-      perdaPercentualEstimada: meta.perdaPercentualEstimada, criadoEm: meta.criadoEm }
+      perdaPercentualEstimada: meta.perdaPercentualEstimada,
+      criadoEm: meta.criadoEm,
+    }
   }
 
   @ApiOperation({ summary: 'Listar metas de produção da campanha com viabilidade de estoque' })
@@ -618,9 +638,9 @@ export class CampanhasController {
   @ApiOperation({ summary: 'Listar saldo de matéria-prima disponível na campanha' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id/estoque-campanha')
-  async listarEstoque_(@Param('id') campanhaId: string) {
+  async listarEstoque_(@Param('id') campanhaId: string): Promise<EstoqueCampanhaResponse[]> {
     const lista = await this.listarEstoqueCampanha.execute(campanhaId)
-    return lista.map(e => ({
+    return lista.map((e): EstoqueCampanhaResponse => ({
       id: e.id,
       tipoMateriaPrimaId: e.tipoMateriaPrimaId,
       quantidadeDisponivel: e.quantidadeDisponivel,
@@ -640,7 +660,7 @@ export class CampanhasController {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  private toCampanhaResponse(c: Campanha) {
+  private toCampanhaResponse(c: Campanha): CampanhaResponse {
     return {
       id: c.id, codigo: c.codigo, nome: c.nome, tipo: c.tipo, safraId: c.safraId,
       dataInicio: c.dataInicio, dataFim: c.dataFim, status: c.status,
@@ -651,7 +671,7 @@ export class CampanhasController {
     }
   }
 
-  private toContribuicaoResponse(c: Contribuicao) {
+  private toContribuicaoResponse(c: Contribuicao): ContribuicaoResponse {
     return {
       id: c.id, campanhaId: c.campanhaId, associadoId: c.associadoId, tipo: c.tipo,
       valorMonetario: c.valorMonetario, colheitaId: c.colheitaId, volume: c.volume,
@@ -660,7 +680,7 @@ export class CampanhasController {
     }
   }
 
-  private toCotaResponse(c: Cota) {
+  private toCotaResponse(c: Cota): CotaResponse {
     return {
       id: c.id, campanhaId: c.campanhaId,
       associadoId: c.associadoId ?? null,
@@ -671,7 +691,7 @@ export class CampanhasController {
     }
   }
 
-  private toCustoResponse(c: CustoCampanha) {
+  private toCustoResponse(c: CustoCampanha): CustoCampanhaResponse {
     return {
       id: c.id, campanhaId: c.campanhaId, descricao: c.descricao,
       valor: c.valor, categoria: c.categoria, pagoPorId: c.pagoPorId,
@@ -679,7 +699,7 @@ export class CampanhasController {
     }
   }
 
-  private toOrdemResponse(o: OrdemProducao) {
+  private toOrdemResponse(o: OrdemProducao): OrdemProducaoResponse {
     return {
       id: o.id, campanhaId: o.campanhaId, produtoId: o.produtoId,
       quantidade: o.quantidade, status: o.status, perdaPercentual: o.perdaPercentual,
@@ -692,7 +712,7 @@ export class CampanhasController {
     }
   }
 
-  private toApuracaoResponse(a: ApuracaoCampanha) {
+  private toApuracaoResponse(a: ApuracaoCampanha): ApuracaoCampanhaResponse {
     return {
       id: a.id, campanhaId: a.campanhaId,
       faturamentoTotal: a.faturamentoTotal, custoTotal: a.custoTotal, lucroLiquido: a.lucroLiquido,
@@ -700,7 +720,7 @@ export class CampanhasController {
     }
   }
 
-  private toItemAquisicaoResponse(i: ItemAquisicao) {
+  private toItemAquisicaoResponse(i: ItemAquisicao): ItemAquisicaoResponse {
     return {
       id: i.id, campanhaId: i.campanhaId, nome: i.nome,
       precoUnitario: i.precoUnitario, quantidadeMeta: i.quantidadeMeta,
@@ -710,7 +730,7 @@ export class CampanhasController {
     }
   }
 
-  private toMetaDetalheResponse(d: MetaProducaoDetalhe) {
+  private toMetaDetalheResponse(d: MetaProducaoDetalhe): MetaProducaoResponse {
     return {
       id: d.meta.id, campanhaId: d.meta.campanhaId, produtoId: d.meta.produtoId,
       nomeProduto: d.nomeProduto, precoProduto: d.precoProduto,
@@ -723,7 +743,7 @@ export class CampanhasController {
     }
   }
 
-  private toPedidoAquisicaoResponse(p: PedidoAquisicao) {
+  private toPedidoAquisicaoResponse(p: PedidoAquisicao): PedidoAquisicaoResponse {
     return {
       id: p.id, campanhaId: p.campanhaId, itemAquisicaoId: p.itemAquisicaoId,
       associadoId: p.associadoId, origem: p.origem,

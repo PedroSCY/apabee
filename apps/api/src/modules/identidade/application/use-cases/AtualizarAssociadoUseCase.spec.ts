@@ -1,10 +1,10 @@
-import { NotFoundException } from '@nestjs/common'
+﻿import { NotFoundException } from '@nestjs/common'
 import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { AtualizarAssociadoUseCase } from './AtualizarAssociadoUseCase'
 
 const makeUsuario = (ativo = true): Usuario =>
-  new Usuario({ id: 'user-1', nome: 'João', email: 'joao@test.com', role: RoleUsuario.ASSOCIADO, ativo, criadoEm: new Date() })
+  new Usuario({ id: 'user-1', nome: 'JoÃ£o', email: 'joao@test.com', role: RoleUsuario.ASSOCIADO, ativo, criadoEm: new Date() })
 
 const makeAssociado = (status = StatusAssociado.ATIVO): Associado =>
   new Associado({ id: 'assoc-1', usuario: makeUsuario(), dataIngresso: new Date(), status })
@@ -35,6 +35,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('AtualizarAssociadoUseCase', () => {
@@ -50,18 +51,18 @@ describe('AtualizarAssociadoUseCase', () => {
     useCase = new AtualizarAssociadoUseCase(associadoRepo, usuarioRepo, provedorAuth)
   })
 
-  it('atualiza observacoes sem alterar status do auth quando status não muda', async () => {
+  it('atualiza observacoes sem alterar status do auth quando status nÃ£o muda', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.ATIVO))
     associadoRepo.update.mockImplementation(async (a) => a)
 
-    const result = await useCase.execute({ associadoId: 'assoc-1', observacoes: 'Nova observação' })
+    const result = await useCase.execute({ associadoId: 'assoc-1', observacoes: 'Nova observaÃ§Ã£o' })
 
-    expect(result.observacoes).toBe('Nova observação')
+    expect(result.observacoes).toBe('Nova observaÃ§Ã£o')
     expect(provedorAuth.revogarAcesso).not.toHaveBeenCalled()
     expect(provedorAuth.ativarAcesso).not.toHaveBeenCalled()
   })
 
-  it('revoga acesso e desativa usuário ao mudar status para SUSPENSO', async () => {
+  it('revoga acesso e desativa usuÃ¡rio ao mudar status para SUSPENSO', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.ATIVO))
     associadoRepo.update.mockImplementation(async (a) => a)
     usuarioRepo.update.mockImplementation(async (u) => u)
@@ -73,7 +74,7 @@ describe('AtualizarAssociadoUseCase', () => {
     expect(usuarioRepo.update).toHaveBeenCalledWith(expect.objectContaining({ ativo: false }))
   })
 
-  it('revoga acesso e desativa usuário ao mudar status para INATIVO', async () => {
+  it('revoga acesso e desativa usuÃ¡rio ao mudar status para INATIVO', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.ATIVO))
     associadoRepo.update.mockImplementation(async (a) => a)
     usuarioRepo.update.mockImplementation(async (u) => u)
@@ -97,7 +98,7 @@ describe('AtualizarAssociadoUseCase', () => {
     expect(usuarioRepo.update).toHaveBeenCalledWith(expect.objectContaining({ ativo: true }))
   })
 
-  it('não chama provedor de auth quando status é igual ao atual', async () => {
+  it('nÃ£o chama provedor de auth quando status Ã© igual ao atual', async () => {
     associadoRepo.findById.mockResolvedValue(makeAssociado(StatusAssociado.ATIVO))
     associadoRepo.update.mockImplementation(async (a) => a)
 
@@ -108,10 +109,11 @@ describe('AtualizarAssociadoUseCase', () => {
     expect(usuarioRepo.update).not.toHaveBeenCalled()
   })
 
-  it('lança NotFoundException quando associado não existe', async () => {
+  it('lanÃ§a NotFoundException quando associado nÃ£o existe', async () => {
     associadoRepo.findById.mockResolvedValue(null)
 
     await expect(useCase.execute({ associadoId: 'nao-existe' })).rejects.toThrow(NotFoundException)
     expect(associadoRepo.update).not.toHaveBeenCalled()
   })
 })
+

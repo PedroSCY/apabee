@@ -37,6 +37,7 @@ import {
 } from '../../../patrimonio.tokens'
 import { BUSCAR_ASSOCIADO_POR_USUARIO_USE_CASE } from '../../../../identidade/identidade.tokens'
 import { CriarSolicitacaoDto } from './dto'
+import { SolicitacaoPatrimonioResponse } from './dto/response.types'
 
 @ApiTags('Patrimônio — Solicitações')
 @ApiBearerAuth('JWT')
@@ -56,7 +57,7 @@ export class SolicitacoesController {
   async criarHandler(
     @Body() dto: CriarSolicitacaoDto,
     @Request() req: { user: { sub: string; associadoId?: string } },
-  ) {
+  ): Promise<SolicitacaoPatrimonioResponse> {
     const associadoId = await this.resolveAssociadoId(req.user)
     const input =
       dto.tipoPatrimonio === TipoPatrimonio.EQUIPAMENTO
@@ -72,7 +73,7 @@ export class SolicitacoesController {
   async listarHandler(
     @Query('status') status?: StatusSolicitacaoPatrimonio,
     @Request() req?: { user: { sub: string; role: string; associadoId?: string } },
-  ) {
+  ): Promise<SolicitacaoPatrimonioResponse[]> {
     const user = req!.user
     if (user.role === RoleUsuario.ADMIN) {
       const lista = await this.listar.execute({ status })
@@ -88,7 +89,7 @@ export class SolicitacoesController {
   @Patch(':id/aprovar')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleUsuario.ADMIN)
-  async aprovarHandler(@Param('id') id: string) {
+  async aprovarHandler(@Param('id') id: string): Promise<SolicitacaoPatrimonioResponse> {
     const s = await this.aprovar.execute(id)
     return this.toResponse(s)
   }
@@ -97,7 +98,7 @@ export class SolicitacoesController {
   @Patch(':id/rejeitar')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleUsuario.ADMIN)
-  async rejeitarHandler(@Param('id') id: string) {
+  async rejeitarHandler(@Param('id') id: string): Promise<SolicitacaoPatrimonioResponse> {
     const s = await this.rejeitar.execute(id)
     return this.toResponse(s)
   }
@@ -109,7 +110,7 @@ export class SolicitacoesController {
     return associado.id
   }
 
-  private toResponse(s: SolicitacaoPatrimonio) {
+  private toResponse(s: SolicitacaoPatrimonio): SolicitacaoPatrimonioResponse {
     return {
       id: s.id,
       tipoPatrimonio: s.tipoPatrimonio,

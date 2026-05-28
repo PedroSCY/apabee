@@ -25,6 +25,7 @@ const ordemRepo: jest.Mocked<IOrdemProducaoRepository> = {
   save: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  salvarConfirmacaoAtomico: jest.fn(),
 }
 
 describe('ConcluirCampanhaUseCase', () => {

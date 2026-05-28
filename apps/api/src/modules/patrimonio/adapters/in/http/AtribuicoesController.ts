@@ -26,6 +26,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { AtribuirPatrimonioDto } from './dto'
+import { AtribuicaoPatrimonioResponse } from './dto/response.types'
 import {
   ATRIBUIR_PATRIMONIO_USE_CASE,
   DEVOLVER_PATRIMONIO_USE_CASE,
@@ -52,7 +53,7 @@ export class AtribuicoesController {
   @ApiOperation({ summary: 'Listar todas as atribuições (admin)' })
   @ApiResponse({ status: 200, description: 'Lista completa de atribuições.' })
   @Get()
-  async listarTodas() {
+  async listarTodas(): Promise<AtribuicaoPatrimonioResponse[]> {
     const lista = await this.listarTodasAtribuicoes.execute()
     return lista.map((a) => this.toResponse(a))
   }
@@ -61,7 +62,7 @@ export class AtribuicoesController {
   @ApiResponse({ status: 201, description: 'Atribuição criada.' })
   @ApiResponse({ status: 400, description: 'Patrimônio indisponível ou já atribuído (RN02).' })
   @Post()
-  async atribuir(@Body() dto: AtribuirPatrimonioDto) {
+  async atribuir(@Body() dto: AtribuirPatrimonioDto): Promise<AtribuicaoPatrimonioResponse> {
     const atribuicao = await this.atribuirPatrimonio.execute({
       ...dto,
       dataInicio: dto.dataInicio ? new Date(dto.dataInicio) : undefined,
@@ -83,12 +84,12 @@ export class AtribuicoesController {
   @ApiResponse({ status: 200, description: 'Lista de atribuições.' })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get('associado/:associadoId')
-  async listarPorAssociado(@Param('associadoId') associadoId: string) {
+  async listarPorAssociado(@Param('associadoId') associadoId: string): Promise<AtribuicaoPatrimonioResponse[]> {
     const lista = await this.listarAtribuicoes.execute(associadoId)
     return lista.map((a) => this.toResponse(a))
   }
 
-  private toResponse(a: AtribuicaoPatrimonio) {
+  private toResponse(a: AtribuicaoPatrimonio): AtribuicaoPatrimonioResponse {
     return {
       id: a.id,
       patrimonioId: a.patrimonioId,

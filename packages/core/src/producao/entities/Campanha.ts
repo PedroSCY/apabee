@@ -1,4 +1,4 @@
-import { DestinatarioCampanha, StatusCampanha, TipoLote } from '@apa/shared'
+﻿import { DestinatarioCampanha, StatusCampanha, TipoLote } from '@apa/shared'
 
 interface CampanhaProps {
   id: string
@@ -91,5 +91,4 @@ export class Campanha {
     return new Campanha({ ...this.props, status: StatusCampanha.CANCELADA })
   }
 
-  toJSON() { return { ...this.props } }
 }

@@ -1,6 +1,6 @@
 ﻿import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { IniciarCampanhaUseCase } from './IniciarCampanhaUseCase'
-import { Campanha, ICampanhaRepository } from '@apa/core'
+import { Campanha, ICampanhaRepository, IMetaProducaoRepository, IOrdemProducaoRepository } from '@apa/core'
 import { StatusCampanha, TipoLote } from '@apa/shared'
 
 const makeCampanha = (status: StatusCampanha) =>
@@ -16,12 +16,29 @@ const repo: jest.Mocked<ICampanhaRepository> = {
   delete: jest.fn(),
 }
 
+const metaRepo: jest.Mocked<IMetaProducaoRepository> = {
+  findById: jest.fn(),
+  findByCampanha: jest.fn(),
+  findByCampanhaEProduto: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+}
+
+const ordemRepo: jest.Mocked<IOrdemProducaoRepository> = {
+  findById: jest.fn(),
+  findByCampanha: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+  salvarConfirmacaoAtomico: jest.fn(),
+}
+
 describe('IniciarCampanhaUseCase', () => {
   let useCase: IniciarCampanhaUseCase
 
   beforeEach(() => {
     jest.clearAllMocks()
-    useCase = new IniciarCampanhaUseCase(repo)
+    useCase = new IniciarCampanhaUseCase(repo, metaRepo, ordemRepo)
     repo.update.mockImplementation(async c => c)
   })
 

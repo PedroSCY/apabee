@@ -42,6 +42,7 @@ import {
   REMOVER_PARTICIPANTE_USE_CASE,
 } from '../../../gestao.tokens'
 import { CriarAtaDto, AdicionarParticipanteDto } from './dto/CriarAtaDto'
+import { AtaResponse, ParticipanteAtaResponse } from './dto/response.types'
 
 @ApiTags('Gestão — Atas')
 @ApiBearerAuth('JWT')
@@ -63,7 +64,7 @@ export class AtasController {
   @ApiResponse({ status: 403, description: 'Sem permissão (requer ADMIN).' })
   @Post()
   @Roles(RoleUsuario.ADMIN)
-  async criar(@Body() dto: CriarAtaDto, @Request() req: { user: { sub: string } }) {
+  async criar(@Body() dto: CriarAtaDto, @Request() req: { user: { sub: string } }): Promise<AtaResponse> {
     const ata = await this.criarAta.execute({
       titulo: dto.titulo,
       conteudo: dto.conteudo,
@@ -78,8 +79,9 @@ export class AtasController {
   @ApiOperation({ summary: 'Listar atas', description: 'Admin vê todas as atas (publicadas e rascunhos). Associado vê apenas as publicadas.' })
   @ApiResponse({ status: 200, description: 'Lista de atas.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
+  @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get()
-  async listar(@Request() req: { user: { role: string } }) {
+  async listar(@Request() req: { user: { role: string } }): Promise<AtaResponse[]> {
     const apenasPublicadas = req.user.role !== RoleUsuario.ADMIN
     const lista = await this.listarAtas.execute(apenasPublicadas)
     return lista.map((a) => this.toAtaResponse(a))
@@ -91,7 +93,7 @@ export class AtasController {
   @ApiResponse({ status: 404, description: 'Ata não encontrada.' })
   @Patch(':id/publicar')
   @Roles(RoleUsuario.ADMIN)
-  async publicar(@Param('id') id: string) {
+  async publicar(@Param('id') id: string): Promise<AtaResponse> {
     return this.toAtaResponse(await this.publicarAta.execute(id))
   }
 
@@ -101,7 +103,7 @@ export class AtasController {
   @ApiResponse({ status: 404, description: 'Ata não encontrada.' })
   @Patch(':id/despublicar')
   @Roles(RoleUsuario.ADMIN)
-  async despublicar(@Param('id') id: string) {
+  async despublicar(@Param('id') id: string): Promise<AtaResponse> {
     return this.toAtaResponse(await this.despublicarAta.execute(id))
   }
 
@@ -109,8 +111,9 @@ export class AtasController {
   @ApiParam({ name: 'id', description: 'UUID da ata' })
   @ApiResponse({ status: 200, description: 'Lista de participantes.' })
   @ApiResponse({ status: 404, description: 'Ata não encontrada.' })
+  @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get(':id/participantes')
-  async listarParticipantesAta(@Param('id') id: string) {
+  async listarParticipantesAta(@Param('id') id: string): Promise<ParticipanteAtaResponse[]> {
     const lista = await this.listarParticipantes.execute(id)
     return lista.map((p) => this.toParticipanteResponse(p))
   }
@@ -124,7 +127,7 @@ export class AtasController {
   async adicionarParticipanteAta(
     @Param('id') ataId: string,
     @Body() dto: AdicionarParticipanteDto,
-  ) {
+  ): Promise<ParticipanteAtaResponse> {
     return this.toParticipanteResponse(await this.adicionarParticipante.execute(ataId, dto.associadoId))
   }
 
@@ -140,7 +143,7 @@ export class AtasController {
     await this.removerParticipante.execute(participanteId)
   }
 
-  private toAtaResponse(a: Ata) {
+  private toAtaResponse(a: Ata): AtaResponse {
     return {
       id: a.id,
       titulo: a.titulo,
@@ -152,7 +155,7 @@ export class AtasController {
     }
   }
 
-  private toParticipanteResponse(p: ParticipanteAta) {
+  private toParticipanteResponse(p: ParticipanteAta): ParticipanteAtaResponse {
     return {
       id: p.id,
       ataId: p.ataId,

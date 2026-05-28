@@ -49,7 +49,4 @@ export class Insumo {
     return new Insumo({ ...this.props, descricao })
   }
 
-  toJSON(): InsumoProps {
-    return { ...this.props }
-  }
 }

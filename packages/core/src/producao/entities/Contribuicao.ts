@@ -1,4 +1,4 @@
-import { TipoContribuicao } from '@apa/shared'
+﻿import { TipoContribuicao } from '@apa/shared'
 
 interface ContribuicaoProps {
   id: string
@@ -45,5 +45,4 @@ export class Contribuicao {
     return new Contribuicao({ ...this.props, liquidado: true })
   }
 
-  toJSON() { return { ...this.props } }
 }

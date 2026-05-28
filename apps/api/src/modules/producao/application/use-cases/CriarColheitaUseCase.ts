@@ -15,7 +15,7 @@ import {
   MovimentacaoEstoque,
   MovimentacaoEstoqueCampanha,
 } from '@apa/core'
-import { StatusSafra, TipoContribuicao, TipoMovimentacao } from '@apa/shared'
+import { StatusSafra, TipoContribuicao, TipoMovimentacao, UnidadeMedida } from '@apa/shared'
 import { randomUUID } from 'crypto'
 import {
   COLHEITA_REPOSITORY,
@@ -93,7 +93,7 @@ export class CriarColheitaUseCase implements ICriarColheitaUseCase {
     return salva
   }
 
-  private async adicionarAoEstoqueCampanha(input: CriarColheitaInput, colheitaId: string, unidade: string): Promise<void> {
+  private async adicionarAoEstoqueCampanha(input: CriarColheitaInput, colheitaId: string, unidade: UnidadeMedida): Promise<void> {
     const existente = await this.estoqueCampanhaRepo.findByCampanhaETipo(
       input.campanhaId!,
       input.tipoMateriaPrimaId,
@@ -126,7 +126,7 @@ export class CriarColheitaUseCase implements ICriarColheitaUseCase {
     )
   }
 
-  private async adicionarAoPool(input: CriarColheitaInput, colheitaId: string, unidade: string): Promise<void> {
+  private async adicionarAoPool(input: CriarColheitaInput, colheitaId: string, unidade: UnidadeMedida): Promise<void> {
     const estoqueExistente = await this.estoquePoolRepo.findByTipo(input.tipoMateriaPrimaId)
 
     let estoque: EstoqueMateriaPrima

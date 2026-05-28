@@ -17,6 +17,7 @@ import {
 import { RelatorioFinanceiroService } from '../../../adapters/out/RelatorioFinanceiroService'
 import { RegistrarMovimentoDto } from './dto/RegistrarMovimentoDto'
 import { ExportarMovimentosDto } from './dto/ExportarMovimentosDto'
+import { MovimentoFinanceiroResponse } from './dto/response.types'
 
 @ApiTags('Financeiro — Movimentos')
 @ApiBearerAuth('JWT')
@@ -51,7 +52,7 @@ export class MovimentosController {
     @Query('associadoId') associadoId?: string,
     @Query('campanhaId') campanhaId?: string,
     @Query('limit') limit?: string,
-  ) {
+  ): Promise<MovimentoFinanceiroResponse[]> {
     const movimentos = await this.listar.execute({ associadoId, campanhaId, limit: limit ? Number(limit) : 200 })
     return movimentos.map((m) => this.toResponse(m))
   }
@@ -61,7 +62,7 @@ export class MovimentosController {
   @ApiResponse({ status: 400, description: 'Tipo inválido ou valor ≤ 0.' })
   @Post()
   @HttpCode(201)
-  async registrar_(@Body() dto: RegistrarMovimentoDto) {
+  async registrar_(@Body() dto: RegistrarMovimentoDto): Promise<MovimentoFinanceiroResponse> {
     const movimento = await this.registrar.execute({
       ...dto,
       data: dto.data ? new Date(dto.data) : undefined,
@@ -123,7 +124,7 @@ export class MovimentosController {
     return res.send(buf)
   }
 
-  private toResponse(m: MovimentoFinanceiro) {
+  private toResponse(m: MovimentoFinanceiro): MovimentoFinanceiroResponse {
     return { id: m.id, associadoId: m.associadoId, campanhaId: m.campanhaId, valor: m.valor, tipo: m.tipo, descricao: m.descricao, data: m.data }
   }
 }

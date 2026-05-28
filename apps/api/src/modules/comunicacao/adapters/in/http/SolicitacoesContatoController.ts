@@ -43,6 +43,7 @@ import {
   EXCLUIR_SOLICITACAO_CONTATO_USE_CASE,
   LISTAR_SOLICITACOES_CONTATO_USE_CASE,
 } from '../../../comunicacao.tokens'
+import { SolicitacaoContatoResponse } from './dto/response.types'
 
 class CriarSolicitacaoContatoDto {
   @IsEnum(TipoSolicitacaoContato) tipo!: TipoSolicitacaoContato
@@ -75,7 +76,7 @@ export class SolicitacoesContatoController {
   @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async criarHandler(@Body() dto: CriarSolicitacaoContatoDto) {
+  async criarHandler(@Body() dto: CriarSolicitacaoContatoDto): Promise<SolicitacaoContatoResponse> {
     const s = await this.criar.execute(dto)
     return this.toResponse(s)
   }
@@ -85,7 +86,7 @@ export class SolicitacoesContatoController {
   @ApiResponse({ status: 200, description: 'Lista de solicitações.' })
   @Roles(RoleUsuario.ADMIN)
   @Get()
-  async listarHandler(@Query('status') status?: StatusSolicitacaoContato) {
+  async listarHandler(@Query('status') status?: StatusSolicitacaoContato): Promise<SolicitacaoContatoResponse[]> {
     const lista = await this.listar.execute(status)
     return lista.map((s) => this.toResponse(s))
   }
@@ -96,7 +97,7 @@ export class SolicitacoesContatoController {
   @ApiResponse({ status: 404, description: 'Solicitação não encontrada.' })
   @Roles(RoleUsuario.ADMIN)
   @Patch(':id/status')
-  async atualizarStatusHandler(@Param('id') id: string, @Body() dto: AtualizarStatusDto) {
+  async atualizarStatusHandler(@Param('id') id: string, @Body() dto: AtualizarStatusDto): Promise<SolicitacaoContatoResponse> {
     const s = await this.atualizarStatus.execute(id, dto.status)
     return this.toResponse(s)
   }
@@ -112,7 +113,7 @@ export class SolicitacoesContatoController {
     await this.excluir.execute(id)
   }
 
-  private toResponse(s: SolicitacaoContato) {
+  private toResponse(s: SolicitacaoContato): SolicitacaoContatoResponse {
     return {
       id: s.id,
       tipo: s.tipo,

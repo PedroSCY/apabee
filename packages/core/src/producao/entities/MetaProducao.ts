@@ -1,4 +1,4 @@
-interface MetaProducaoProps {
+﻿interface MetaProducaoProps {
   id: string
   campanhaId: string
   produtoId: string
@@ -26,5 +26,4 @@ export class MetaProducao {
     return quantidadeNecessariaPorUnidade * this.props.quantidadePlanejada * (1 + this.props.perdaPercentualEstimada / 100)
   }
 
-  toJSON() { return { ...this.props } }
 }

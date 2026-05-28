@@ -419,9 +419,10 @@ interface Props {
   campanhaId: string
   statusCampanha: StatusCampanha
   onConcluir?: () => void
+  isAdmin?: boolean
 }
 
-export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Props) {
+export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir, isAdmin = false }: Props) {
   const { data: ordens = [], isLoading } = useOrdensProducao(campanhaId)
   const { data: estoque = [] } = useEstoqueCampanha(campanhaId)
   const { data: produtos = [] } = useProdutos()
@@ -435,7 +436,7 @@ export function OrdensProducaoTab({ campanhaId, statusCampanha, onConcluir }: Pr
   const [removerOrdemId, setRemoverOrdemId] = React.useState<string | null>(null)
   const [estornarOrdemId, setEstornarOrdemId] = React.useState<string | null>(null)
 
-  const podeEditar = statusCampanha === 'ATIVA'
+  const podeEditar = isAdmin && statusCampanha === 'ATIVA'
   const produtoNome = (id: string) => produtos.find(p => p.id === id)?.nome ?? id.slice(0, 8)
   const tipoNome = (id: string) => tipos.find(t => t.id === id)?.nome ?? id.slice(0, 8)
   const todasConcluidas = ordens.length > 0 && ordens.every(o => o.status === 'CONCLUIDA')

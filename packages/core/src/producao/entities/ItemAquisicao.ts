@@ -1,4 +1,4 @@
-interface ItemAquisicaoProps {
+﻿interface ItemAquisicaoProps {
   id: string
   campanhaId: string
   nome: string
@@ -44,5 +44,4 @@ export class ItemAquisicao {
     return this.props.quantidadeTotalPedida * this.props.precoUnitario
   }
 
-  toJSON() { return { ...this.props } }
 }

@@ -25,4 +25,6 @@ export interface IProvedorAuth {
   removerCredencial(usuarioId: string): Promise<void>
   /** Atualiza metadados (app_metadata) do usuário no provedor. */
   atualizarMetadata(usuarioId: string, metadata: Record<string, unknown>): Promise<void>
+  /** Define app_metadata.role = CLIENTE para um usuário Google OAuth. */
+  definirRoleCliente(usuarioId: string): Promise<void>
 }

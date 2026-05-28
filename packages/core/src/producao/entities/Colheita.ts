@@ -1,4 +1,4 @@
-interface ColheitaProps {
+﻿interface ColheitaProps {
   id: string
   associadoId: string
   tipoMateriaPrimaId: string
@@ -36,5 +36,4 @@ export class Colheita {
     return this.props.volume > 0
   }
 
-  toJSON() { return { ...this.props } }
 }

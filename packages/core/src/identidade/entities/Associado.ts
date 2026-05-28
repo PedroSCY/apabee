@@ -57,5 +57,4 @@ export class Associado {
     return new Associado({ ...this.props, ...dados })
   }
 
-  toJSON(): AssociadoProps { return { ...this.props } }
 }

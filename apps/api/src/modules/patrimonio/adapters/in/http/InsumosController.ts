@@ -27,6 +27,7 @@ import {
   LIBERAR_INSUMO_MANUTENCAO_USE_CASE,
   LISTAR_INSUMOS_USE_CASE,
 } from '../../../patrimonio.tokens'
+import { InsumoResponse } from './dto/response.types'
 
 @ApiTags('Patrimônio — Insumos (unidades)')
 @ApiBearerAuth('JWT')
@@ -45,7 +46,7 @@ export class InsumosController {
   @ApiQuery({ name: 'tipoId', required: false, type: String, description: 'Filtrar por tipo de insumo' })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get()
-  async listar(@Query('tipoId') tipoId?: string) {
+  async listar(@Query('tipoId') tipoId?: string): Promise<InsumoResponse[]> {
     const lista = await this.listarInsumos.execute(tipoId)
     return lista.map((i) => this.toResponse(i))
   }
@@ -54,7 +55,7 @@ export class InsumosController {
   @ApiParam({ name: 'id', type: String })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get(':id')
-  async buscar(@Param('id') id: string) {
+  async buscar(@Param('id') id: string): Promise<InsumoResponse> {
     return this.toResponse(await this.buscarInsumo.execute(id))
   }
 
@@ -70,7 +71,7 @@ export class InsumosController {
   @ApiOperation({ summary: 'Liberar unidade da manutenção' })
   @ApiParam({ name: 'id', type: String })
   @Patch(':id/liberar-manutencao')
-  async liberarManutencaoHandler(@Param('id') id: string) {
+  async liberarManutencaoHandler(@Param('id') id: string): Promise<InsumoResponse> {
     return this.toResponse(await this.liberarManutencao.execute(id))
   }
 
@@ -83,7 +84,7 @@ export class InsumosController {
     await this.excluirInsumo.execute(id)
   }
 
-  private toResponse(i: Insumo) {
+  private toResponse(i: Insumo): InsumoResponse {
     return {
       id: i.id,
       identificador: i.identificador,

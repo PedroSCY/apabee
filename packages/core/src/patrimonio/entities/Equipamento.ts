@@ -48,7 +48,4 @@ export class Equipamento {
     })
   }
 
-  toJSON(): EquipamentoProps {
-    return { ...this.props }
-  }
 }

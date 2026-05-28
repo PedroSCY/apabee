@@ -1,4 +1,4 @@
-import { OrigemContribuicao } from '@apa/shared'
+﻿import { OrigemContribuicao } from '@apa/shared'
 
 interface PedidoAquisicaoProps {
   id: string
@@ -47,5 +47,4 @@ export class PedidoAquisicao {
     return new PedidoAquisicao({ ...this.props, entregue: true, entregueEm: new Date() })
   }
 
-  toJSON() { return { ...this.props } }
 }

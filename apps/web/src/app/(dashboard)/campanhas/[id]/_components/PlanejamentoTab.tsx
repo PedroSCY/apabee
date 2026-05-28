@@ -37,9 +37,10 @@ type FormValues = z.infer<typeof schema>
 
 interface Props {
   campanhaId: string
+  isAdmin?: boolean
 }
 
-export function PlanejamentoTab({ campanhaId }: Props) {
+export function PlanejamentoTab({ campanhaId, isAdmin = false }: Props) {
   const { data: metas = [], isLoading } = useMetasProducao(campanhaId)
   const { data: produtos = [] } = useProdutos()
   const { mutateAsync: criarMeta, isPending: criando } = useCriarMeta(campanhaId)
@@ -106,9 +107,11 @@ export function PlanejamentoTab({ campanhaId }: Props) {
             </p>
           )}
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <Plus className="size-4" /> Adicionar meta
-        </Button>
+        {isAdmin && (
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <Plus className="size-4" /> Adicionar meta
+          </Button>
+        )}
       </div>
 
       {metas.length === 0 ? (
@@ -134,14 +137,16 @@ export function PlanejamentoTab({ campanhaId }: Props) {
                     ? <Badge className="bg-emerald-100 text-emerald-700 border-transparent text-xs">Estoque OK</Badge>
                     : <Badge className="bg-amber-100 text-amber-700 border-transparent text-xs">Déficit</Badge>
                   }
-                  <Button
-                    size="icon" variant="ghost"
-                    aria-label="Remover meta"
-                    className="size-7 text-destructive hover:bg-destructive/10"
-                    onClick={() => setConfirmMeta(m)}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      size="icon" variant="ghost"
+                      aria-label="Remover meta"
+                      className="size-7 text-destructive hover:bg-destructive/10"
+                      onClick={() => setConfirmMeta(m)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
 

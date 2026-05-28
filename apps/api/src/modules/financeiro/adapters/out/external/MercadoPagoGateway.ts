@@ -3,10 +3,25 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import type { CobrancaInput, CobrancaResult, IPaymentGateway, StatusCobranca, WebhookEvent } from '@apa/core'
 
+const MAPA_REJEICAO: Record<string, string> = {
+  cc_rejected_insufficient_amount: 'Saldo insuficiente',
+  cc_rejected_bad_filled_card_number: 'Número do cartão inválido',
+  cc_rejected_bad_filled_security_code: 'Código de segurança inválido',
+  cc_rejected_bad_filled_date: 'Validade do cartão inválida',
+  cc_rejected_call_for_authorize: 'Contate seu banco para autorizar',
+  cc_rejected_card_disabled: 'Cartão bloqueado',
+  cc_rejected_high_risk: 'Pagamento recusado por segurança',
+  cc_rejected_duplicated_payment: 'Pagamento duplicado',
+  cc_rejected_max_attempts: 'Número máximo de tentativas atingido',
+  cc_rejected_other_reason: 'Pagamento recusado pelo banco',
+}
+
 interface MpPaymentResponse {
   id: number
   status: string
+  status_detail?: string
   external_reference?: string
+  transaction_amount?: number
   point_of_interaction?: {
     transaction_data?: {
       qr_code?: string
@@ -37,9 +52,29 @@ export class MercadoPagoGateway implements IPaymentGateway {
   }
 
   async criarCobranca(input: CobrancaInput): Promise<CobrancaResult> {
-    const [firstName, ...rest] = (input.nomeCliente ?? 'Associado').split(' ')
+    const [firstName, ...rest] = (input.nomeCliente ?? 'Cliente').split(' ')
     const lastName = rest.join(' ') || firstName
 
+    const payer: Record<string, unknown> = {
+      email: input.emailCliente ?? 'pagador@apabee.com.br',
+      first_name: firstName,
+      last_name: lastName,
+      ...(input.cpfCnpjCliente
+        ? { identification: { type: 'CPF', number: input.cpfCnpjCliente.replace(/\D/g, '') } }
+        : {}),
+    }
+
+    if (input.metodoPagamento === 'CARTAO') {
+      return this.criarCobrancaCartao(input, payer)
+    }
+
+    return this.criarCobrancaPix(input, payer)
+  }
+
+  private async criarCobrancaPix(
+    input: CobrancaInput,
+    payer: Record<string, unknown>,
+  ): Promise<CobrancaResult> {
     const vencimento = input.vencimento ?? new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     const valorCobrado = this.feePercent > 0
@@ -52,14 +87,7 @@ export class MercadoPagoGateway implements IPaymentGateway {
       payment_method_id: 'pix',
       external_reference: input.referenciaId,
       date_of_expiration: vencimento.toISOString(),
-      payer: {
-        email: input.emailCliente ?? 'pagador@apabee.com.br',
-        first_name: firstName,
-        last_name: lastName,
-        ...(input.cpfCnpjCliente
-          ? { identification: { type: 'CPF', number: input.cpfCnpjCliente.replace(/\D/g, '') } }
-          : {}),
-      },
+      payer,
     }
 
     const res = await this.request<MpPaymentResponse>('POST', '/v1/payments', body, {
@@ -71,7 +99,7 @@ export class MercadoPagoGateway implements IPaymentGateway {
     const pixCopiaECola = txData?.qr_code
     const pixQrCodeBase64 = txData?.qr_code_base64
 
-    this.logger.log(`Cobrança MP criada: id=${res.id} referencia=${input.referenciaId} valorCobrado=${valorCobrado}`)
+    this.logger.log(`Cobrança PIX MP criada: id=${res.id} referencia=${input.referenciaId} valorCobrado=${valorCobrado}`)
 
     return {
       gatewayId: String(res.id),
@@ -80,6 +108,40 @@ export class MercadoPagoGateway implements IPaymentGateway {
       pixQrCodeBase64,
       status: res.status ?? 'pending',
       valorCobrado: valorCobrado !== input.valor ? valorCobrado : undefined,
+    }
+  }
+
+  private async criarCobrancaCartao(
+    input: CobrancaInput,
+    payer: Record<string, unknown>,
+  ): Promise<CobrancaResult> {
+    const body: Record<string, unknown> = {
+      transaction_amount: input.valor,
+      description: input.descricao,
+      external_reference: input.referenciaId,
+      token: input.cardToken,
+      installments: input.cardInstallments ?? 1,
+      payment_method_id: input.cardPaymentMethodId,
+      issuer_id: input.cardIssuerId,
+      payer,
+    }
+
+    const res = await this.request<MpPaymentResponse>('POST', '/v1/payments', body, {
+      'X-Idempotency-Key': input.referenciaId,
+    })
+
+    this.logger.log(`Cobrança Cartão MP: id=${res.id} status=${res.status} detail=${res.status_detail}`)
+
+    const motivoRejeicao = res.status === 'rejected'
+      ? (MAPA_REJEICAO[res.status_detail ?? ''] ?? 'Pagamento recusado')
+      : undefined
+
+    return {
+      gatewayId: String(res.id),
+      linkPagamento: '',
+      status: res.status ?? 'rejected',
+      valorCobrado: res.transaction_amount,
+      motivoRejeicao,
     }
   }
 
@@ -107,6 +169,22 @@ export class MercadoPagoGateway implements IPaymentGateway {
       await this.request('PUT', `/v1/payments/${gatewayId}`, { status: 'cancelled' })
       this.logger.log(`Cobrança MP cancelada: id=${gatewayId}`)
     }
+  }
+
+  async estornarCobranca(gatewayId: string): Promise<void> {
+    const pagamento = await this.request<MpPaymentResponse>('GET', `/v1/payments/${gatewayId}`)
+
+    if (['refunded', 'charged_back'].includes(pagamento.status ?? '')) {
+      this.logger.log(`Cobrança MP já estornada (${pagamento.status}): id=${gatewayId} — nenhuma ação`)
+      return
+    }
+
+    if (pagamento.status !== 'approved') {
+      throw new Error(`Não é possível estornar pagamento com status "${pagamento.status}". Somente pagamentos aprovados podem ser estornados.`)
+    }
+
+    await this.request('POST', `/v1/payments/${gatewayId}/refunds`, {})
+    this.logger.log(`Estorno MP solicitado com sucesso: id=${gatewayId}`)
   }
 
   async processarWebhook(payload: unknown, token: string): Promise<WebhookEvent> {

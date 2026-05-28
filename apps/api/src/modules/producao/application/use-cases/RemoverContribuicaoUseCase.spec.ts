@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { RemoverContribuicaoUseCase } from './RemoverContribuicaoUseCase'
-import { Campanha, Contribuicao, ICampanhaRepository, IContribuicaoRepository } from '@apa/core'
+import { Campanha, Contribuicao, ICampanhaRepository, IColheitaRepository, IContribuicaoRepository, IEstoqueCampanhaRepository, IEstoqueMateriaPrimaRepository } from '@apa/core'
 import { StatusCampanha, TipoContribuicao, TipoLote } from '@apa/shared'
 
 const makeCampanha = (status: StatusCampanha) =>
@@ -29,12 +29,41 @@ const campanhaRepo: jest.Mocked<ICampanhaRepository> = {
   delete: jest.fn(),
 }
 
+const estoqueCampanhaRepo: jest.Mocked<IEstoqueCampanhaRepository> = {
+  findByCampanha: jest.fn(),
+  findByCampanhaETipo: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  salvarMovimentacao: jest.fn(),
+  countSaidas: jest.fn(),
+  findMovimentacoes: jest.fn(),
+}
+
+const poolRepo: jest.Mocked<IEstoqueMateriaPrimaRepository> = {
+  findAll: jest.fn(),
+  findByTipo: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  salvarMovimentacao: jest.fn(),
+  findMovimentacoesByEstoque: jest.fn(),
+  deleteByTipo: jest.fn(),
+}
+
+const colheitaRepo: jest.Mocked<IColheitaRepository> = {
+  findAll: jest.fn(),
+  findById: jest.fn(),
+  findByAssociado: jest.fn(),
+  findByCampanha: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+}
+
 describe('RemoverContribuicaoUseCase', () => {
   let useCase: RemoverContribuicaoUseCase
 
   beforeEach(() => {
     jest.clearAllMocks()
-    useCase = new RemoverContribuicaoUseCase(contribuicaoRepo, campanhaRepo)
+    useCase = new RemoverContribuicaoUseCase(contribuicaoRepo, campanhaRepo, estoqueCampanhaRepo, poolRepo, colheitaRepo)
     contribuicaoRepo.delete.mockResolvedValue(undefined)
   })
 

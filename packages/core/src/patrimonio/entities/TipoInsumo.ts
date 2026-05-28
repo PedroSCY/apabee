@@ -32,7 +32,4 @@ export class TipoInsumo {
     })
   }
 
-  toJSON(): TipoInsumoProps {
-    return { ...this.props }
-  }
 }

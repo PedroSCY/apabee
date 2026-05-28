@@ -33,6 +33,7 @@ import {
 import { Roles } from '../../../../../shared/guards'
 import { SseService } from '../../../../../shared/sse/sse.service'
 import { CriarAvisoDto } from './dto/CriarAvisoDto'
+import { AvisoResponse } from './dto/response.types'
 import {
   CRIAR_AVISO_USE_CASE,
   DESPUBLICAR_AVISO_USE_CASE,
@@ -58,7 +59,7 @@ export class AvisosController {
   @ApiResponse({ status: 201, description: 'Aviso criado.' })
   @Post()
   @Roles(RoleUsuario.ADMIN)
-  async criarHandler(@Body() dto: CriarAvisoDto) {
+  async criarHandler(@Body() dto: CriarAvisoDto): Promise<AvisoResponse> {
     return this.toResponse(await this.criar.execute({
       ...dto,
       dataReuniao: dto.dataReuniao ? new Date(dto.dataReuniao) : undefined,
@@ -76,7 +77,7 @@ export class AvisosController {
   async listarHandler(
     @Query('publicos') publicos?: string,
     @Request() req?: { user?: { role?: string } },
-  ) {
+  ): Promise<AvisoResponse[]> {
     const isAdmin = req?.user?.role === RoleUsuario.ADMIN
     const apenasPublicados = !isAdmin || publicos === 'true'
     const lista = await this.listar.execute(apenasPublicados)
@@ -87,7 +88,7 @@ export class AvisosController {
   @ApiParam({ name: 'id', description: 'UUID do aviso' })
   @Patch(':id/publicar')
   @Roles(RoleUsuario.ADMIN)
-  async publicarHandler(@Param('id') id: string) {
+  async publicarHandler(@Param('id') id: string): Promise<AvisoResponse> {
     const aviso = await this.publicar.execute(id)
     this.sse.emit('comunicacao:aviso-publicado', id)
     return this.toResponse(aviso)
@@ -97,7 +98,7 @@ export class AvisosController {
   @ApiParam({ name: 'id', description: 'UUID do aviso' })
   @Patch(':id/despublicar')
   @Roles(RoleUsuario.ADMIN)
-  async despublicarHandler(@Param('id') id: string) {
+  async despublicarHandler(@Param('id') id: string): Promise<AvisoResponse> {
     const aviso = await this.despublicar.execute(id)
     this.sse.emit('comunicacao:aviso-despublicado', id)
     return this.toResponse(aviso)
@@ -113,7 +114,7 @@ export class AvisosController {
     await this.excluir.execute(id)
   }
 
-  private toResponse(a: Aviso) {
+  private toResponse(a: Aviso): AvisoResponse {
     return {
       id: a.id,
       titulo: a.titulo,

@@ -43,6 +43,7 @@ import { Roles } from '../../../../../shared/guards'
 import { AuditService } from '../../../../../shared/audit/audit.service'
 import { SseService } from '../../../../../shared/sse/sse.service'
 import { AprovarAssociadoPendenteDto, AtualizarAssociadoDto, AtualizarSenhaDto, AtualizarUsuarioDto, CriarAssociadoDto, CriarAssociadoPendenteDto, CriarUsuarioDto } from './dto'
+import { AssociadoResponse, UsuarioResponse } from './dto/response.types'
 import { AtualizarSenhaUseCase } from '../../../application/use-cases'
 import {
   APROVAR_ASSOCIADO_PENDENTE_USE_CASE,
@@ -111,7 +112,7 @@ export class IdentidadeController {
   /** Cria um usuário com credencial no Supabase Auth */
   @Post('usuarios')
   @HttpCode(HttpStatus.CREATED)
-  async criarUsuarioHandler(@Body() dto: CriarUsuarioDto) {
+  async criarUsuarioHandler(@Body() dto: CriarUsuarioDto): Promise<UsuarioResponse> {
     const usuario = await this.criarUsuario.execute(dto)
     return this.toUsuarioResponse(usuario)
   }
@@ -122,7 +123,7 @@ export class IdentidadeController {
   /** Registra uma solicitação de associação pendente (auto-cadastro) */
   @Post('associados/pendentes')
   @HttpCode(HttpStatus.CREATED)
-  async criarAssociadoPendenteHandler(@Body() dto: CriarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
+  async criarAssociadoPendenteHandler(@Body() dto: CriarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }): Promise<AssociadoResponse> {
     const associado = await this.criarAssociadoPendente.execute({
       nome: dto.nome,
       email: dto.email,
@@ -141,7 +142,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   /** Aprova um associado pendente: define senha e libera acesso */
   @Post('associados/:id/aprovar')
-  async aprovarAssociadoPendenteHandler(@Param('id') id: string, @Body() dto: AprovarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
+  async aprovarAssociadoPendenteHandler(@Param('id') id: string, @Body() dto: AprovarAssociadoPendenteDto, @Req() req: { user?: { sub?: string }; ip?: string }): Promise<AssociadoResponse> {
     const associado = await this.aprovarAssociadoPendente.execute({
       associadoId: id,
       cpf: dto.cpf,
@@ -160,7 +161,7 @@ export class IdentidadeController {
   /** Vincula um usuário existente como associado da APA */
   @Post('associados')
   @HttpCode(HttpStatus.CREATED)
-  async criarAssociadoHandler(@Body() dto: CriarAssociadoDto, @Req() req: { user?: { sub?: string }; ip?: string }) {
+  async criarAssociadoHandler(@Body() dto: CriarAssociadoDto, @Req() req: { user?: { sub?: string }; ip?: string }): Promise<AssociadoResponse> {
     const associado = await this.criarAssociado.execute({
       usuarioId: dto.usuarioId,
       cpf: dto.cpf,
@@ -178,7 +179,7 @@ export class IdentidadeController {
   /** Retorna o perfil do associado logado */
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get('me')
-  async meuPerfilHandler(@Req() req: { user: { sub: string } }) {
+  async meuPerfilHandler(@Req() req: { user: { sub: string } }): Promise<AssociadoResponse> {
     const associado = await this.buscarAssociadoPorUsuario.execute(req.user.sub)
     if (!associado) throw new NotFoundException('Perfil de associado não encontrado.')
     return this.toAssociadoResponse(associado, false)
@@ -188,7 +189,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 200, description: 'Lista de associados.' })
   /** Lista todos os associados cadastrados */
   @Get('associados')
-  async listarAssociadosHandler() {
+  async listarAssociadosHandler(): Promise<AssociadoResponse[]> {
     const lista = await this.listarAssociados.execute()
     return lista.map((a) => this.toAssociadoResponse(a, true))
   }
@@ -237,7 +238,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   /** Busca um associado pelo ID */
   @Get('associados/:id')
-  async buscarAssociadoHandler(@Param('id') id: string) {
+  async buscarAssociadoHandler(@Param('id') id: string): Promise<AssociadoResponse> {
     const associado = await this.buscarAssociado.execute(id)
     return this.toAssociadoResponse(associado, false)
   }
@@ -248,7 +249,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   /** Atualiza dados cadastrais do associado e sincroniza status */
   @Patch('associados/:id')
-  async atualizarAssociadoHandler(@Param('id') id: string, @Body() dto: AtualizarAssociadoDto) {
+  async atualizarAssociadoHandler(@Param('id') id: string, @Body() dto: AtualizarAssociadoDto): Promise<AssociadoResponse> {
     const associado = await this.atualizarAssociado.execute({
       associadoId: id,
       cpf: dto.cpf,
@@ -266,7 +267,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
   /** Atualiza dados cadastrais do usuário (nome, email, role) */
   @Patch('usuarios/:id')
-  async atualizarUsuarioHandler(@Param('id') id: string, @Body() dto: AtualizarUsuarioDto) {
+  async atualizarUsuarioHandler(@Param('id') id: string, @Body() dto: AtualizarUsuarioDto): Promise<UsuarioResponse> {
     const usuario = await this.atualizarUsuario.execute({
       usuarioId: id,
       nome: dto.nome,
@@ -287,7 +288,7 @@ export class IdentidadeController {
     await this.atualizarSenha.execute({ usuarioId: id, senha: dto.senha })
   }
 
-  private toUsuarioResponse(u: Usuario) {
+  private toUsuarioResponse(u: Usuario): UsuarioResponse {
     return {
       id: u.id,
       nome: u.nome,
@@ -303,7 +304,7 @@ export class IdentidadeController {
   @ApiResponse({ status: 200, description: 'Associado marcado como isento.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   @Patch('associados/:id/isencao-mensalidade')
-  async marcarIsentoAssociadoHandler(@Param('id') id: string) {
+  async marcarIsentoAssociadoHandler(@Param('id') id: string): Promise<AssociadoResponse> {
     const associado = await this.marcarIsentoAssociado.execute(id)
     this.sse.emit('identidade:isencao-marcada', id)
     return this.toAssociadoResponse(associado)
@@ -314,13 +315,13 @@ export class IdentidadeController {
   @ApiResponse({ status: 200, description: 'Isenção removida.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   @Delete('associados/:id/isencao-mensalidade')
-  async removerIsencaoAssociadoHandler(@Param('id') id: string) {
+  async removerIsencaoAssociadoHandler(@Param('id') id: string): Promise<AssociadoResponse> {
     const associado = await this.removerIsencaoAssociado.execute(id)
     this.sse.emit('identidade:isencao-removida', id)
     return this.toAssociadoResponse(associado)
   }
 
-  private toAssociadoResponse(a: Associado, maskCpf = true) {
+  private toAssociadoResponse(a: Associado, maskCpf = true): AssociadoResponse {
     const cpf = a.cpf
       ? maskCpf
         ? `***.${a.cpf.slice(3, 6)}.${a.cpf.slice(6, 9)}-**`

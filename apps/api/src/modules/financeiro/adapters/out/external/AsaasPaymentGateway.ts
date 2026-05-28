@@ -115,6 +115,11 @@ export class AsaasPaymentGateway implements IPaymentGateway {
     this.logger.log(`Cobrança ${gatewayId} cancelada no Asaas`)
   }
 
+  async estornarCobranca(gatewayId: string): Promise<void> {
+    await this.fetch(`/payments/${gatewayId}/refund`, { method: 'POST' })
+    this.logger.log(`Cobrança ${gatewayId} estornada no Asaas`)
+  }
+
   async processarWebhook(payload: unknown, token: string): Promise<WebhookEvent> {
     if (token !== this.webhookToken) {
       this.logger.warn('Webhook recebido com token inválido')

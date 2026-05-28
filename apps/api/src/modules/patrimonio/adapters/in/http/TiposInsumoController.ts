@@ -26,6 +26,7 @@ import {
 } from '@apa/core'
 import { Roles } from '../../../../../shared/guards'
 import { AdicionarUnidadesDto, AtualizarTipoInsumoDto, CriarTipoInsumoDto } from './dto'
+import { InsumoResponse, TipoInsumoResponse } from './dto/response.types'
 import {
   ADICIONAR_UNIDADES_INSUMO_USE_CASE,
   ATUALIZAR_TIPO_INSUMO_USE_CASE,
@@ -53,14 +54,14 @@ export class TiposInsumoController {
 
   @ApiOperation({ summary: 'Criar tipo de insumo' })
   @Post()
-  async criarHandler(@Body() dto: CriarTipoInsumoDto) {
+  async criarHandler(@Body() dto: CriarTipoInsumoDto): Promise<TipoInsumoResponse> {
     return this.tipoToResponse(await this.criar.execute(dto))
   }
 
   @ApiOperation({ summary: 'Listar tipos de insumo' })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get()
-  async listarHandler() {
+  async listarHandler(): Promise<TipoInsumoResponse[]> {
     const tipos = await this.listar.execute()
     return tipos.map((t) => this.tipoToResponse(t))
   }
@@ -69,14 +70,14 @@ export class TiposInsumoController {
   @ApiParam({ name: 'id', type: String })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get(':id')
-  async buscarHandler(@Param('id') id: string) {
+  async buscarHandler(@Param('id') id: string): Promise<TipoInsumoResponse> {
     return this.tipoToResponse(await this.buscar.execute(id))
   }
 
   @ApiOperation({ summary: 'Atualizar tipo de insumo' })
   @ApiParam({ name: 'id', type: String })
   @Patch(':id')
-  async atualizarHandler(@Param('id') id: string, @Body() dto: AtualizarTipoInsumoDto) {
+  async atualizarHandler(@Param('id') id: string, @Body() dto: AtualizarTipoInsumoDto): Promise<TipoInsumoResponse> {
     return this.tipoToResponse(await this.atualizar.execute(id, dto))
   }
 
@@ -92,7 +93,7 @@ export class TiposInsumoController {
   @ApiOperation({ summary: 'Adicionar unidades individuais a um tipo de insumo' })
   @ApiParam({ name: 'id', type: String })
   @Post(':id/unidades')
-  async adicionarUnidadesHandler(@Param('id') id: string, @Body() dto: AdicionarUnidadesDto) {
+  async adicionarUnidadesHandler(@Param('id') id: string, @Body() dto: AdicionarUnidadesDto): Promise<InsumoResponse[]> {
     const unidades = await this.adicionarUnidades.execute({
       tipoInsumoId: id,
       quantidade: dto.quantidade,
@@ -106,12 +107,12 @@ export class TiposInsumoController {
   @ApiQuery({ name: 'tipoId', required: false, type: String })
   @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get(':id/unidades')
-  async listarUnidadesHandler(@Param('id') id: string) {
+  async listarUnidadesHandler(@Param('id') id: string): Promise<InsumoResponse[]> {
     const unidades = await this.listarUnidades.execute(id)
     return unidades.map((u) => this.unidadeToResponse(u))
   }
 
-  private tipoToResponse(t: TipoInsumo) {
+  private tipoToResponse(t: TipoInsumo): TipoInsumoResponse {
     return {
       id: t.id,
       nome: t.nome,
@@ -122,7 +123,7 @@ export class TiposInsumoController {
     }
   }
 
-  private unidadeToResponse(u: Insumo) {
+  private unidadeToResponse(u: Insumo): InsumoResponse {
     return {
       id: u.id,
       identificador: u.identificador,

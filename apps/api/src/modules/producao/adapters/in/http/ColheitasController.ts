@@ -11,6 +11,7 @@ import {
 import { RoleUsuario } from '@apa/shared'
 import { Roles } from '../../../../../shared/guards/roles.decorator'
 import { CriarColheitaDto } from './dto'
+import { ColheitaResponse } from './dto/response.types'
 import {
   CRIAR_COLHEITA_USE_CASE,
   DELETAR_COLHEITA_USE_CASE,
@@ -38,16 +39,18 @@ export class ColheitasController {
 
   @ApiOperation({ summary: 'Listar todas as colheitas (admin)' })
   @ApiResponse({ status: 200 })
+  @Roles(RoleUsuario.ADMIN)
   @Get()
-  async listar() {
+  async listar(): Promise<ColheitaResponse[]> {
     const lista = await this.listarColheitas.execute()
     return lista.map((c) => this.toResponse(c))
   }
 
-  @ApiOperation({ summary: 'Registrar colheita' })
+  @ApiOperation({ summary: 'Registrar colheita (admin)' })
   @ApiResponse({ status: 201, description: 'Colheita registrada.' })
+  @Roles(RoleUsuario.ADMIN)
   @Post()
-  async criar(@Body() dto: CriarColheitaDto) {
+  async criar(@Body() dto: CriarColheitaDto): Promise<ColheitaResponse> {
     return this.toResponse(
       await this.criarColheita.execute({ ...dto, dataColheita: new Date(dto.dataColheita) }),
     )
@@ -56,8 +59,9 @@ export class ColheitasController {
   @ApiOperation({ summary: 'Listar colheitas por associado' })
   @ApiParam({ name: 'associadoId', type: String })
   @ApiResponse({ status: 200 })
+  @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get('associado/:associadoId')
-  async listarAssociado(@Param('associadoId') associadoId: string) {
+  async listarAssociado(@Param('associadoId') associadoId: string): Promise<ColheitaResponse[]> {
     const lista = await this.listarPorAssociado.execute(associadoId)
     return lista.map((c) => this.toResponse(c))
   }
@@ -65,8 +69,9 @@ export class ColheitasController {
   @ApiOperation({ summary: 'Listar colheitas por campanha' })
   @ApiParam({ name: 'campanhaId', type: String })
   @ApiResponse({ status: 200 })
+  @Roles(RoleUsuario.ADMIN, RoleUsuario.ASSOCIADO)
   @Get('campanha/:campanhaId')
-  async listarCampanha(@Param('campanhaId') campanhaId: string) {
+  async listarCampanha(@Param('campanhaId') campanhaId: string): Promise<ColheitaResponse[]> {
     const lista = await this.listarPorCampanha.execute(campanhaId)
     return lista.map((c) => this.toResponse(c))
   }
@@ -82,7 +87,7 @@ export class ColheitasController {
     await this.deletarColheita.execute(id)
   }
 
-  private toResponse(c: Colheita) {
+  private toResponse(c: Colheita): ColheitaResponse {
     return {
       id: c.id,
       associadoId: c.associadoId,

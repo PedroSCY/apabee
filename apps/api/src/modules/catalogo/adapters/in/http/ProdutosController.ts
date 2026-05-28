@@ -41,6 +41,14 @@ import {
 import { Public, Roles } from '../../../../../shared/guards'
 import { AdicionarComposicaoDto, AtualizarProdutoDto, CriarProdutoDto, GerarEstoqueDto } from './dto'
 import {
+  CapacidadeProducaoResponse,
+  ComposicaoProdutoResponse,
+  EstoqueProdutoResponse,
+  ProdutoComEstoqueResponse,
+  ProdutoDetalheResponse,
+  ProdutoResponse,
+} from './dto/response.types'
+import {
   ADICIONAR_COMPOSICAO_USE_CASE,
   ARQUIVAR_PRODUTO_USE_CASE,
   ATUALIZAR_PRODUTO_USE_CASE,
@@ -79,7 +87,7 @@ export class ProdutosController {
   @ApiResponse({ status: 201, description: 'Produto criado em rascunho.' })
   @Post()
   @Roles(RoleUsuario.ADMIN)
-  async criarHandler(@Body() dto: CriarProdutoDto) {
+  async criarHandler(@Body() dto: CriarProdutoDto): Promise<ProdutoResponse> {
     const produto = await this.criar.execute(dto)
     return this.toProdutoResponse(produto)
   }
@@ -88,10 +96,10 @@ export class ProdutosController {
   @ApiQuery({ name: 'publicos', required: false, type: Boolean, description: 'true = apenas publicados' })
   @Get()
   @Public()
-  async listarHandler(@Query('publicos') publicos?: string) {
+  async listarHandler(@Query('publicos') publicos?: string): Promise<ProdutoComEstoqueResponse[]> {
     const apenasPublicados = publicos === 'true'
     const items = await this.listarComEstoque.execute({ apenasPublicados })
-    return items.map(({ produto, quantidadeEstoque }) => ({
+    return items.map(({ produto, quantidadeEstoque }): ProdutoComEstoqueResponse => ({
       ...this.toProdutoResponse(produto),
       quantidadeEstoque,
     }))
@@ -101,7 +109,7 @@ export class ProdutosController {
   @ApiParam({ name: 'id', description: 'UUID do produto' })
   @Get(':id')
   @Public()
-  async buscarHandler(@Param('id') id: string) {
+  async buscarHandler(@Param('id') id: string): Promise<ProdutoDetalheResponse> {
     const { produto, estoque, composicoes } = await this.buscar.execute(id)
     return {
       ...this.toProdutoResponse(produto),
@@ -114,7 +122,7 @@ export class ProdutosController {
   @ApiParam({ name: 'id', description: 'UUID do produto' })
   @Patch(':id')
   @Roles(RoleUsuario.ADMIN)
-  async atualizarHandler(@Param('id') id: string, @Body() dto: AtualizarProdutoDto) {
+  async atualizarHandler(@Param('id') id: string, @Body() dto: AtualizarProdutoDto): Promise<ProdutoResponse> {
     const produto = await this.atualizar.execute({ produtoId: id, ...dto })
     return this.toProdutoResponse(produto)
   }
@@ -154,7 +162,10 @@ export class ProdutosController {
   @ApiQuery({ name: 'campanhaId', required: true, description: 'UUID da campanha de origem' })
   @Get(':id/capacidade')
   @Roles(RoleUsuario.ADMIN)
-  async capacidadeHandler(@Param('id') id: string, @Query('campanhaId') campanhaId: string) {
+  async capacidadeHandler(
+    @Param('id') id: string,
+    @Query('campanhaId') campanhaId: string,
+  ): Promise<CapacidadeProducaoResponse> {
     return this.consultarCapacidade.execute({ produtoId: id, campanhaId })
   }
 
@@ -162,7 +173,7 @@ export class ProdutosController {
   @ApiParam({ name: 'id', description: 'UUID do produto' })
   @Post(':id/gerar-estoque')
   @Roles(RoleUsuario.ADMIN)
-  async gerarEstoqueHandler(@Param('id') id: string, @Body() dto: GerarEstoqueDto) {
+  async gerarEstoqueHandler(@Param('id') id: string, @Body() dto: GerarEstoqueDto): Promise<EstoqueProdutoResponse> {
     const estoque = await this.gerarEstoque.execute({
       produtoId: id,
       quantidade: dto.quantidade,
@@ -176,7 +187,10 @@ export class ProdutosController {
   @ApiResponse({ status: 201, description: 'Composição adicionada.' })
   @Post(':id/composicoes')
   @Roles(RoleUsuario.ADMIN)
-  async adicionarComposicaoHandler(@Param('id') id: string, @Body() dto: AdicionarComposicaoDto) {
+  async adicionarComposicaoHandler(
+    @Param('id') id: string,
+    @Body() dto: AdicionarComposicaoDto,
+  ): Promise<ComposicaoProdutoResponse> {
     const composicao = await this.adicionarComposicao.execute({
       produtoId: id,
       tipoMateriaPrimaId: dto.tipoMateriaPrimaId,
@@ -196,7 +210,7 @@ export class ProdutosController {
     await this.removerComposicao.execute(composicaoId)
   }
 
-  private toProdutoResponse(p: Produto) {
+  private toProdutoResponse(p: Produto): ProdutoResponse {
     return {
       id: p.id,
       nome: p.nome,
@@ -210,7 +224,7 @@ export class ProdutosController {
     }
   }
 
-  private toEstoqueResponse(e: EstoqueProduto) {
+  private toEstoqueResponse(e: EstoqueProduto): EstoqueProdutoResponse {
     return {
       id: e.id,
       produtoId: e.produtoId,
@@ -218,7 +232,7 @@ export class ProdutosController {
     }
   }
 
-  private toComposicaoResponse(c: ComposicaoProduto) {
+  private toComposicaoResponse(c: ComposicaoProduto): ComposicaoProdutoResponse {
     return {
       id: c.id,
       tipoMateriaPrimaId: c.tipoMateriaPrimaId,

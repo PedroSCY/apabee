@@ -57,12 +57,13 @@ export class PrismaOrdemProducaoRepository implements IOrdemProducaoRepository {
         observacao: ordem.observacao ?? null,
         confirmadoEm: ordem.confirmadoEm ?? null,
         materiaisConsumidos: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           create: ordem.materiaisConsumidos.map(m => ({
-            id: crypto.randomUUID(),
+            id: crypto.randomUUID() as string,
             tipoMateriaPrimaId: m.tipoMateriaPrimaId,
             quantidade: m.quantidade,
             unidade: tipoMap.get(m.tipoMateriaPrimaId)!,
-          })),
+          })) as any,
         },
       },
       include: { materiaisConsumidos: true },
@@ -141,7 +142,7 @@ export class PrismaOrdemProducaoRepository implements IOrdemProducaoRepository {
       } else {
         await tx.estoqueProduto.create({
           data: {
-            id: crypto.randomUUID(),
+            id: crypto.randomUUID() as string,
             produtoId: estoqueProduto.produtoId,
             quantidadeDisponivel: estoqueProduto.quantidadeNova,
           },
@@ -168,12 +169,13 @@ export class PrismaOrdemProducaoRepository implements IOrdemProducaoRepository {
           observacao: ordemConfirmada.observacao ?? null,
           confirmadoEm: ordemConfirmada.confirmadoEm ?? null,
           materiaisConsumidos: {
-            create: ordemConfirmada.materiaisConsumidos.map(m => ({
-              id: crypto.randomUUID(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          create: ordemConfirmada.materiaisConsumidos.map(m => ({
+              id: crypto.randomUUID() as string,
               tipoMateriaPrimaId: m.tipoMateriaPrimaId,
               quantidade: m.quantidade,
               unidade: tipoMap.get(m.tipoMateriaPrimaId)!,
-            })),
+            })) as any,
           },
         },
         include: { materiaisConsumidos: true },

@@ -52,6 +52,4 @@ export class Aviso {
   marcarEmailEnviado(): Aviso {
     return new Aviso({ ...this.props, emailEnviado: true })
   }
-
-  toJSON() { return { ...this.props } }
 }

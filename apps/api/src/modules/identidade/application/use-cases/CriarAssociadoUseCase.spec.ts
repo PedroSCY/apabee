@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+﻿import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
 import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
@@ -6,7 +6,7 @@ import { CriarAssociadoUseCase } from './CriarAssociadoUseCase'
 const makeUsuario = (role = RoleUsuario.ASSOCIADO): Usuario =>
   new Usuario({
     id: 'usr-1',
-    nome: 'João',
+    nome: 'JoÃ£o',
     email: 'joao@email.com',
     role,
     ativo: true,
@@ -39,6 +39,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn().mockResolvedValue(undefined),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('CriarAssociadoUseCase', () => {
@@ -54,7 +55,7 @@ describe('CriarAssociadoUseCase', () => {
     useCase = new CriarAssociadoUseCase(usuarioRepo, associadoRepo, provedorAuth)
   })
 
-  it('cria associado para usuário com role ASSOCIADO', async () => {
+  it('cria associado para usuÃ¡rio com role ASSOCIADO', async () => {
     const usuario = makeUsuario(RoleUsuario.ASSOCIADO)
     usuarioRepo.findById.mockResolvedValue(usuario)
     associadoRepo.findByUsuarioId.mockResolvedValue(null)
@@ -91,21 +92,21 @@ describe('CriarAssociadoUseCase', () => {
     expect(provedorAuth.atualizarMetadata).toHaveBeenCalledWith('usr-1', expect.objectContaining({ associadoId: expect.any(String) }))
   })
 
-  it('lança NotFoundException quando usuário não existe', async () => {
+  it('lanÃ§a NotFoundException quando usuÃ¡rio nÃ£o existe', async () => {
     usuarioRepo.findById.mockResolvedValue(null)
 
     await expect(useCase.execute({ usuarioId: 'nao-existe' })).rejects.toThrow(NotFoundException)
     expect(associadoRepo.save).not.toHaveBeenCalled()
   })
 
-  it('lança BadRequestException quando usuário tem role ADMIN', async () => {
+  it('lanÃ§a BadRequestException quando usuÃ¡rio tem role ADMIN', async () => {
     usuarioRepo.findById.mockResolvedValue(makeUsuario(RoleUsuario.ADMIN))
 
     await expect(useCase.execute({ usuarioId: 'usr-1' })).rejects.toThrow(BadRequestException)
     expect(associadoRepo.save).not.toHaveBeenCalled()
   })
 
-  it('lança ConflictException quando usuário já é associado', async () => {
+  it('lanÃ§a ConflictException quando usuÃ¡rio jÃ¡ Ã© associado', async () => {
     const usuario = makeUsuario()
     const existente = new Associado({ id: 'asc-existente', usuario, dataIngresso: new Date(), status: StatusAssociado.ATIVO })
     usuarioRepo.findById.mockResolvedValue(usuario)
@@ -115,3 +116,4 @@ describe('CriarAssociadoUseCase', () => {
     expect(associadoRepo.save).not.toHaveBeenCalled()
   })
 })
+

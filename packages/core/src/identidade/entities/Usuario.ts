@@ -48,6 +48,4 @@ export class Usuario {
     return new Usuario({ ...this.props, ...dados })
   }
 
-  /** Retorna uma cópia plana das propriedades (para serialização). */
-  toJSON(): UsuarioProps { return { ...this.props } }
 }

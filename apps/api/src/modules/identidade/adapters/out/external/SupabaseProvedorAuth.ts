@@ -73,4 +73,12 @@ export class SupabaseProvedorAuth implements IProvedorAuth {
     })
     if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
   }
+
+  /** Define app_metadata.role = CLIENTE para um usuário Google OAuth recém-sincronizado */
+  async definirRoleCliente(usuarioId: string): Promise<void> {
+    const { error } = await this.client.auth.admin.updateUserById(usuarioId, {
+      app_metadata: { role: 'CLIENTE' },
+    })
+    if (error) throw new InternalServerErrorException(`Auth: ${error.message}`)
+  }
 }

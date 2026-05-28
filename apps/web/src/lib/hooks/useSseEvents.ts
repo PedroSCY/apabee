@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 type SseEventTipo = string
 

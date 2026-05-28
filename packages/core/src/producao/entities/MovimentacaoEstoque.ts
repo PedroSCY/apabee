@@ -1,4 +1,4 @@
-import { TipoMovimentacao } from '@apa/shared';
+﻿import { TipoMovimentacao } from '@apa/shared';
 
 interface MovimentacaoEstoqueProps {
   id: string;
@@ -35,5 +35,4 @@ export class MovimentacaoEstoque {
     return `${acao} de ${this.props.quantidade} unidades — ref: ${this.props.referenciaId ?? 'N/A'}`;
   }
 
-  toJSON() { return { ...this.props } }
 }

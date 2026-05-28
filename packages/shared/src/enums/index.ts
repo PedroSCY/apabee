@@ -1,7 +1,8 @@
-/** Define os papéis de usuário no sistema. ADMIN tem acesso total, ASSOCIADO tem acesso restrito aos próprios dados. */
+/** Define os papéis de usuário no sistema. ADMIN tem acesso total, ASSOCIADO tem acesso restrito aos próprios dados, CLIENTE é cliente externo da loja. */
 export enum RoleUsuario {
   ADMIN = 'ADMIN',
   ASSOCIADO = 'ASSOCIADO',
+  CLIENTE = 'CLIENTE',
 }
 
 /** Status do vínculo de um patrimônio a um associado. ATIVO = item em uso; DEVOLVIDO = item retornado. */
@@ -227,15 +228,48 @@ export enum OrigemContribuicao {
 
 /** Tipo de notificação in-app. Define o template de mensagem e o deep-link associado. */
 export enum TipoNotificacao {
-  APROVACAO_CADASTRO          = 'APROVACAO_CADASTRO',
-  MENSALIDADE_GERADA          = 'MENSALIDADE_GERADA',
-  COBRANCA_PIX_EMITIDA        = 'COBRANCA_PIX_EMITIDA',
-  RATEIO_DISPONIVEL           = 'RATEIO_DISPONIVEL',
-  NOVO_ASSOCIADO_PENDENTE     = 'NOVO_ASSOCIADO_PENDENTE',
-  SOLICITACAO_APROVADA        = 'SOLICITACAO_APROVADA',
-  SOLICITACAO_REJEITADA       = 'SOLICITACAO_REJEITADA',
-  NOVA_SOLICITACAO_PATRIMONIO = 'NOVA_SOLICITACAO_PATRIMONIO',
-  NOVA_SOLICITACAO_CONTATO    = 'NOVA_SOLICITACAO_CONTATO',
-  NOVO_AVISO                  = 'NOVO_AVISO',
-  ATA_PUBLICADA               = 'ATA_PUBLICADA',
+  APROVACAO_CADASTRO                    = 'APROVACAO_CADASTRO',
+  MENSALIDADE_GERADA                    = 'MENSALIDADE_GERADA',
+  COBRANCA_PIX_EMITIDA                  = 'COBRANCA_PIX_EMITIDA',
+  RATEIO_DISPONIVEL                     = 'RATEIO_DISPONIVEL',
+  NOVO_ASSOCIADO_PENDENTE               = 'NOVO_ASSOCIADO_PENDENTE',
+  SOLICITACAO_APROVADA                  = 'SOLICITACAO_APROVADA',
+  SOLICITACAO_REJEITADA                 = 'SOLICITACAO_REJEITADA',
+  NOVA_SOLICITACAO_PATRIMONIO           = 'NOVA_SOLICITACAO_PATRIMONIO',
+  NOVA_SOLICITACAO_CONTATO              = 'NOVA_SOLICITACAO_CONTATO',
+  NOVO_AVISO                            = 'NOVO_AVISO',
+  ATA_PUBLICADA                         = 'ATA_PUBLICADA',
+  // Loja — notificações para clientes externos
+  PEDIDO_LOJA_AGUARDANDO_PAGAMENTO      = 'PEDIDO_LOJA_AGUARDANDO_PAGAMENTO',
+  PEDIDO_LOJA_CONFIRMADO                = 'PEDIDO_LOJA_CONFIRMADO',
+  PEDIDO_LOJA_EM_PREPARACAO             = 'PEDIDO_LOJA_EM_PREPARACAO',
+  PEDIDO_LOJA_SAIU_ENTREGA              = 'PEDIDO_LOJA_SAIU_ENTREGA',
+  PEDIDO_LOJA_ENTREGUE                  = 'PEDIDO_LOJA_ENTREGUE',
+  PEDIDO_LOJA_CARTAO_EM_ANALISE         = 'PEDIDO_LOJA_CARTAO_EM_ANALISE',
+}
+
+/** Modalidade de entrega escolhida pelo cliente na loja. */
+export enum OpcaoEntrega {
+  PRATA_GRATIS   = 'PRATA_GRATIS',
+  RETIRADA_LOCAL = 'RETIRADA_LOCAL',
+  A_COMBINAR     = 'A_COMBINAR',
+  CORREIOS       = 'CORREIOS',
+}
+
+/** Ciclo de vida de um pedido da loja externa (clientes Google). Distinto de StatusPedido (associados). */
+export enum StatusPedidoLoja {
+  AGUARDANDO_PAGAMENTO      = 'AGUARDANDO_PAGAMENTO',
+  PAGO                      = 'PAGO',
+  EM_PREPARACAO             = 'EM_PREPARACAO',
+  SAIU_ENTREGA              = 'SAIU_ENTREGA',
+  ENTREGUE                  = 'ENTREGUE',
+  CANCELADO                 = 'CANCELADO',
+  /** Cliente solicitou cancelamento de pedido já pago — admin deve aprovar e processar estorno. */
+  CANCELAMENTO_SOLICITADO   = 'CANCELAMENTO_SOLICITADO',
+}
+
+/** Método de pagamento utilizado num pedido da loja. */
+export enum MetodoPagamentoPedidoLoja {
+  PIX    = 'PIX',
+  CARTAO = 'CARTAO',
 }

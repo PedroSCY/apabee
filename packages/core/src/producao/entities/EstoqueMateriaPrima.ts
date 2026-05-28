@@ -1,4 +1,4 @@
-import { UnidadeMedida } from '@apa/shared'
+﻿import { UnidadeMedida } from '@apa/shared'
 
 interface EstoqueMateriaPrimaProps {
   id: string
@@ -58,5 +58,4 @@ export class EstoqueMateriaPrima {
     })
   }
 
-  toJSON() { return { ...this.props } }
 }

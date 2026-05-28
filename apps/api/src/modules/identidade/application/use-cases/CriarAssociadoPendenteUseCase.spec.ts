@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common'
+﻿import { ConflictException } from '@nestjs/common'
 import { RoleUsuario, StatusAssociado } from '@apa/shared'
 import { Associado, IAssociadoRepository, IProvedorAuth, IUsuarioRepository, Usuario } from '@apa/core'
 import { CriarAssociadoPendenteUseCase } from './CriarAssociadoPendenteUseCase'
@@ -35,6 +35,7 @@ const makeProvedorAuth = (): jest.Mocked<IProvedorAuth> => ({
   definirSenha: jest.fn(),
   removerCredencial: jest.fn(),
   atualizarMetadata: jest.fn(),
+  definirRoleCliente: jest.fn(),
 })
 
 describe('CriarAssociadoPendenteUseCase', () => {
@@ -88,7 +89,7 @@ describe('CriarAssociadoPendenteUseCase', () => {
     expect(provedorAuth.revogarAcesso).toHaveBeenCalledWith('user-novo')
   })
 
-  it('cria usuário com role ASSOCIADO e ativo = false', async () => {
+  it('cria usuÃ¡rio com role ASSOCIADO e ativo = false', async () => {
     usuarioRepo.findByEmail.mockResolvedValue(null)
     provedorAuth.criarCredencial.mockResolvedValue({ id: 'user-novo' })
     provedorAuth.revogarAcesso.mockResolvedValue(undefined)
@@ -102,7 +103,7 @@ describe('CriarAssociadoPendenteUseCase', () => {
     )
   })
 
-  it('lança ConflictException quando email já existe', async () => {
+  it('lanÃ§a ConflictException quando email jÃ¡ existe', async () => {
     usuarioRepo.findByEmail.mockResolvedValue(makeUsuario())
 
     await expect(useCase.execute({ nome: 'Maria', email: 'maria@test.com' })).rejects.toThrow(ConflictException)
@@ -110,3 +111,4 @@ describe('CriarAssociadoPendenteUseCase', () => {
     expect(associadoRepo.save).not.toHaveBeenCalled()
   })
 })
+

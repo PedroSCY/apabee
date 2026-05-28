@@ -57,10 +57,10 @@ export function PublicFooter() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/associados"
+                  href="/login"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Área do Associado
+                  Já sou associado
                 </Link>
               </li>
               <li>

@@ -27,7 +27,7 @@ export class AtribuicaoPatrimonio {
   get insumoId(): string {
     return this.props.patrimonioId
   }
-  get tipoPatrimonio(): string {
+  get tipoPatrimonio(): TipoPatrimonio {
     return this.props.tipoPatrimonio
   }
   get associadoId(): string {
@@ -75,7 +75,4 @@ export class AtribuicaoPatrimonio {
     return Math.floor(diff / 86_400_000)
   }
 
-  toJSON(): AtribuicaoPatrimonioProps {
-    return { ...this.props }
-  }
 }

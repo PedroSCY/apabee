@@ -36,6 +36,7 @@ import { MarcarIsentoDto } from './dto/MarcarIsentoDto'
 import { ExportarMensalidadesDto } from './dto/ExportarMensalidadesDto'
 import { SseService } from '../../../../../shared/sse/sse.service'
 import { RelatorioFinanceiroService } from '../../../adapters/out/RelatorioFinanceiroService'
+import { EmitirCobrancaResponse, MensalidadeResponse } from './dto/response.types'
 
 @ApiTags('Financeiro — Mensalidades')
 @ApiBearerAuth('JWT')
@@ -62,7 +63,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 201, description: 'Mensalidades geradas.' })
   @ApiResponse({ status: 400, description: 'Competência inválida ou valor ausente.' })
   @Post('gerar')
-  async gerar_(@Body() dto: GerarMensalidadesDto) {
+  async gerar_(@Body() dto: GerarMensalidadesDto): Promise<MensalidadeResponse[]> {
     const mensalidades = await this.gerar.execute(dto)
     this.sse.emit('financeiro:mensalidade-gerada')
     return mensalidades.map((m) => this.toMensalidadeResponse(m))
@@ -78,7 +79,7 @@ export class MensalidadesController {
     @Query('ano') ano?: string,
     @Query('mes') mes?: string,
     @Query('status') status?: StatusMensalidade,
-  ) {
+  ): Promise<MensalidadeResponse[]> {
     const mensalidades = await this.listar.execute({
       competenciaAno: ano ? Number(ano) : undefined,
       competenciaMes: mes ? Number(mes) : undefined,
@@ -92,7 +93,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 200, description: 'Mensalidades do associado.' })
   @ApiResponse({ status: 404, description: 'Associado não encontrado.' })
   @Get('associado/:associadoId')
-  async listarPorAssociado_(@Param('associadoId') associadoId: string) {
+  async listarPorAssociado_(@Param('associadoId') associadoId: string): Promise<MensalidadeResponse[]> {
     const mensalidades = await this.listarPorAssociado.execute(associadoId)
     return mensalidades.map((m) => this.toMensalidadeResponse(m))
   }
@@ -103,7 +104,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 400, description: 'Mensalidade já quitada ou isenta.' })
   @ApiResponse({ status: 404, description: 'Mensalidade não encontrada.' })
   @Patch(':id/quitar')
-  async quitar_(@Param('id') id: string, @Body() dto: QuitarMensalidadeDto) {
+  async quitar_(@Param('id') id: string, @Body() dto: QuitarMensalidadeDto): Promise<MensalidadeResponse> {
     const mensalidade = await this.quitar.execute({ mensalidadeId: id, metodoPagamento: dto.metodoPagamento })
     this.sse.emit('financeiro:mensalidade-quitada', id)
     return this.toMensalidadeResponse(mensalidade)
@@ -114,7 +115,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 200, description: 'Mensalidade isenta.' })
   @ApiResponse({ status: 404, description: 'Mensalidade não encontrada.' })
   @Patch(':id/isentar')
-  async isentar(@Param('id') id: string, @Body() dto: MarcarIsentoDto) {
+  async isentar(@Param('id') id: string, @Body() dto: MarcarIsentoDto): Promise<MensalidadeResponse> {
     const mensalidade = await this.marcarIsento.execute({ mensalidadeId: id, motivo: dto.motivo })
     this.sse.emit('financeiro:mensalidade-isenta', id)
     return this.toMensalidadeResponse(mensalidade)
@@ -125,7 +126,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 200, description: 'Mensalidade reativada para PENDENTE.' })
   @ApiResponse({ status: 400, description: 'Mensalidade não está com status ISENTO.' })
   @Patch(':id/reativar')
-  async reativar_(@Param('id') id: string) {
+  async reativar_(@Param('id') id: string): Promise<MensalidadeResponse> {
     const mensalidade = await this.reativar.execute(id)
     this.sse.emit('financeiro:mensalidade-reativada', id)
     return this.toMensalidadeResponse(mensalidade)
@@ -146,7 +147,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 400, description: 'Associado sem CPF (Asaas) / mensalidade não PENDENTE / já tem cobrança ativa.' })
   @ApiResponse({ status: 404, description: 'Mensalidade não encontrada.' })
   @Post(':id/emitir-cobranca')
-  async emitirCobranca_(@Param('id') id: string) {
+  async emitirCobranca_(@Param('id') id: string): Promise<EmitirCobrancaResponse> {
     const resultado = await this.emitirCobranca.execute(id)
     this.sse.emit('financeiro:cobranca-emitida', id)
     return {
@@ -162,7 +163,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 200, description: 'Cobrança cancelada.' })
   @ApiResponse({ status: 404, description: 'Mensalidade sem cobrança ativa.' })
   @Delete(':id/cobranca')
-  async cancelarCobranca_(@Param('id') id: string) {
+  async cancelarCobranca_(@Param('id') id: string): Promise<MensalidadeResponse> {
     const mensalidade = await this.cancelarCobranca.execute(id)
     this.sse.emit('financeiro:cobranca-cancelada', id)
     return this.toMensalidadeResponse(mensalidade)
@@ -173,7 +174,7 @@ export class MensalidadesController {
   @ApiResponse({ status: 200, description: 'Mensalidade estornada.' })
   @ApiResponse({ status: 400, description: 'Mensalidade não está quitada.' })
   @Post(':id/estornar')
-  async estornar_(@Param('id') id: string) {
+  async estornar_(@Param('id') id: string): Promise<MensalidadeResponse> {
     const mensalidade = await this.estornar.execute(id)
     this.sse.emit('financeiro:mensalidade-estornada', id)
     return this.toMensalidadeResponse(mensalidade)
@@ -223,7 +224,7 @@ export class MensalidadesController {
   @ApiParam({ name: 'associadoId', description: 'UUID do associado' })
   @ApiQuery({ name: 'ano', required: false, type: Number })
   @Get('associado/:associadoId/extrato')
-  async extrato(@Param('associadoId') associadoId: string, @Query('ano') ano?: string, @Res() res: FastifyReply) {
+  async extrato(@Param('associadoId') associadoId: string, @Query('ano') ano: string | undefined, @Res() res: FastifyReply) {
     const anoNum = ano ? Number(ano) : new Date().getFullYear()
     const [mensalidades, movimentos] = await Promise.all([
       this.listarPorAssociado.execute(associadoId),
@@ -239,7 +240,7 @@ export class MensalidadesController {
     return res.send(buf)
   }
 
-  private toMensalidadeResponse(m: Mensalidade) {
+  private toMensalidadeResponse(m: Mensalidade): MensalidadeResponse {
     return {
       id: m.id,
       associadoId: m.associadoId,
