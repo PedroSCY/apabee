@@ -17,8 +17,64 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'Apabee — Sistema da APA',
-  description: 'APA reúne os apicultores de Prata e região.',
+  metadataBase: new URL('https://www.apabee.com.br'),
+
+  title: {
+    default: 'Apabee — Mel Artesanal de Prata - PB',
+    template: '%s | Apabee',
+  },
+  description:
+    'Mel puro, própolis e derivados da colmeia produzidos pelos apicultores da Associação Pratense de Apicultura (APA) em Prata - PB. Compre direto do produtor com rastreabilidade total.',
+  keywords: [
+    'mel artesanal',
+    'mel puro',
+    'mel de abelha',
+    'apicultura',
+    'Prata PB',
+    'Prata Paraíba',
+    'APA',
+    'Apabee',
+    'própolis',
+    'mel paraíba',
+    'mel natural',
+    'apicultura sustentável',
+  ],
+  authors: [{ name: 'Associação Pratense de Apicultura', url: 'https://www.apabee.com.br' }],
+  creator: 'APA — Associação Pratense de Apicultura',
+  publisher: 'APA — Associação Pratense de Apicultura',
+
+  // Open Graph (WhatsApp, Facebook, LinkedIn)
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://www.apabee.com.br',
+    siteName: 'Apabee',
+    title: 'Apabee — Mel Artesanal de Prata - PB',
+    description:
+      'Mel puro, própolis e derivados produzidos pelos apicultores da APA. Compre direto do produtor.',
+  },
+
+  // Twitter / X
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Apabee — Mel Artesanal de Prata - PB',
+    description: 'Mel puro e artesanal direto dos apicultores da APA em Prata - PB.',
+  },
+
+  // Canonical e indexação
+  alternates: {
+    canonical: 'https://www.apabee.com.br',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export default function RootLayout({
