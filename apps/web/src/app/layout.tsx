@@ -84,6 +84,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${fraunces.variable} h-full antialiased`}>
+      <head>
+        {/* JSON-LD WebSite — instrui o Google a exibir "Apabee" como nome do site (não "apabee.com.br") */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Apabee',
+              alternateName: 'APA — Associação Pratense de Apicultura',
+              url: 'https://www.apabee.com.br',
+            }),
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <Providers>{children}</Providers>
